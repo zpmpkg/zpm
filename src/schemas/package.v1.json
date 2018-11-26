@@ -1,0 +1,78 @@
+{
+  "type": "object",
+  "properties": {
+    "includes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "additionalItems": false,
+      "default": [
+        "**/*.h",
+        "**/*.cpp",
+        "**/*.hpp",
+        "**/*.cc",
+        "**/*.cxx"
+      ]
+    },
+    "development": {
+      "type": "object",
+      "properties": {
+        "public": {
+          "$ref": "#/definitions/PackageEntries"
+        },
+        "private": {
+          "$ref": "#/definitions/PackageEntries"
+        }
+      },
+      "additionalProperties": false
+    },
+    "production": {
+      "type": "object",
+      "properties": {
+        "public": {
+          "$ref": "#/definitions/PackageEntries"
+        },
+        "private": {
+          "$ref": "#/definitions/PackageEntries"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "includes"
+  ],
+  "definitions": {
+    "PackageEntry": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "version"
+      ]
+    },
+    "PackageEntries": {
+      "type": "object",
+      "properties": {
+        "libraries": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/PackageEntry"
+          },
+          "additionalItems": false
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

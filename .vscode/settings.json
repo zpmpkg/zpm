@@ -1,0 +1,16 @@
+{
+    "javascript.validate.enable": true,
+    "prettier.eslintIntegration": true,
+    "prettier.disableLanguages": [
+      "json",
+      "yaml"
+    ],
+    "typescript.referencesCodeLens.enabled": true,
+    "typescript.implementationsCodeLens.enabled": true,
+    "yaml.format.enable": false,
+    "editor.snippetSuggestions": "top",
+    "editor.formatOnSave": true,
+    "[json]": {
+        "editor.tabSize": 2
+    }
+  }

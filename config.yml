@@ -1,0 +1,8 @@
+registries:
+  - url: 'https://github.com/zpmpkg/registry.git'
+    branch: 'master'
+
+registry:
+  libraries:
+    manifest: registry.json
+    name: library
