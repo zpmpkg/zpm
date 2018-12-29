@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "type": "array",
   "items": {
-    "$ref": "#/definitions/Registry"
+    "$ref": "#/definitions/RegistryDefinition"
   },
   "additionalItems": false
 }

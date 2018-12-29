@@ -1,19 +1,19 @@
 import Ajv from 'ajv'
+import betterAjvErrors from 'better-ajv-errors'
 import { omit } from 'lodash'
-import { logger } from '~/common/logger'
 import { definitionsV1 } from '~/schemas/schemas'
 
-export function validateSchema<T>(
+export function validateSchema<T, R = T>(
     instance: T,
-    schema,
+    schema: any,
     options?: { throw?: boolean; origin?: string }
-): T {
+): R {
     options = {
         throw: true,
         ...(options || {}),
     }
     if (schema) {
-        const validator = new Ajv({ useDefaults: true })
+        const validator = new Ajv({ useDefaults: true, jsonPointers: true })
         if (
             !validator.validate(
                 {
@@ -23,11 +23,16 @@ export function validateSchema<T>(
                 instance
             )
         ) {
-            logger.error(`Failed to validate: ${validator.errorsText()} ${options.origin}`)
             if (options.throw) {
-                throw validator.errors[0]
+                throw new Error(
+                    `Failed to validate${
+                        options.origin ? ` ${options.origin}` : ''
+                    }:\n\n${betterAjvErrors(schema, instance, [validator.errors![0]], {
+                        indent: 2,
+                    })}`
+                )
             }
         }
     }
-    return instance
+    return (instance as unknown) as R
 }

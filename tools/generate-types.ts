@@ -8,7 +8,7 @@ const definitions = JSON.parse(readFileSync('src/schemas/definitions.v1.json').t
 delete definitions.$schema
 const definitionKeys = orderBy(keys(definitions))
 
-function readSchema(file) {
+function readSchema(file: string) {
     const contents = JSON.parse(readFileSync(file).toString())
     const schema = {
         ...contents,

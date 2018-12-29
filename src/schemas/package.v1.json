@@ -1,50 +1,72 @@
 {
   "type": "object",
-  "properties": {
-    "includes": {
-      "type": "array",
-      "items": {
-        "type": "string"
+  "oneOf": [
+    {
+      "$ref": "#/definitions/PackageDefinition"
+    },
+    {
+      "properties": {
+        "versions": {
+          "type": "string"
+        },
+        "definition": {
+          "$ref": "#/definitions/PackageDefinition"
+        }
       },
-      "additionalItems": false,
-      "default": [
-        "**/*.h",
-        "**/*.cpp",
-        "**/*.hpp",
-        "**/*.cc",
-        "**/*.cxx"
+      "additionalProperties": false,
+      "required": [
+        "versions",
+        "definition"
       ]
-    },
-    "development": {
-      "type": "object",
-      "properties": {
-        "public": {
-          "$ref": "#/definitions/PackageEntries"
-        },
-        "private": {
-          "$ref": "#/definitions/PackageEntries"
-        }
-      },
-      "additionalProperties": false
-    },
-    "production": {
-      "type": "object",
-      "properties": {
-        "public": {
-          "$ref": "#/definitions/PackageEntries"
-        },
-        "private": {
-          "$ref": "#/definitions/PackageEntries"
-        }
-      },
-      "additionalProperties": false
     }
-  },
-  "additionalProperties": false,
-  "required": [
-    "includes"
   ],
   "definitions": {
+    "PackageDefinition": {
+      "type": "object",
+      "properties": {
+        "includes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "additionalItems": false,
+          "default": [
+            "**/*.h",
+            "**/*.cpp",
+            "**/*.hpp",
+            "**/*.cc",
+            "**/*.cxx"
+          ]
+        },
+        "development": {
+          "type": "object",
+          "properties": {
+            "public": {
+              "$ref": "#/definitions/PackageEntries"
+            },
+            "private": {
+              "$ref": "#/definitions/PackageEntries"
+            }
+          },
+          "additionalProperties": false
+        },
+        "production": {
+          "type": "object",
+          "properties": {
+            "public": {
+              "$ref": "#/definitions/PackageEntries"
+            },
+            "private": {
+              "$ref": "#/definitions/PackageEntries"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "includes"
+      ]
+    },
     "PackageEntry": {
       "type": "object",
       "properties": {
@@ -52,6 +74,9 @@
           "type": "string"
         },
         "version": {
+          "type": "string"
+        },
+        "definition": {
           "type": "string"
         }
       },
@@ -63,8 +88,8 @@
     },
     "PackageEntries": {
       "type": "object",
-      "properties": {
-        "libraries": {
+      "patternProperties": {
+        "\\w+": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/PackageEntry"

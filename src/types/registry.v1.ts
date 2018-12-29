@@ -1,3 +1,3 @@
-import { Registry } from './definitions.v1'
+import { RegistryDefinition } from './definitions.v1'
 
-export type RegistrySchema = Registry[]
+export type RegistrySchema = RegistryDefinition[]

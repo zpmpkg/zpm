@@ -1,26 +1,44 @@
-import { exists, writeFile, readFile } from 'async-file'
-import { readFileSync, remove } from 'fs-extra'
+import * as fs from 'fs-extra'
+import ora from 'ora'
 import { join } from 'upath'
-import { force, update } from '~/cli/program'
+import { update } from '~/cli/program'
 import { environment } from '~/common/environment'
-import { cloneOrFetch } from '~/common/git'
+import {
+    cloneOrFetch,
+    CloneOrFetchResult,
+    cloneOrPull,
+    CloneOrPullResult,
+    showRef,
+} from '~/common/git'
 import { copy } from '~/common/io'
-import { SourceResolver } from '~/resolver/source/sourceResolver'
-import { DefinitionResolver } from '../definition/definitionResolver'
 import { logger } from '~/common/logger'
+import { isDefined } from '~/common/util'
+import { Version } from '~/common/version'
+import { SourceResolver } from '~/resolver/source/sourceResolver'
+import { GitDefinitionResolver } from '../definition/gitDefinitionResolver'
+import { PathDefinitionResolver } from '../definition/pathDefinitionResolver'
 
 export class GitSourceResolver extends SourceResolver {
-    public definitionResolver: DefinitionResolver
-
     public async load(): Promise<void> {
+        this.definitionResolver = this.isDefinitionSeparate()
+            ? new PathDefinitionResolver(this)
+            : new GitDefinitionResolver(this)
         if (this.mayPull()) {
-            await cloneOrFetch(this.getRepositoryPath(), this.repository)
-            if (this.definition !== this.repository) {
-                await cloneOrFetch(this.getDefinitionPath(), this.definition)
-            }
+            const spinner = ora(`Pulling repository ${this.repository}`).start()
+            const result = await cloneOrFetch(this.getRepositoryPath(), this.repository)
+            spinner.succeed(`Pulled repository '${this.repository}' ${this.getFetchInfo(result)}`)
         }
 
-        this.definitionResolver = new DefinitionResolver(this)
+        if (this.mayPull()) {
+            const spinner = ora(`Pulling definition ${this.definition}`).start()
+            const result = await cloneOrPull(this.getDefinitionPath(), this.definition!)
+            spinner.succeed(`Pulled definition '${this.definition}' ${this.getPullInfo(result)}`)
+        }
+
+        logger.info(await this.getTags())
+    }
+    public getName(): string {
+        return 'GIT'
     }
 
     public getDefinitionPath(): string {
@@ -31,23 +49,52 @@ export class GitSourceResolver extends SourceResolver {
         return join(this.getCachePath(), 'repository')
     }
 
-    public getExtractionPath(): string {
-        return join(
-            environment.directory.extract,
-            this.package.manifest.type,
-            this.package.vendor,
-            this.package.name
-        )
+    public isDefinitionSeparate(): boolean {
+        return this.definition !== this.repository && this.definition !== undefined
     }
 
-    public getExtractionHashPath(): string {
-        return join(
-            environment.directory.extract,
-            this.package.manifest.type,
-            this.package.vendor,
-            this.package.name,
-            '.EXTRACTION_HASH'
-        )
+    public async getVersions() {
+        const output = await showRef(this.getRepositoryPath(), ['--tags'])
+        return output
+            .split('\n')
+            .map(s => s.split(' '))
+            .filter(s => s.length === 2)
+            .map(s => {
+                let result
+                try {
+                    result = {
+                        version: new Version(s[1].replace('refs/tags/', '')),
+                        hash: s[0],
+                        name: s[1].replace('refs/tags/', ''),
+                    }
+                } catch (error) {
+                    result = undefined
+                }
+                return result
+            })
+            .filter(isDefined)
+    }
+
+    public async getTags() {
+        const output = await showRef(this.getRepositoryPath(), ['--heads'])
+        return output
+            .split('\n')
+            .map(s => s.split(' '))
+            .filter(s => s.length === 2)
+            .map(s => {
+                let result
+                try {
+                    result = {
+                        version: new Version(s[1].replace('refs/heads/', '')),
+                        hash: s[0],
+                        name: s[1].replace('refs/heads/', ''),
+                    }
+                } catch (error) {
+                    result = undefined
+                }
+                return result
+            })
+            .filter(isDefined)
     }
 
     public getCachePath() {
@@ -62,41 +109,40 @@ export class GitSourceResolver extends SourceResolver {
     public async extract(hash?: string): Promise<void> {
         if (await this.needsExtraction(hash)) {
             try {
-                await remove(this.getExtractionPath())
-            } catch (err) {
-                console.error(err)
-            }
-            console.log('copy')
-            await copy(
-                (await this.definitionResolver.getPackageDefinition(hash)).includes,
-                this.getRepositoryPath(),
-                this.getExtractionPath()
-            )
-            console.log('hash')
-            try {
+                await fs.remove(this.getExtractionPath())
+                await fs.ensureDir(this.getExtractionPath())
+                await copy(
+                    (await this.definitionResolver.getPackageDefinition(hash)).includes,
+                    this.getRepositoryPath(),
+                    this.getExtractionPath()
+                )
                 await this.writeExtractionHash(hash)
             } catch (err) {
-                console.error(err)
+                logger.error(err)
             }
-            console.log('written')
-        }
-    }
-
-    public async needsExtraction(hash?: string) {
-        const file = this.getExtractionHashPath()
-        if (!force() && (await exists(file)) && hash) {
-            return (await readFile(file)).toString() !== hash
-        }
-        return true
-    }
-
-    public async writeExtractionHash(hash?: string) {
-        if (hash) {
-            await writeFile(this.getExtractionHashPath(), hash)
         }
     }
 
     public mayPull() {
         return update()
+    }
+
+    private getPullInfo(fetched: CloneOrPullResult): string {
+        if (!fetched.cloned) {
+            if (fetched.newCommits) {
+                return `(${fetched.newCommits} new commits)`
+            }
+            return '(no changes)'
+        }
+        return '(cloned)'
+    }
+    private getFetchInfo(fetched: CloneOrFetchResult): string {
+        if (!fetched.cloned) {
+            if (fetched.newCommits) {
+                return `(${fetched.newCommits} new commits)`
+            }
+            return '(no changes)'
+        }
+        return '(cloned)'
     }
 }

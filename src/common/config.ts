@@ -8,7 +8,7 @@ import { configurationV1 } from '~/schemas/schemas'
 import { ConfigurationSchema } from '~/types/configuration.v1'
 
 export class Configuration {
-    public values: Readonly<ConfigurationSchema> = undefined
+    public values!: Readonly<ConfigurationSchema>
     private names: string[] = ['config.yml', 'config.yaml', 'config.json']
     private loaded: string[] = []
 

@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "Registry": {
+  "RegistryDefinition": {
     "type": "object",
     "properties": {
       "url": {
@@ -16,7 +16,17 @@
       "url"
     ]
   },
-  "Entry": {
+  "RegistryEntry": {
+    "oneOf": [
+      {
+        "$ref": "#/definitions/RegistryGitEntry"
+      },
+      {
+        "$ref": "#/definitions/RegistryPathEntry"
+      }
+    ]
+  },
+  "RegistryGitEntry": {
     "type": "object",
     "properties": {
       "name": {
@@ -37,6 +47,18 @@
     "required": [
       "name",
       "repository"
+    ]
+  },
+  "RegistryPathEntry": {
+    "type": "object",
+    "properties": {
+      "path": {
+        "type": "string"
+      }
+    },
+    "additionalProperties": false,
+    "required": [
+      "path"
     ]
   }
 }

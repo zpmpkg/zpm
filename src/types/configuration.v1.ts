@@ -1,7 +1,7 @@
-import { Registry } from './definitions.v1'
+import { RegistryDefinition } from './definitions.v1'
 
 export interface ConfigurationSchema {
-    registries: Registry[]
+    registries: RegistryDefinition[]
     registry?: any
     [k: string]: any
 }

@@ -1,3 +1,4 @@
-import { Entry } from './definitions.v1'
+import { RegistryEntry, RegistryGitEntry, RegistryPathEntry } from './definitions.v1'
 
-export type EntriesSchema = Entry[]
+export type RegistryEntry = RegistryGitEntry | RegistryPathEntry
+export type EntriesSchema = RegistryEntry[]

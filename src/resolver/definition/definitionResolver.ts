@@ -1,29 +1,29 @@
-import { exists } from 'async-file'
-import { join } from 'upath'
+import * as fs from 'fs-extra'
 import { loadJsonOrYaml } from '~/common/io'
-import { logger } from '~/common/logger'
-import { validateSchema } from '~/common/validation'
-import { packageV1 } from '~/schemas/schemas'
 import { PackageSchema } from '~/types/package.v1'
 import { SourceResolver } from '../source/sourceResolver'
+import { PackageDefinitionSummary } from './packageDefinition'
 
-export class DefinitionResolver {
+export abstract class DefinitionResolver {
     public source: SourceResolver
 
     constructor(source: SourceResolver) {
         this.source = source
     }
 
-    public async getPackageDefinition(hash?: string): Promise<PackageSchema> {
-        const directory = this.source.getDefinitionPath()
-        return this.loadFile(join(directory, 'package.json'))
+    public abstract async getPackageDefinition(hash?: string): Promise<PackageDefinitionSummary>
+
+    public getDefinitionPath() {
+        return this.source.getDefinitionPath()
     }
 
-    private async loadFile(file: string): Promise<PackageSchema> {
+    public async loadFile(
+        file: string
+    ): Promise<PackageSchema[] | PackageDefinitionSummary | undefined> {
         let content
-        if (await exists(file)) {
+        if (await fs.pathExists(file)) {
             content = await loadJsonOrYaml(file)
         }
-        return validateSchema(content || {}, packageV1)
+        return content
     }
 }

@@ -6,3 +6,7 @@ export function shortHash(hash: string) {
 export function shorten(str: string) {
     return str.substring(0, 5)
 }
+
+export function isDefined<T>(value: T | undefined | null): value is T {
+    return (value as T) !== undefined && (value as T) !== null
+}

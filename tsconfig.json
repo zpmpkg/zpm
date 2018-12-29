@@ -13,12 +13,21 @@
     ],
     "baseUrl": ".",
     "paths": {
-      "~/*": ["src/*"],
+      "~/*": ["src/*"],      
+      "*": [
+        "./typings/*"
+      ]
     },
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
-    "allowSyntheticDefaultImports": true,
-		"outDir": "dist"
+		"outDir": "dist",
+    "forceConsistentCasingInFileNames": true,
+    "noImplicitReturns": true,
+    "noImplicitAny": true,
+    "strict": true,
+    "noUnusedLocals": true,  
+    "strictNullChecks": true,
+    "sourceMap": true
   },
   "include": [
     "src/**/*"
@@ -26,12 +35,5 @@
   "exclude": [
     "node_modules",
     "**/*.spec.ts"
-  ],
-  "forceConsistentCasingInFileNames": true,
-  "noImplicitReturns": true,
-  "noImplicitAny": true,
-  "strict": true,
-  "noUnusedLocals": true,  
-  "esModuleInterop": true,
-  "allowSyntheticDefaultImports": true
+  ]
 }

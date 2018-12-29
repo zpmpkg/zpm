@@ -1,26 +1,51 @@
-import { createSourceResolver } from '~/resolver/source/factory'
+import path from 'path'
+import { createSourceResolver, isGitEntry, isPathEntry } from '~/resolver/source/factory'
 import { SourceResolver } from '~/resolver/source/sourceResolver'
-import { Entry } from '~/types/definitions.v1'
+import { RegistryEntry } from '~/types/definitions.v1'
 import { Manifest } from './manifest'
 
+export interface PackageOptions {
+    isRoot?: boolean
+}
+
 export class Package {
-    public name: string
-    public vendor: string
-    public fullName: string
+    public name!: string
+    public vendor!: string
+    public fullName!: string
     public resolver: SourceResolver
     public manifest: Manifest
+    public options: PackageOptions
+    private loaded: boolean = false
 
-    constructor(manifest: Manifest, entry: Entry) {
+    constructor(manifest: Manifest, entry: RegistryEntry, options?: PackageOptions) {
         this.manifest = manifest
-        this.fullName = entry.name
         this.resolver = createSourceResolver(entry, this)
-        const split = entry.name.split('/')
-        this.name = split[1]
-        this.vendor = split[0]
+        this.options = {
+            isRoot: false,
+            ...options,
+        }
+
+        if (isGitEntry(entry)) {
+            this.fullName = entry.name
+            const split = entry.name.split('/')
+            this.name = split[1]
+            this.vendor = split[0]
+        } else if (isPathEntry(entry)) {
+            this.fullName = entry.path
+            this.name = path.basename(entry.path)
+            this.vendor = 'Local'
+        }
     }
 
-    public async load() {
-        this.resolver.load()
+    public getHash() {
+        return `${this.manifest.type}:${this.resolver.getName()}:${this.fullName}`
+    }
+
+    public async load(): Promise<void> {
+        if (!this.loaded) {
+            this.loaded = true
+            await this.resolver.load()
+        }
     }
 
     public async extract(hash: string) {

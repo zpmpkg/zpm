@@ -1,6 +1,6 @@
 import AppDirectory from 'appdirectory'
-import * as fs from 'async-file'
 import * as Parallel from 'async-parallel'
+import * as fs from 'fs-extra'
 import { join } from 'upath'
 
 const dirs = new AppDirectory({ appName: 'zpm', appAuthor: 'Zefiros' })
@@ -25,6 +25,7 @@ export const environment = {
     directory: {
         configuration: userConfig(),
         registries: join(userCache(), 'registries'),
+        storage: join(userCache(), 'storage'),
         packages: join(userCache(), 'packages'),
         extract: join(process.cwd(), 'extern'),
     },
@@ -33,8 +34,8 @@ export const environment = {
 export async function loadEnvironment() {
     const directories = [userData(), userConfig(), userCache(), userLogs()]
     await Parallel.each(directories, async d => {
-        if (!(await fs.exists(d))) {
-            await fs.mkdirp(d, 744)
+        if (!(await fs.pathExists(d))) {
+            await fs.ensureDir(d)
         }
     })
 }

@@ -11,6 +11,7 @@
     "object-literal-sort-keys": false,
     "interface-name": false,
     "prefer-conditional-expression": false,
+    "no-floating-promises": true,
     "no-implicit-dependencies": [false, "dev"],
     "no-submodule-imports": false,
     "no-unused-variable": [true, { "ignore-pattern": "[iI]gnored" }],

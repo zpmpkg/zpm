@@ -4,23 +4,36 @@
  * and run json-schema-to-typescript to regenerate this file.
  */
 
+/**
+ * This interface was referenced by `DefinitionsSchema`'s JSON-Schema
+ * via the `definition` "RegistryEntry".
+ */
+export type RegistryEntry = RegistryGitEntry | RegistryPathEntry
+
 export interface DefinitionsSchema {
     [k: string]: any
 }
 /**
  * This interface was referenced by `DefinitionsSchema`'s JSON-Schema
- * via the `definition` "Registry".
+ * via the `definition` "RegistryDefinition".
  */
-export interface Registry {
+export interface RegistryDefinition {
     url: string
     branch?: string
 }
 /**
  * This interface was referenced by `DefinitionsSchema`'s JSON-Schema
- * via the `definition` "Entry".
+ * via the `definition` "RegistryGitEntry".
  */
-export interface Entry {
+export interface RegistryGitEntry {
     name: string
     repository: string
     definition?: string
+}
+/**
+ * This interface was referenced by `DefinitionsSchema`'s JSON-Schema
+ * via the `definition` "RegistryPathEntry".
+ */
+export interface RegistryPathEntry {
+    path: string
 }

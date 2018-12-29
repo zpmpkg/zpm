@@ -1,0 +1,9 @@
+{
+    "recommendations": [
+        "esbenp.prettier-vscode",
+        "dskwrk.vscode-generate-getter-setter",
+        "wallabyjs.wallaby-vscode",
+        "gabrielgrinberg.auto-run-command",
+        "eg2.tslint"
+    ]
+}

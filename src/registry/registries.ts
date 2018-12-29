@@ -1,13 +1,18 @@
 import * as Parallel from 'async-parallel'
+import { filter, flatten } from 'lodash'
+import { isDefined } from '~/common/util'
 import { Manifest } from '~/registry/manifest'
 import { ConfigurationSchema } from '~/types/configuration.v1'
+import { RegistryDefinition, RegistryEntry } from '~/types/definitions.v1'
 import { ZPM } from '../zpm'
+import { PackageOptions } from './package'
 import { Registry } from './registry'
 
 export class Registries {
     public zpm: ZPM
-    public registries: Registry[]
-    public config: ConfigurationSchema
+    public registries!: Registry[]
+
+    public config!: ConfigurationSchema
     public manifests: { [k: string]: Manifest } = {}
 
     constructor(zpm: ZPM) {
@@ -17,6 +22,10 @@ export class Registries {
     public async load() {
         await this.findRegistries()
         await this.loadManifests()
+    }
+
+    public addPackage(type: string, entry: RegistryEntry, options?: PackageOptions) {
+        return this.manifests[type].add(entry, options)
     }
 
     private async loadManifests() {
@@ -32,9 +41,17 @@ export class Registries {
             ),
             new Registry(process.cwd()),
         ]
-        await Parallel.each(registries, async registry => {
-            await registry.pull()
+        const newRegistries: RegistryDefinition[] = flatten(
+            filter(await Parallel.map(registries, async registry => registry.update()), isDefined)
+        )
+        // go one deeper in the registry chain (each registry may also host a registry list)
+        newRegistries.forEach(r => {
+            registries.push(new Registry(r.url, r.branch))
         })
+        await Parallel.each(registries, async registry => {
+            await registry.update()
+        })
+
         this.registries = registries.filter(x => x.valid)
     }
 }
