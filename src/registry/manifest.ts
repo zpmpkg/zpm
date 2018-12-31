@@ -1,4 +1,3 @@
-import * as Parallel from 'async-parallel'
 import * as fs from 'fs-extra'
 import { has } from 'lodash'
 import { join, normalize } from 'upath'
@@ -23,38 +22,42 @@ export class Manifest {
     }
 
     public async load() {
-        await Parallel.each(this.registries.registries, async registry => {
-            const file = join(registry.directory, `${this.type}.json`)
-            if (await fs.pathExists(file)) {
-                const contents: EntriesSchema = await this.loadFile(file)
-                try {
-                    validateSchema(contents, entriesV1, {
-                        origin: `${file}`,
-                    })
-                    await Parallel.each(contents, async (x: RegistryEntry) => {
-                        // do not allow overriding of packages
-                        let name!: string
-                        if (isGitEntry(x)) {
-                            name = x.name
-                        } else if (isPathEntry(x)) {
-                            name = x.path
-                        } else {
-                            // this one should not validate
-                        }
-                        if (!has(this.entries, name)) {
-                            this.entries[name] = new Package(this, x)
-                        }
-                    })
-                } catch (e) {
-                    logger.error(e)
+        await Promise.all(
+            this.registries.registries.map(async registry => {
+                const file = join(registry.directory, `${this.type}.json`)
+                if (await fs.pathExists(file)) {
+                    const contents: EntriesSchema = await this.loadFile(file)
+                    try {
+                        validateSchema(contents, entriesV1, {
+                            origin: `${file}`,
+                        })
+                        await Promise.all(
+                            contents.map(async (x: RegistryEntry) => {
+                                // do not allow overriding of packages
+                                let name!: string
+                                if (isGitEntry(x)) {
+                                    name = x.name
+                                } else if (isPathEntry(x)) {
+                                    name = x.path
+                                } else {
+                                    // this one should not validate
+                                }
+                                if (!has(this.entries, name)) {
+                                    this.entries[name] = new Package(this, x)
+                                }
+                            })
+                        )
+                    } catch (e) {
+                        logger.error(e)
+                    }
                 }
-            }
-        })
+            })
+        )
         try {
-            await this.entries['Zefiros-Software/Boost'].load()
-            await this.entries['Zefiros-Software/GoogleTest'].load()
-            await this.entries['Zefiros-Software/The-Forge'].load()
-            await this.entries['Zefiros-Software/The-Forge'].extract('wef')
+            // await this.entries['Zefiros-Software/Boost'].load()
+            // await this.entries['Zefiros-Software/GoogleTest'].load()
+            // await this.entries['Zefiros-Software/The-Forge'].load()
+            // await this.entries['Zefiros-Software/The-Forge'].extract('wef')
         } catch (e) {
             logger.error(e)
         }

@@ -1,7 +1,7 @@
 import { satisfies, validRange } from 'semver'
 import { areAllowedTagCharacters, Version } from './version'
 
-export class Range {
+export class VersionRange {
     public semverMatcher: string | undefined
     public tags: string[] = []
 

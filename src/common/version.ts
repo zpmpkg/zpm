@@ -10,10 +10,9 @@ export interface VersionOptions {
 export class Version {
     public semver: SemVer | undefined
     public tag: string | undefined
-    public hash: string | undefined
     public cost!: number
     public isTag: boolean = false
-    public constructor(version: string | undefined, hash?: string, options?: VersionOptions) {
+    public constructor(version: string | undefined, options?: VersionOptions) {
         const coptions = options || {}
         if (isDefined(version)) {
             const found = first(findVersions(version, { loose: true }))
@@ -28,14 +27,12 @@ export class Version {
                     throw new TypeError(`Could not convert '${version}' to a version`)
                 }
             } else {
-                this.cost =
-                    1000000000 -
-                    this.semver.major * 1000000 +
-                    this.semver.minor * 1000 +
-                    this.semver.patch
+                this.cost = Math.trunc(
+                    100000000 -
+                        (this.semver.major * 1000000 + this.semver.minor * 1000 + this.semver.patch)
+                )
             }
         }
-        this.hash = hash
     }
 
     public toString(): string {

@@ -28,9 +28,9 @@ export class Registry {
 
         if (gitUrlParse(this.url).protocol === 'file') {
             if (await fs.pathExists(this.url)) {
-                const spinner = ora(`Pulling registry ${this.url}`).start()
+                const spinner = ora(`Loading registry ${this.url}`).start()
                 this.directory = this.url
-                spinner.succeed(`Pulled registry '${this.url}'`)
+                spinner.succeed(`Loaded registry '${this.url}'`)
             } else {
                 logger.error(`We do not support file protocol for registry: ${this.url}`)
                 this.valid = false

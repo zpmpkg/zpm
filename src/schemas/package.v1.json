@@ -24,59 +24,32 @@
     "PackageDefinition": {
       "type": "object",
       "properties": {
-        "includes": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          },
-          "additionalItems": false,
-          "default": [
-            "**/*.h",
-            "**/*.cpp",
-            "**/*.hpp",
-            "**/*.cc",
-            "**/*.cxx"
-          ]
-        },
         "development": {
-          "type": "object",
-          "properties": {
-            "public": {
-              "$ref": "#/definitions/PackageEntries"
-            },
-            "private": {
-              "$ref": "#/definitions/PackageEntries"
-            }
-          },
-          "additionalProperties": false
+          "$ref": "#/definitions/PackageEntries"
         },
         "production": {
-          "type": "object",
-          "properties": {
-            "public": {
-              "$ref": "#/definitions/PackageEntries"
-            },
-            "private": {
-              "$ref": "#/definitions/PackageEntries"
-            }
-          },
-          "additionalProperties": false
+          "$ref": "#/definitions/PackageEntries"
         }
-      },
-      "required": [
-        "includes"
-      ]
+      }
     },
     "PackageEntry": {
+      "oneOf": [
+        {
+          "$ref": "#/definitions/PackageGitEntry"
+        },
+        {
+          "$ref": "#/definitions/PackagePathEntry"
+        }
+      ]
+    },
+    "PackageGitEntry": {
       "type": "object",
       "properties": {
         "name": {
-          "type": "string"
+          "type": "string",
+          "pattern": "^([a-zA-Z0-9_-]{2,50}/[a-zA-Z0-9_-]{2,50})$"
         },
         "version": {
-          "type": "string"
-        },
-        "definition": {
           "type": "string"
         }
       },
@@ -84,6 +57,18 @@
       "required": [
         "name",
         "version"
+      ]
+    },
+    "PackagePathEntry": {
+      "type": "object",
+      "properties": {
+        "path": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "path"
       ]
     },
     "PackageEntries": {

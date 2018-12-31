@@ -1,5 +1,6 @@
 import { safeLoad } from 'js-yaml'
 import { catFile } from '~/common/git'
+import { logger } from '~/common/logger'
 import { isDefined } from '~/common/util'
 import { validateSchema } from '~/common/validation'
 import { packageV1 } from '~/schemas/schemas'
@@ -16,7 +17,8 @@ export class GitDefinitionResolver extends DefinitionResolver {
         try {
             content = await this.getContent(directory, hash!)
         } catch (e) {
-            //
+            logger.info(e)
+            // @todo
         }
 
         content.content = validateSchema(content.content || {}, packageV1, {

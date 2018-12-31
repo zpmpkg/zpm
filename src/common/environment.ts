@@ -1,5 +1,4 @@
 import AppDirectory from 'appdirectory'
-import * as Parallel from 'async-parallel'
 import * as fs from 'fs-extra'
 import { join } from 'upath'
 
@@ -33,9 +32,11 @@ export const environment = {
 
 export async function loadEnvironment() {
     const directories = [userData(), userConfig(), userCache(), userLogs()]
-    await Parallel.each(directories, async d => {
-        if (!(await fs.pathExists(d))) {
-            await fs.ensureDir(d)
-        }
-    })
+    await Promise.all(
+        directories.map(async d => {
+            if (!(await fs.pathExists(d))) {
+                await fs.ensureDir(d)
+            }
+        })
+    )
 }

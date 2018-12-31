@@ -1,7 +1,7 @@
 import * as fs from 'fs-extra'
 import { find, has, isArray } from 'lodash'
 import { join } from 'upath'
-import { Range } from '~/common/range'
+import { VersionRange } from '~/common/range'
 import { isDefined } from '~/common/util'
 import { validateSchema } from '~/common/validation'
 import { packageV1 } from '~/schemas/schemas'
@@ -76,7 +76,7 @@ export class PathDefinitionResolver extends DefinitionResolver {
             }
             const found = find(yml, (y: PackageSchema) => {
                 if (isDefined(y.versions)) {
-                    return new Range(y.versions).satisfies(version!)
+                    return new VersionRange(y.versions).satisfies(version!)
                 }
                 return false
             })

@@ -2,9 +2,9 @@ import * as fs from 'fs-extra'
 import { join } from 'upath'
 import { force } from '~/cli/program'
 import { environment } from '~/common/environment'
+import { Version } from '~/common/version'
 import { Package } from '~/registry/package'
 import { DefinitionResolver } from '../definition/definitionResolver'
-import { Version } from '~/common/version'
 
 export interface SourceVersions {
     version: Version

@@ -48,9 +48,11 @@ export class Registries {
         newRegistries.forEach(r => {
             registries.push(new Registry(r.url, r.branch))
         })
-        await Parallel.each(registries, async registry => {
-            await registry.update()
-        })
+        await Promise.all(
+            registries.map(async registry => {
+                await registry.update()
+            })
+        )
 
         this.registries = registries.filter(x => x.valid)
     }

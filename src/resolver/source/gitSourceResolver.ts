@@ -19,7 +19,13 @@ import { GitDefinitionResolver } from '../definition/gitDefinitionResolver'
 import { PathDefinitionResolver } from '../definition/pathDefinitionResolver'
 
 export class GitSourceResolver extends SourceResolver {
+    public loaded = false
     public async load(): Promise<void> {
+        if (this.loaded) {
+            return
+        }
+        this.loaded = true
+
         this.definitionResolver = this.isDefinitionSeparate()
             ? new PathDefinitionResolver(this)
             : new GitDefinitionResolver(this)
@@ -34,8 +40,6 @@ export class GitSourceResolver extends SourceResolver {
             const result = await cloneOrPull(this.getDefinitionPath(), this.definition!)
             spinner.succeed(`Pulled definition '${this.definition}' ${this.getPullInfo(result)}`)
         }
-
-        logger.info(await this.getTags())
     }
     public getName(): string {
         return 'GIT'
@@ -54,6 +58,9 @@ export class GitSourceResolver extends SourceResolver {
     }
 
     public async getVersions() {
+        // we need to be certain we have the repository
+        await this.load()
+
         const output = await showRef(this.getRepositoryPath(), ['--tags'])
         return output
             .split('\n')

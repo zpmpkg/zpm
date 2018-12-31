@@ -1,20 +1,17 @@
 import { fromPairs, get, map } from 'lodash'
-import { PackageEntry, PackageSchema } from '~/types/package.v1'
+import { PackageSchema } from '~/types/package.v1'
 import { PackageOptions } from '../../registry/package'
 
 export interface PackageDefinitionSummary {
     includes: string[]
-    packages: {
-        public: PackageDefinitionEntries
-        private: PackageDefinitionEntries
-    }
+    packages: PackageDefinitionEntries
 }
 export type PackageDefinitionEntries =
     | {
           libraries: PackageDefinitionEntry[]
       }
     | {
-          [k: string]: PackageDefinitionSummary[]
+          [k: string]: PackageDefinitionEntry[]
       }
 
 export interface PackageDefinitionEntry {
@@ -27,16 +24,12 @@ export function fromPackageDefinition(
     options: PackageOptions
 ): PackageDefinitionSummary {
     return {
-        includes: [], //pkg.includes,
-        packages: {
-            private: mapEntries('private', ['libraries'], pkg, options),
-            public: mapEntries('public', ['libraries'], pkg, options),
-        },
+        includes: [], // pkg.includes,
+        packages: mapEntries(['libraries'], pkg, options),
     }
 }
 
 function mapEntries(
-    environment: string,
     keys: string[],
     pkg: PackageSchema,
     options: PackageOptions
@@ -46,10 +39,10 @@ function mapEntries(
             k,
             map(
                 [
-                    ...get(pkg, ['production', environment, k], []),
-                    ...(options.isRoot ? get(pkg, ['development', k, environment], []) : []),
+                    ...get(pkg, ['production', k], []),
+                    ...(options.isRoot ? get(pkg, ['development', k], []) : []),
                 ] as PackageDefinitionEntry[],
-                (p: PackageEntry): PackageEntry => ({
+                (p: PackageDefinitionEntry): PackageDefinitionEntry => ({
                     name: p.name,
                     version: p.version,
                 })

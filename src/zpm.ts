@@ -5,8 +5,8 @@ import { loadCLI } from './cli/program'
 import { logger } from './common/logger'
 import { storage } from './common/storage'
 import { Package } from './registry/package'
-import { Solver } from './solver/solver'
 import { SATSolver } from './solver/sat'
+import { Solver } from './solver/solver'
 
 export class ZPM {
     public root!: Package
@@ -42,27 +42,32 @@ export class ZPM {
             return false
         }
 
-        this.solver = new Solver(this)
-        await this.solver.solve()
+        // this.solver = new Solver(this)
+        // await this.solver.solve()
 
-        const solver = new SATSolver()
-        await solver.addPackage(this.root)
-        // await solver.addPackage(
-        //     this.registries.manifests.libraries.entries['Zefiros-Software/Boost']
-        // )
-        // await solver.addPackageRequirements({
-        //     required: [
-        //         [
-        //             'libraries:GIT:Zefiros-Software/Boost@1.69.0',
-        //             'libraries:GIT:Zefiros-Software/Boost@1.63.0',
-        //         ],
-        //     ],
-        // })
-        console.log('@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@')
-        solver.solve()
-        console.log('@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@')
-        solver.optimize()
-        console.log('@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@')
+        try {
+            const solver = new SATSolver(this.registries)
+            await solver.addPackage(this.root)
+            // await solver.addPackage(
+            // this.registries.manifests.libraries.entries['Zefiros-Software/Boost']
+            // )
+            // await solver.addPackageRequirements({
+            //     required: [
+            //         [
+            //             'libraries:GIT:Zefiros-Software/Boost@1.69.0',
+            //             'libraries:GIT:Zefiros-Software/Boost@1.63.0',
+            //         ],
+            //     ],
+            // })
+            console.log('@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@')
+            solver.solve()
+            console.log('@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@')
+            solver.optimize()
+            console.log('@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@')
+        } catch (error) {
+            logger.error(`Failed to resolve the dependency graph:\n\n${error.message}`)
+            return false
+        }
 
         return true
     }

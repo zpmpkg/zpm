@@ -4,17 +4,11 @@ export type PackageSchema =
           versions: string
           definition: PackageDefinition
       }
+export type PackageEntry = PackageGitEntry | PackagePathEntry
 
 export interface PackageDefinition {
-    includes: string[]
-    development?: {
-        public?: PackageEntries
-        private?: PackageEntries
-    }
-    production?: {
-        public?: PackageEntries
-        private?: PackageEntries
-    }
+    development?: PackageEntries
+    production?: PackageEntries
     [k: string]: any
 }
 export interface PackageEntries {
@@ -24,8 +18,10 @@ export interface PackageEntries {
      */
     [k: string]: PackageEntry[]
 }
-export interface PackageEntry {
+export interface PackageGitEntry {
     name: string
     version: string
-    definition?: string
+}
+export interface PackagePathEntry {
+    path: string
 }

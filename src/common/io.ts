@@ -1,4 +1,3 @@
-import * as Parallel from 'async-parallel'
 import fg from 'fast-glob'
 import * as fs from 'fs-extra'
 import { safeLoadAll } from 'js-yaml'
@@ -22,14 +21,12 @@ export async function copy(source: string | string[], root: string, destination:
         })).map(f => f.toString()),
         f => isSubDirectory(f, root)
     )
-    await Parallel.each(
-        files,
-        async file => {
+    await Promise.all(
+        files.map(async file => {
             await fs.copy(file, join(destination, relative(root, file)), {
                 preserveTimestamps: true,
             })
-        },
-        16
+        })
     )
 }
 
