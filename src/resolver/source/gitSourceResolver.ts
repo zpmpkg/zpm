@@ -30,17 +30,26 @@ export class GitSourceResolver extends SourceResolver {
             ? new PathDefinitionResolver(this)
             : new GitDefinitionResolver(this)
         if (this.mayPull()) {
-            const spin = spinners.create(`Pulling repository ${this.repository}`)
-            const result = await cloneOrFetch(this.getRepositoryPath(), this.repository, {
-                stream: spin.stream,
-            })
-            spin.succeed(`Pulled repository '${this.repository}' ${this.getFetchInfo(result)}`)
-        }
-
-        if (this.mayPull()) {
-            const spin = spinners.create(`Pulling definition ${this.definition}`)
-            const result = await cloneOrPull(this.getDefinitionPath(), this.definition!)
-            spin.succeed(`Pulled definition '${this.definition}' ${this.getPullInfo(result)}`)
+            await Promise.all([
+                (async () => {
+                    const spin = spinners.create(`Pulling repository '${this.package.fullName}':`)
+                    const result = await cloneOrFetch(this.getRepositoryPath(), this.repository, {
+                        stream: spin.stream,
+                    })
+                    spin.succeed(
+                        `Pulled repository '${this.package.fullName}' ${this.getFetchInfo(result)}`
+                    )
+                })(),
+                (async () => {
+                    const spin = spinners.create(`Pulling definition '${this.package.fullName}'`)
+                    const result = await cloneOrPull(this.getDefinitionPath(), this.definition!, {
+                        stream: spin.stream,
+                    })
+                    spin.succeed(
+                        `Pulled definition '${this.package.fullName}' ${this.getPullInfo(result)}`
+                    )
+                })(),
+            ])
         }
     }
     public getName(): string {
