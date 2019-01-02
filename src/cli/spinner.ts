@@ -1,9 +1,8 @@
 import cliSpinners from 'cli-spinners'
-// import hasUnicode from 'has-unicode'
-import logUpdate from 'log-update'
-// import ora from 'ora'
-import { WritableStreamBuffer } from 'stream-buffers'
 import symbols from 'log-symbols'
+import logUpdate from 'log-update'
+import { WritableStreamBuffer } from 'stream-buffers'
+import { logger } from '~/common/logger'
 
 export class Spinner {
     public stream: WritableStreamBuffer = new WritableStreamBuffer()
@@ -19,6 +18,7 @@ export class Spinner {
     }
 
     public render() {
+        const oldFrame = this.frame
         if (this.running) {
             if (this.stream.size() > 0) {
                 this.suffix = this.stream
@@ -36,6 +36,9 @@ export class Spinner {
             this.frame = `${frame} ${this.text} ${this.suffix}`
         } else {
             this.frame = this.text
+        }
+        if (oldFrame !== this.frame) {
+            logger.logfile.info(this.frame)
         }
     }
 

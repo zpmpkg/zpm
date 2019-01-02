@@ -23,6 +23,7 @@ export function userLogs() {
 export const environment = {
     directory: {
         configuration: userConfig(),
+        logs: join(userCache(), 'logs'),
         registries: join(userCache(), 'registries'),
         storage: join(userCache(), 'storage'),
         packages: join(userCache(), 'packages'),
@@ -31,7 +32,13 @@ export const environment = {
 }
 
 export async function loadEnvironment() {
-    const directories = [userData(), userConfig(), userCache(), userLogs()]
+    const directories = [
+        userData(),
+        userConfig(),
+        userCache(),
+        userLogs(),
+        environment.directory.logs,
+    ]
     await Promise.all(
         directories.map(async d => {
             if (!(await fs.pathExists(d))) {
