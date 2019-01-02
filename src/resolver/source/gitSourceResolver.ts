@@ -1,6 +1,7 @@
 import * as fs from 'fs-extra'
 import { join } from 'upath'
 import { update } from '~/cli/program'
+import { spinners } from '~/cli/spinner'
 import { environment } from '~/common/environment'
 import {
     cloneOrFetch,
@@ -16,7 +17,6 @@ import { Version } from '~/common/version'
 import { SourceResolver } from '~/resolver/source/sourceResolver'
 import { GitDefinitionResolver } from '../definition/gitDefinitionResolver'
 import { PathDefinitionResolver } from '../definition/pathDefinitionResolver'
-import { spinners } from '~/cli/spinner'
 
 export class GitSourceResolver extends SourceResolver {
     public loaded = false

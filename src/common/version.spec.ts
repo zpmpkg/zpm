@@ -29,15 +29,17 @@ describe('range', () => {
         })
         test('tag with semver', () => {
             const version = new Version('master/wefv1.2.3')
-            expect(version.isTag).toBeTruthy()
-            expect(version.tag).toEqual('master/wefv1.2.3')
-            expect(version.semver).toEqual(undefined)
+            expect(version.isTag).toBeFalsy()
+            expect(version.tag).toEqual(undefined)
+            expect(version.semver).toEqual(new SemVer('1.2.3'))
         })
         test('tag with semver space', () => {
-            expect(() => new Version('master/wef v1.2.3')).toThrow()
+            const version = new Version('master/wef v1.2.3')
+            expect(version.isTag).toBeFalsy()
+            expect(version.tag).toEqual(undefined)
+            expect(version.semver).toEqual(new SemVer('1.2.3'))
         })
         test('undefined remains', () => {
-            expect(new Version(undefined).hash).toEqual(undefined)
             expect(new Version(undefined).semver).toEqual(undefined)
         })
     })
