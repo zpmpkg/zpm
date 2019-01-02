@@ -1,13 +1,12 @@
 import * as fs from 'fs-extra'
 import gitUrlParse from 'git-url-parse'
-import ora from 'ora'
 import { join } from 'upath'
 import { update } from '~/cli/program'
 import { environment } from '~/common/environment'
 import { cloneOrPull, CloneOrPullResult } from '~/common/git'
-import { logger } from '~/common/logger'
 import { shortHash } from '~/common/util'
 import { RegistryDefinition } from '~/types/definitions.v1'
+import { spinners } from '~/cli/spinner'
 
 export class Registry {
     public url: string
@@ -27,20 +26,23 @@ export class Registry {
         }
 
         if (gitUrlParse(this.url).protocol === 'file') {
+            const spin = spinners.create(`Loading registry ${this.url}`)
             if (await fs.pathExists(this.url)) {
-                const spinner = ora(`Loading registry ${this.url}`).start()
                 this.directory = this.url
-                spinner.succeed(`Loaded registry '${this.url}'`)
+                spin.succeed(`Loaded registry '${this.url}'`)
             } else {
-                logger.error(`We do not support file protocol for registry: ${this.url}`)
+                spin.fail(`We do not support file protocol for registry: ${this.url}`)
                 this.valid = false
             }
         } else {
             this.directory = join(environment.directory.registries, shortHash(this.url))
             if (this.mayPull()) {
-                const spinner = ora(`Pulling registry ${this.url}`).start()
-                const fetched = await cloneOrPull(this.directory, this.url, this.branch)
-                spinner.succeed(`Pulled registry '${this.url}' ${this.getHitInfo(fetched)}`)
+                const spin = spinners.create(`Pulling registry ${this.url}`)
+                const fetched = await cloneOrPull(this.directory, this.url, {
+                    branch: this.branch,
+                    stream: spin.stream,
+                })
+                spin.succeed(`Pulled registry '${this.url}' ${this.getHitInfo(fetched)}`)
             }
         }
         this.isUpdated = true

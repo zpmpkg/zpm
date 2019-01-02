@@ -18,10 +18,12 @@ export interface PackageEntries {
      */
     [k: string]: PackageEntry[]
 }
+
 export interface PackageGitEntry {
     name: string
     version: string
 }
+
 export interface PackagePathEntry {
     path: string
 }

@@ -3,7 +3,7 @@ import { safeLoad } from 'js-yaml'
 import { merge } from 'lodash'
 import path, { normalize } from 'upath'
 import { environment } from '~/common/environment'
-import { validateSchema } from '~/common/validation'
+import { validateSchema, buildSchema } from '~/common/validation'
 import { configurationV1 } from '~/schemas/schemas'
 import { ConfigurationSchema } from '~/types/configuration.v1'
 
@@ -11,6 +11,8 @@ export class Configuration {
     public values!: Readonly<ConfigurationSchema>
     private names: string[] = ['config.yml', 'config.yaml', 'config.json']
     private loaded: string[] = []
+
+    private validator = buildSchema(configurationV1)
 
     public load() {
         this.loadOverrideFile(path.join(__dirname, '../../'))
@@ -31,8 +33,9 @@ export class Configuration {
             this.loaded.push(abs)
 
             try {
-                this.values = validateSchema(this.values, configurationV1, {
+                this.values = validateSchema(this.values, undefined, {
                     origin: `while loading ${file} - skipping instead`,
+                    validator: this.validator,
                 })
             } catch (error) {
                 // pass

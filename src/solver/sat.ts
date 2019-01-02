@@ -1,5 +1,6 @@
 import { concat, flatten, get, isEmpty, reverse, set, toPairs, unzip } from 'lodash'
 import * as Logic from 'logic-solver'
+import { logger } from '~/common/logger'
 import { VersionRange } from '~/common/range'
 import { isDefined } from '~/common/util'
 import { Version } from '~/common/version'
@@ -7,6 +8,8 @@ import { Package } from '~/registry/package'
 import { Registries } from '~/registry/registries'
 import { PackageDefinitionSummary } from '~/resolver/definition/packageDefinition'
 import { SourceVersions } from '~/resolver/source/sourceResolver'
+import { PackageGitEntry, PackagePathEntry } from '~/types/package.v1'
+import { isGitPackageEntry, isPathPackageEntry } from './package'
 
 export interface SATOptions {
     branchHeuristic: boolean
@@ -21,6 +24,15 @@ export interface SATRequirements {
     hash?: string
     required?: string[][]
     optional?: string[][]
+}
+
+export interface SATGitEntry {
+    description: PackageGitEntry
+    type: string
+}
+export interface SATPathEntry {
+    description: PackagePathEntry
+    type: string
 }
 
 export class SATSolver {
@@ -72,31 +84,26 @@ export class SATSolver {
         // this.solver.require(Logic.implies(hash))
         // logger.info(hash, definition, '@@@')
 
-        await Promise.all(
-            flatten(
-                toPairs(definition.packages).map(p =>
-                    p[1].map(e => ({ name: e.name, version: e.version, type: p[0] }))
+        await Promise.all([
+            ...flatten(
+                toPairs(definition.packages.git).map(p =>
+                    p[1]
+                        .filter(x => isGitPackageEntry(x))
+                        .map((e): SATGitEntry => ({ description: e, type: p[0] }))
                 )
             ).map(async pkg => {
-                const found = get(this.registries.manifests, [pkg.type, 'entries', pkg.name])
-                if (found) {
-                    const versions = await this.addPackage(found)
-                    const range = new VersionRange(pkg.version)
-                    versions.filter(v => range.satisfies(v.version))
-                    this.addPackageRequirements({
-                        hash,
-                        required: [
-                            versions
-                                .filter(v => range.satisfies(v.version))
-                                .map(x => this.toTerm(found.getHash(), x.version)),
-                        ],
-                    })
-                } else {
-                    throw new Error('not implemented')
-                }
-                // console.log(hash, pkg, this.solver)
-            })
-        )
+                await this.addGitEntry(pkg, hash)
+            }),
+            ...flatten(
+                toPairs(definition.packages.path).map(p =>
+                    p[1]
+                        .filter(x => isPathPackageEntry(x))
+                        .map((e): SATPathEntry => ({ description: e, type: p[0] }))
+                )
+            ).map(async pkg => {
+                await this.addPathEntry(pkg)
+            }),
+        ])
     }
 
     public solve() {
@@ -105,6 +112,7 @@ export class SATSolver {
     }
 
     public optimize() {
+        this.solution.ignoreUnknownVariables()
         console.log(
             this.solver
                 .minimizeWeightedSum(this.solution, this.weights.terms, this.weights.weights)
@@ -152,7 +160,48 @@ export class SATSolver {
         if (!isEmpty(newTerms[0]) && !isEmpty(newTerms[1])) {
             this.weights.terms = concat(this.weights.terms || [], newTerms[0] as string[])
             this.weights.weights = concat(this.weights.weights || [], newTerms[1] as number[])
-            this.solver.require(Logic.atMostOne(...newTerms[0]))
+            //this.solver.require(Logic.atMostOne(...newTerms[0]))
+        }
+    }
+    private async addPathEntry(pkg: SATPathEntry) {
+        const added = this.registries.addPackage(
+            pkg.type,
+            {
+                path: pkg.description.path,
+            },
+            {
+                isRoot: false,
+            }
+        )
+        try {
+            await added.load()
+        } catch (error) {
+            logger.error(
+                `Failed to load the definition of the root package:\n\n${error.message}\n${
+                    error.stack
+                }`
+            )
+        }
+        //console.log(added)
+        await this.addPackage(added)
+    }
+
+    private async addGitEntry(pkg: SATGitEntry, hash: string) {
+        const found = get(this.registries.manifests, [pkg.type, 'entries', pkg.description.name])
+        if (found) {
+            const versions = await this.addPackage(found)
+            const range = new VersionRange(pkg.description.version)
+            versions.filter(v => range.satisfies(v.version))
+            this.addPackageRequirements({
+                hash,
+                required: [
+                    versions
+                        .filter(v => range.satisfies(v.version))
+                        .map(x => this.toTerm(found.getHash(), x.version)),
+                ],
+            })
+        } else {
+            throw new Error('not implemented')
         }
     }
 

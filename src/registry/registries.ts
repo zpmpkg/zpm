@@ -1,4 +1,3 @@
-import * as Parallel from 'async-parallel'
 import { filter, flatten } from 'lodash'
 import { isDefined } from '~/common/util'
 import { Manifest } from '~/registry/manifest'
@@ -42,7 +41,10 @@ export class Registries {
             new Registry(process.cwd()),
         ]
         const newRegistries: RegistryDefinition[] = flatten(
-            filter(await Parallel.map(registries, async registry => registry.update()), isDefined)
+            filter(
+                await Promise.all(registries.map(async registry => registry.update())),
+                isDefined
+            )
         )
         // go one deeper in the registry chain (each registry may also host a registry list)
         newRegistries.forEach(r => {

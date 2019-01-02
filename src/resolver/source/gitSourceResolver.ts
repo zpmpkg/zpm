@@ -1,5 +1,4 @@
 import * as fs from 'fs-extra'
-import ora from 'ora'
 import { join } from 'upath'
 import { update } from '~/cli/program'
 import { environment } from '~/common/environment'
@@ -10,13 +9,14 @@ import {
     CloneOrPullResult,
     showRef,
 } from '~/common/git'
-import { copy } from '~/common/io'
+//import { copy } from '~/common/io'
 import { logger } from '~/common/logger'
 import { isDefined } from '~/common/util'
 import { Version } from '~/common/version'
 import { SourceResolver } from '~/resolver/source/sourceResolver'
 import { GitDefinitionResolver } from '../definition/gitDefinitionResolver'
 import { PathDefinitionResolver } from '../definition/pathDefinitionResolver'
+import { spinners } from '~/cli/spinner'
 
 export class GitSourceResolver extends SourceResolver {
     public loaded = false
@@ -30,15 +30,17 @@ export class GitSourceResolver extends SourceResolver {
             ? new PathDefinitionResolver(this)
             : new GitDefinitionResolver(this)
         if (this.mayPull()) {
-            const spinner = ora(`Pulling repository ${this.repository}`).start()
-            const result = await cloneOrFetch(this.getRepositoryPath(), this.repository)
-            spinner.succeed(`Pulled repository '${this.repository}' ${this.getFetchInfo(result)}`)
+            const spin = spinners.create(`Pulling repository ${this.repository}`)
+            const result = await cloneOrFetch(this.getRepositoryPath(), this.repository, {
+                stream: spin.stream,
+            })
+            spin.succeed(`Pulled repository '${this.repository}' ${this.getFetchInfo(result)}`)
         }
 
         if (this.mayPull()) {
-            const spinner = ora(`Pulling definition ${this.definition}`).start()
+            const spin = spinners.create(`Pulling definition ${this.definition}`)
             const result = await cloneOrPull(this.getDefinitionPath(), this.definition!)
-            spinner.succeed(`Pulled definition '${this.definition}' ${this.getPullInfo(result)}`)
+            spin.succeed(`Pulled definition '${this.definition}' ${this.getPullInfo(result)}`)
         }
     }
     public getName(): string {
@@ -80,6 +82,8 @@ export class GitSourceResolver extends SourceResolver {
                 return result
             })
             .filter(isDefined)
+            .sort(x => x.version.cost)
+            .reverse()
     }
 
     public async getTags() {
@@ -118,11 +122,11 @@ export class GitSourceResolver extends SourceResolver {
             try {
                 await fs.remove(this.getExtractionPath())
                 await fs.ensureDir(this.getExtractionPath())
-                await copy(
-                    (await this.definitionResolver.getPackageDefinition(hash)).includes,
-                    this.getRepositoryPath(),
-                    this.getExtractionPath()
-                )
+                // await copy(
+                //     (await this.definitionResolver.getPackageDefinition(hash)).includes,
+                //     this.getRepositoryPath(),
+                //     this.getExtractionPath()
+                // )
                 await this.writeExtractionHash(hash)
             } catch (err) {
                 logger.error(err)

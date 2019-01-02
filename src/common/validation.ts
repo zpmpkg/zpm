@@ -1,33 +1,34 @@
-import Ajv from 'ajv'
+import Ajv, { ValidateFunction } from 'ajv'
 import betterAjvErrors from 'better-ajv-errors'
 import { omit } from 'lodash'
 import { definitionsV1 } from '~/schemas/schemas'
 
+const ajv = new Ajv({ useDefaults: true, jsonPointers: true })
+
+export function buildSchema(schema: any): ValidateFunction {
+    return ajv.compile({
+        ...schema,
+        definitions: { ...omit(definitionsV1, '$schema'), ...schema.definitions },
+    })
+}
+
 export function validateSchema<T, R = T>(
     instance: T,
-    schema: any,
-    options?: { throw?: boolean; origin?: string }
+    schema?: any,
+    options?: { throw?: boolean; origin?: string; validator?: ValidateFunction }
 ): R {
     options = {
         throw: true,
         ...(options || {}),
     }
     if (schema) {
-        const validator = new Ajv({ useDefaults: true, jsonPointers: true })
-        if (
-            !validator.validate(
-                {
-                    ...schema,
-                    definitions: { ...omit(definitionsV1, '$schema'), ...schema.definitions },
-                },
-                instance
-            )
-        ) {
+        const validate = options.validator || buildSchema(schema)
+        if (!validate(instance)) {
             if (options.throw) {
                 throw new Error(
                     `Failed to validate${
                         options.origin ? ` ${options.origin}` : ''
-                    }:\n\n${betterAjvErrors(schema, instance, [validator.errors![0]], {
+                    }:\n\n${betterAjvErrors(schema, instance, [validate.errors![0]], {
                         indent: 2,
                     })}`
                 )

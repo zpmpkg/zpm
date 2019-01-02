@@ -3,7 +3,7 @@ import { has } from 'lodash'
 import { join, normalize } from 'upath'
 import { loadJsonOrYaml } from '~/common/io'
 import { logger } from '~/common/logger'
-import { validateSchema } from '~/common/validation'
+import { validateSchema, buildSchema } from '~/common/validation'
 import { Package, PackageOptions } from '~/registry/package'
 import { isGitEntry, isPathEntry } from '~/resolver/source/factory'
 import { entriesV1 } from '~/schemas/schemas'
@@ -15,6 +15,7 @@ export class Manifest {
     public type: string
     public registries: Registries
     public entries: { [name: string]: Package } = {}
+    private validator = buildSchema(entriesV1)
 
     constructor(registries: Registries, type: string) {
         this.registries = registries
@@ -28,8 +29,9 @@ export class Manifest {
                 if (await fs.pathExists(file)) {
                     const contents: EntriesSchema = await this.loadFile(file)
                     try {
-                        validateSchema(contents, entriesV1, {
+                        validateSchema(contents, undefined, {
                             origin: `${file}`,
+                            validator: this.validator,
                         })
                         await Promise.all(
                             contents.map(async (x: RegistryEntry) => {

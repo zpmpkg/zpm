@@ -3,13 +3,14 @@ import { find, has, isArray } from 'lodash'
 import { join } from 'upath'
 import { VersionRange } from '~/common/range'
 import { isDefined } from '~/common/util'
-import { validateSchema } from '~/common/validation'
+import { buildSchema, validateSchema } from '~/common/validation'
 import { packageV1 } from '~/schemas/schemas'
 import { PackageSchema } from '~/types/package.v1'
 import { DefinitionResolver } from './definitionResolver'
 import { fromPackageDefinition, PackageDefinitionSummary } from './packageDefinition'
 
 export class PathDefinitionResolver extends DefinitionResolver {
+    private validator = buildSchema(packageV1)
     public async getPackageDefinition(version?: string): Promise<PackageDefinitionSummary> {
         const directory = this.getDefinitionPath()
 
@@ -21,9 +22,10 @@ export class PathDefinitionResolver extends DefinitionResolver {
         } catch (e) {
             //
         }
-        content.content = validateSchema(content.content || {}, packageV1, {
+        content.content = validateSchema(content.content || {}, undefined, {
             throw: true,
             origin: `package '${this.source.package.name}' definition on path '${content.path}'`,
+            validator: this.validator,
         })
         if (!isDefined(content.content)) {
             throw new Error(`Could not find a matching schema for version '${version}'`)

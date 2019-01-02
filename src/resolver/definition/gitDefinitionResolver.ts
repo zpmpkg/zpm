@@ -2,12 +2,13 @@ import { safeLoad } from 'js-yaml'
 import { catFile } from '~/common/git'
 import { logger } from '~/common/logger'
 import { isDefined } from '~/common/util'
-import { validateSchema } from '~/common/validation'
+import { buildSchema, validateSchema } from '~/common/validation'
 import { packageV1 } from '~/schemas/schemas'
 import { DefinitionResolver } from './definitionResolver'
 import { fromPackageDefinition, PackageDefinitionSummary } from './packageDefinition'
 
 export class GitDefinitionResolver extends DefinitionResolver {
+    private validator = buildSchema(packageV1)
     public async getPackageDefinition(hash?: string): Promise<PackageDefinitionSummary> {
         const directory = this.getDefinitionPath()
 
@@ -21,9 +22,10 @@ export class GitDefinitionResolver extends DefinitionResolver {
             // @todo
         }
 
-        content.content = validateSchema(content.content || {}, packageV1, {
+        content.content = validateSchema(content.content || {}, undefined, {
             throw: true,
             origin: `package '${this.source.package.fullName}' definition on version '${hash}'`,
+            validator: this.validator,
         })
         if (!isDefined(content.content)) {
             throw new Error(`Could not find a matching schema for version '${hash}'`)

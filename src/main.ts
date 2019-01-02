@@ -9,7 +9,7 @@ async function main() {
 
 main()
     .then(result => {
-        logger.info('Done')
+        logger.success('Done')
     })
     .catch(error => {
         logger.error(error)

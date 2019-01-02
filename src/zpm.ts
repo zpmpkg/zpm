@@ -7,6 +7,7 @@ import { storage } from './common/storage'
 import { Package } from './registry/package'
 import { SATSolver } from './solver/sat'
 import { Solver } from './solver/solver'
+import { spinners } from './cli/spinner'
 
 export class ZPM {
     public root!: Package
@@ -38,7 +39,11 @@ export class ZPM {
         try {
             await this.root.load()
         } catch (error) {
-            logger.error(`Failed to load the definition of the root package:\n\n${error.message}`)
+            logger.error(
+                `Failed to load the definition of the root package:\n\n${error.message}\n${
+                    error.stack
+                }`
+            )
             return false
         }
 
@@ -46,6 +51,7 @@ export class ZPM {
         // await this.solver.solve()
 
         try {
+            spinners.start()
             const solver = new SATSolver(this.registries)
             await solver.addPackage(this.root)
             // await solver.addPackage(
@@ -59,14 +65,21 @@ export class ZPM {
             //         ],
             //     ],
             // })
-            console.log('@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@')
+            //console.log('@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@')
+
+            spinners.stop()
+
             solver.solve()
-            console.log('@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@')
+            //console.log('@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@')
             solver.optimize()
-            console.log('@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@')
+            //console.log('@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@')
         } catch (error) {
-            logger.error(`Failed to resolve the dependency graph:\n\n${error.message}`)
+            logger.error(
+                `Failed to resolve the dependency graph:\n\n${error.message}\n${error.stack}`
+            )
             return false
+        } finally {
+            spinners.stop()
         }
 
         return true

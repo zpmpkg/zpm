@@ -22,24 +22,40 @@ export async function _pull(
 
 export async function _fetch(
     destination: string,
-    remote?: string,
-    branch?: string,
-    options?: Options
+    options: {
+        remote?: string
+        branch?: string
+        options?: Options
+        stream?: NodeJS.WritableStream
+    } = {}
 ) {
-    return git(destination).fetch(remote, branch, options)
+    return git(destination)
+        .outputHandler((command, stdout, stderr) => {
+            if (options.stream) {
+                stdout.pipe(options.stream)
+                stderr.pipe(options.stream)
+            }
+        })
+        .fetch(options.remote, options.branch, options.options)
 }
 
 export async function _tags(destination: string, options?: Options) {
     return git(destination).tags(options)
 }
 
-export async function _clone(destination: string, remote: string, options?: string[]) {
+export async function _clone(
+    destination: string,
+    remote: string,
+    options: { options?: string[]; stream?: NodeJS.WritableStream } = {}
+) {
     return git()
         .outputHandler((command, stdout, stderr) => {
-            stdout.pipe(process.stdout)
-            stderr.pipe(process.stderr)
+            if (options.stream) {
+                stdout.pipe(options.stream)
+                stderr.pipe(options.stream)
+            }
         })
-        .clone(remote.toString(), destination, options)
+        .clone(remote.toString(), destination, options.options)
 }
 
 export interface CloneOrPullResult {
@@ -50,7 +66,7 @@ export interface CloneOrPullResult {
 export async function _cloneOrPull(
     destination: string,
     url: string,
-    branch?: string
+    options: { branch?: string; stream?: NodeJS.WritableStream } = {}
 ): Promise<CloneOrPullResult> {
     const returnValue: CloneOrPullResult = {
         cloned: !(await fs.pathExists(destination)),
@@ -59,8 +75,12 @@ export async function _cloneOrPull(
     const key = `git.head.${destination}`
     const hash: string | undefined = await storage.getItem(key)
     if (await fs.pathExists(destination)) {
-        await _fetch(destination, 'origin', branch, { '--prune': null })
-        const sha = await getBranchSHA1(destination, getBranch(branch))
+        await _fetch(destination, {
+            remote: 'origin',
+            branch: options.branch,
+            options: { '--prune': null, '--progress': null },
+        })
+        const sha = await getBranchSHA1(destination, getBranch(options.branch))
         await checkout(destination, sha)
         returnValue.latest = sha
 
@@ -69,12 +89,15 @@ export async function _cloneOrPull(
                 (await git(destination).raw([
                     'rev-list',
                     '--count',
-                    `${hash}...origin/${branch || 'master'}`,
+                    `${hash}...origin/${options.branch || 'master'}`,
                 ])).trim()
             )
         }
     } else {
-        returnValue.latest = await clone(destination, url, ['--quiet'])
+        returnValue.latest = await clone(destination, url, {
+            options: ['--progress'],
+            stream: options.stream,
+        })
     }
 
     return returnValue
@@ -88,38 +111,46 @@ export interface CloneOrFetchResult {
 export async function _cloneOrFetch(
     destination: string,
     url: string,
-    branch?: string
+    options: { branch?: string; stream?: NodeJS.WritableStream } = {}
 ): Promise<CloneOrFetchResult> {
     const returnValue: CloneOrFetchResult = { cloned: !(await fs.pathExists(destination)) }
     const key = `git.head.${destination}`
     const hash: string | undefined = await storage.getItem(key)
     if (!returnValue.cloned) {
-        await _fetch(destination, 'origin', branch, { '--prune': null, '--tags': null })
+        await _fetch(destination, {
+            remote: 'origin',
+            branch: options.branch,
+            options: { '--prune': null, '--all': null, '--progress': null },
+            stream: options.stream,
+        })
 
         if (hash) {
             returnValue.newCommits = toSafeInteger(
                 (await git(destination).raw([
                     'rev-list',
                     '--count',
-                    `${hash}...origin/${branch || 'master'}`,
+                    `${hash}...origin/${options.branch || 'master'}`,
                 ])).trim()
             )
         }
     } else {
-        await _clone(destination, url, [
-            '--quiet',
-            '--recurse',
-            '-v',
-            '-j8',
-            '-c',
-            'core.longpaths=true',
-            '-c',
-            'core.fscache=true',
-            '-q',
-            ...(branch ? ['-b', branch] : []),
-        ])
+        await _clone(destination, url, {
+            options: [
+                '--quiet',
+                '--recurse',
+                '-v',
+                '-j8',
+                '-c',
+                'core.longpaths=true',
+                '-c',
+                'core.fscache=true',
+                '--progress',
+                ...(options.branch ? ['-b', options.branch] : []),
+            ],
+            stream: options.stream,
+        })
     }
-    const newHash = await getHash(destination, branch)
+    const newHash = await getHash(destination, options.branch)
 
     if (newHash !== hash) {
         await storage.setItem(key, newHash)
