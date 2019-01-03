@@ -1,6 +1,7 @@
 import * as fs from 'fs-extra'
 import { join } from 'upath'
-import { update } from '~/cli/program'
+import { askPull } from '~/cli/inquiries'
+import { headless, update } from '~/cli/program'
 import { spinners } from '~/cli/spinner'
 import { environment } from '~/common/environment'
 import {
@@ -10,7 +11,7 @@ import {
     CloneOrPullResult,
     showRef,
 } from '~/common/git'
-//import { copy } from '~/common/io'
+// import { copy } from '~/common/io'
 import { logger } from '~/common/logger'
 import { isDefined } from '~/common/util'
 import { Version } from '~/common/version'
@@ -20,16 +21,16 @@ import { PathDefinitionResolver } from '../definition/pathDefinitionResolver'
 
 export class GitSourceResolver extends SourceResolver {
     public loaded = false
-    public async load(): Promise<void> {
+    public async load(): Promise<boolean> {
         if (this.loaded) {
-            return
+            return true
         }
         this.loaded = true
 
         this.definitionResolver = this.isDefinitionSeparate()
             ? new PathDefinitionResolver(this)
             : new GitDefinitionResolver(this)
-        if (this.mayPull()) {
+        if (await this.mayPull()) {
             await Promise.all([
                 (async () => {
                     const spin = spinners.create(`Pulling repository '${this.package.fullName}':`)
@@ -51,6 +52,7 @@ export class GitSourceResolver extends SourceResolver {
                 })(),
             ])
         }
+        return this.loaded
     }
     public getName(): string {
         return 'GIT'
@@ -70,7 +72,9 @@ export class GitSourceResolver extends SourceResolver {
 
     public async getVersions() {
         // we need to be certain we have the repository
-        await this.load()
+        if (!(await this.load())) {
+            return []
+        }
 
         const output = await showRef(this.getRepositoryPath(), ['--tags'])
         return output
@@ -143,8 +147,12 @@ export class GitSourceResolver extends SourceResolver {
         }
     }
 
-    public mayPull() {
-        return update()
+    public async mayPull() {
+        return (
+            update() ||
+            (!(await fs.pathExists(this.getCachePath()!)) &&
+                (headless() || askPull(this.package.name)))
+        )
     }
 
     private getPullInfo(fetched: CloneOrPullResult): string {

@@ -41,11 +41,11 @@ export class Package {
         return `${this.manifest.type}:${this.resolver.getName()}:${this.fullName}`
     }
 
-    public async load(): Promise<void> {
+    public async load(): Promise<boolean> {
         if (!this.loaded) {
-            this.loaded = true
-            await this.resolver.load()
+            this.loaded = await this.resolver.load()
         }
+        return this.loaded
     }
 
     public async extract(hash: string) {

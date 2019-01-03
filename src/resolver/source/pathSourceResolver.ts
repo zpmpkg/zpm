@@ -2,8 +2,9 @@ import { SourceResolver } from '~/resolver/source/sourceResolver'
 import { PathDefinitionResolver } from '../definition/pathDefinitionResolver'
 
 export class PathSourceResolver extends SourceResolver {
-    public async load(): Promise<void> {
+    public async load(): Promise<boolean> {
         this.definitionResolver = new PathDefinitionResolver(this)
+        return true
     }
     public getName(): string {
         return 'PATH'

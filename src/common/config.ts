@@ -3,7 +3,7 @@ import { safeLoad } from 'js-yaml'
 import { merge } from 'lodash'
 import path, { normalize } from 'upath'
 import { environment } from '~/common/environment'
-import { validateSchema, buildSchema } from '~/common/validation'
+import { buildSchema, validateSchema } from '~/common/validation'
 import { configurationV1 } from '~/schemas/schemas'
 import { ConfigurationSchema } from '~/types/configuration.v1'
 
