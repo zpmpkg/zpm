@@ -6,12 +6,13 @@ import { logger } from './common/logger'
 import { storage } from './common/storage'
 import { Package } from './registry/package'
 import { SATSolver } from './solver/sat'
-import { Solver } from './solver/solver'
 import { spinners } from './cli/spinner'
+import { SATSolution } from './solver/solution'
+import { isDefined } from './common/util'
+import { Builder } from './builder/builder'
 
 export class ZPM {
     public root!: Package
-    public solver!: Solver
     public config = new Configuration()
     public registries: Registries = new Registries(this)
 
@@ -26,7 +27,7 @@ export class ZPM {
         this.config.load()
         await this.registries.load()
 
-        const path = './sandbox'
+        const path = './'
         this.root = this.registries.addPackage(
             'libraries',
             {
@@ -47,32 +48,16 @@ export class ZPM {
             return false
         }
 
-        // this.solver = new Solver(this)
-        // await this.solver.solve()
-
+        let lockFile: SATSolution | undefined
         try {
             spinners.start()
             const solver = new SATSolver(this.registries)
             await solver.addPackage(this.root)
-            // await solver.addPackage(
-            // this.registries.manifests.libraries.entries['Zefiros-Software/Boost']
-            // )
-            // await solver.addPackageRequirements({
-            //     required: [
-            //         [
-            //             'libraries:GIT:Zefiros-Software/Boost@1.69.0',
-            //             'libraries:GIT:Zefiros-Software/Boost@1.63.0',
-            //         ],
-            //     ],
-            // })
-            //console.log('@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@')
 
             spinners.stop()
 
             solver.solve()
-            //console.log('@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@')
-            solver.optimize()
-            //console.log('@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@')
+            lockFile = solver.optimize()
         } catch (error) {
             logger.error(
                 `Failed to resolve the dependency graph:\n\n${error.message}\n${error.stack}`
@@ -80,6 +65,15 @@ export class ZPM {
             return false
         } finally {
             spinners.stop()
+        }
+
+        if (isDefined(lockFile)) {
+            spinners.start()
+            const builder = new Builder(this.registries, this.root, lockFile)
+            await builder.load()
+            spinners.stop()
+        } else {
+            logger.error(`We did not find a valid dependency graph, please check your requirements`)
         }
 
         return true

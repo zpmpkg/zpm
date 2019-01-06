@@ -2,11 +2,11 @@ import * as fs from 'fs-extra'
 import gitUrlParse from 'git-url-parse'
 import { join } from 'upath'
 import { update } from '~/cli/program'
+import { spinners } from '~/cli/spinner'
 import { environment } from '~/common/environment'
 import { cloneOrPull, CloneOrPullResult } from '~/common/git'
 import { shortHash } from '~/common/util'
 import { RegistryDefinition } from '~/types/definitions.v1'
-import { spinners } from '~/cli/spinner'
 
 export class Registry {
     public url: string

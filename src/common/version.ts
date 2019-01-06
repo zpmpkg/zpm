@@ -8,12 +8,14 @@ export interface VersionOptions {
 }
 
 export class Version {
+    public raw: string | undefined
     public semver: SemVer | undefined
     public tag: string | undefined
     public cost!: number
     public isTag: boolean = false
     public constructor(version: string | undefined, options?: VersionOptions) {
         const coptions = options || {}
+        this.raw = version
         if (isDefined(version)) {
             const found = first(findVersions(version, { loose: true }))
             this.semver = found ? new SemVer(found) : undefined

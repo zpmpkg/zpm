@@ -5,16 +5,18 @@ import { VersionRange } from '~/common/range'
 import { isDefined } from '~/common/util'
 import { buildSchema, validateSchema } from '~/common/validation'
 import { packageV1 } from '~/schemas/schemas'
-import { PackageSchema } from '~/types/package.v1'
+// tslint:disable-next-line:ordered-imports
+import { PackageSchema, PackageDefinition } from '~/types/package.v1'
 import { DefinitionResolver } from './definitionResolver'
 import { fromPackageDefinition, PackageDefinitionSummary } from './packageDefinition'
+import { logger } from '~/common/logger'
 
 export class PathDefinitionResolver extends DefinitionResolver {
     private validator = buildSchema(packageV1)
     public async getPackageDefinition(version?: string): Promise<PackageDefinitionSummary> {
         const directory = this.getDefinitionPath()
 
-        let content: { content: PackageDefinitionSummary | undefined; path?: string } = {
+        let content: { content: PackageDefinition | undefined; path?: string } = {
             content: undefined,
         }
         try {
@@ -46,14 +48,15 @@ export class PathDefinitionResolver extends DefinitionResolver {
     private async getContent(
         directory: string,
         version?: string
-    ): Promise<{ content: PackageDefinitionSummary | undefined; path?: string }> {
+    ): Promise<{ content: PackageDefinition | undefined; path?: string }> {
+        logger.logfile.info(`Trying to read '${this.source.package.fullName}' from '${directory}`)
         for (const prefix of ['.', '']) {
             const json = join(directory, `${prefix}package.json`)
             const yml = join(directory, `${prefix}package.yml`)
             let pth: string | undefined
-            let content: PackageDefinitionSummary | undefined
+            let content: PackageDefinition | undefined
             if (await fs.pathExists(json)) {
-                content = (await this.loadFile(json)) as PackageDefinitionSummary
+                content = (await this.loadFile(json)) as PackageDefinition
                 pth = json
             } else if (await fs.pathExists(yml)) {
                 content = this.getYamlDefinition(
@@ -71,7 +74,7 @@ export class PathDefinitionResolver extends DefinitionResolver {
     private getYamlDefinition(
         yml: PackageSchema[],
         version?: string
-    ): PackageDefinitionSummary | undefined {
+    ): PackageDefinition | undefined {
         if (isArray(yml)) {
             if (this.isSingularYaml(yml)) {
                 return yml[0]

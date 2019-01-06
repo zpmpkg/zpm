@@ -1,4 +1,4 @@
-import { concat, flatten, get, isEmpty, reverse, set, toPairs, unzip } from 'lodash'
+import { concat, flatten, get, isEmpty, reverse, set, toPairs, unzip, has } from 'lodash'
 import * as Logic from 'logic-solver'
 import { logger } from '~/common/logger'
 import { VersionRange } from '~/common/range'
@@ -10,6 +10,7 @@ import { PackageDefinitionSummary } from '~/resolver/definition/packageDefinitio
 import { SourceVersions } from '~/resolver/source/sourceResolver'
 import { PackageGitEntry, PackagePathEntry } from '~/types/package.v1'
 import { isGitPackageEntry, isPathPackageEntry } from './package'
+import { SATSolution } from './solution'
 
 export interface SATOptions {
     branchHeuristic: boolean
@@ -39,6 +40,13 @@ export class SATSolver {
     public solver = new Logic.Solver()
     public loadedCache: { [k: string]: boolean } = {}
     public versions: { [k: string]: string } = {}
+    public termMap: {
+        git: { [k: string]: { package: Package; version: string; hash: string } }
+        path: { [k: string]: { package: Package } }
+    } = {
+        git: {},
+        path: {},
+    }
 
     public weights: SATWeights = { terms: [], weights: [] }
 
@@ -56,9 +64,9 @@ export class SATSolver {
         if (this.tryInsertPackage(hash)) {
             const versions = await pkg.resolver.getVersions()
             // console.log(versions)
-            this.addPackageVersions(hash, versions)
 
             if (versions.length > 0) {
+                this.addPackageVersions(hash, versions, pkg)
                 await Promise.all(
                     versions.map(async v => {
                         await this.addDefinition(
@@ -68,9 +76,13 @@ export class SATSolver {
                     })
                 )
             } else {
+                this.termMap.path[hash] = {
+                    package: pkg,
+                }
                 await this.addDefinition(
                     hash,
-                    await pkg.resolver.definitionResolver.getPackageDefinition()
+                    await pkg.resolver.definitionResolver.getPackageDefinition(),
+                    pkg
                 )
                 this.solver.require(Logic.exactlyOne(hash))
             }
@@ -80,7 +92,11 @@ export class SATSolver {
         return pkg.resolver.getVersions()
     }
 
-    public async addDefinition(hash: string, definition: PackageDefinitionSummary) {
+    public async addDefinition(
+        hash: string,
+        definition: PackageDefinitionSummary,
+        parent?: Package
+    ) {
         // this.solver.require(Logic.implies(hash))
         // logger.info(hash, definition, '@@@')
 
@@ -101,7 +117,7 @@ export class SATSolver {
                         .map((e): SATPathEntry => ({ description: e, type: p[0] }))
                 )
             ).map(async pkg => {
-                await this.addPathEntry(pkg)
+                await this.addPathEntry(pkg, parent!)
             }),
         ])
     }
@@ -111,13 +127,47 @@ export class SATSolver {
         console.log(this.solution.getTrueVars())
     }
 
-    public optimize() {
+    public optimize(): SATSolution {
         this.solution.ignoreUnknownVariables()
-        console.log(
-            this.solver
-                .minimizeWeightedSum(this.solution, this.weights.terms, this.weights.weights)
-                .getTrueVars()
-        )
+        const minimum = this.solver
+            .minimizeWeightedSum(this.solution, this.weights.terms, this.weights.weights)
+            .getTrueVars()
+
+        console.log(minimum)
+
+        const solution: SATSolution = {
+            git: {},
+            path: {},
+        }
+        if (minimum) {
+            minimum.forEach((term: string) => {
+                if (has(this.termMap.git, term)) {
+                    const pkg = this.termMap.git[term]
+                    if (!get(solution.git, pkg.package.manifest.type)) {
+                        set(solution.git, pkg.package.manifest.type, [])
+                    }
+                    solution.git[pkg.package.manifest.type].push({
+                        name: pkg.package.fullName,
+                        version: pkg.version,
+                        hash: pkg.hash,
+                    })
+                } else if (has(this.termMap.path, term)) {
+                    const pkg = this.termMap.path[term]
+                    if (!get(solution.path, pkg.package.manifest.type)) {
+                        set(solution.path, pkg.package.manifest.type, [])
+                    }
+
+                    solution.path[pkg.package.manifest.type].push({
+                        root: pkg.package.getRootName(),
+                        path: pkg.package.resolver.getPath(),
+                        name: pkg.package.getHash(),
+                    })
+                }
+            })
+        }
+        logger.log(solution)
+
+        return solution
     }
 
     public addPackageRequirements(value: SATRequirements) {
@@ -149,11 +199,17 @@ export class SATSolver {
         // onsole.log(this.solver.solve().getMap())
     }
 
-    public addPackageVersions(hash: string, versions: SourceVersions[]) {
+    public addPackageVersions(hash: string, versions: SourceVersions[], pkg: Package) {
         const newTerms = unzip(
             reverse(
                 versions.map(v => {
-                    return [this.toTerm(hash, v.version), v.version.cost]
+                    const term = this.toTerm(hash, v.version)
+                    this.termMap.git[term] = {
+                        package: pkg,
+                        version: v.version.toString(),
+                        hash: v.hash,
+                    }
+                    return [term, v.version.cost]
                 })
             )
         )
@@ -163,14 +219,16 @@ export class SATSolver {
             //this.solver.require(Logic.atMostOne(...newTerms[0]))
         }
     }
-    private async addPathEntry(pkg: SATPathEntry) {
+    private async addPathEntry(pkg: SATPathEntry, parent: Package) {
         const added = this.registries.addPackage(
             pkg.type,
             {
                 path: pkg.description.path,
             },
             {
+                root: parent.options.root || parent,
                 isRoot: false,
+                parent,
             }
         )
         try {

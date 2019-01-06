@@ -38,6 +38,8 @@ export abstract class SourceResolver {
 
     public abstract async getTags(): Promise<SourceVersions[]>
 
+    public abstract getPath(): string
+
     public abstract getName(): string
 
     public getExtractionPath(): string {

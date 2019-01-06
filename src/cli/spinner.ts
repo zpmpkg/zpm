@@ -97,7 +97,6 @@ export class Spinners {
             .join('\n')
         if (content.length > 0) {
             logUpdate(content)
-            //console.log(content)
         }
     }
 

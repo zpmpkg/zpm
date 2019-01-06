@@ -1,5 +1,7 @@
-import { fromPairs, get, map } from 'lodash'
-import { PackageGitEntry, PackagePathEntry } from '~/types/package.v1'
+// tslint:disable-next-line:ordered-imports
+import { fromPairs, get, map, keys, uniq } from 'lodash'
+// tslint:disable-next-line:ordered-imports
+import { PackageGitEntry, PackagePathEntry, PackageDefinition } from '~/types/package.v1'
 import { PackageOptions } from '../../registry/package'
 import { isPathPackageEntry, isGitPackageEntry } from '~/solver/package'
 
@@ -11,15 +13,17 @@ export interface PackageDefinitionSummary {
 }
 
 export function fromPackageDefinition(
-    pkg: PackageDefinitionSummary,
+    pkg: PackageDefinition,
     options: PackageOptions
 ): PackageDefinitionSummary {
-    // @todo: MOAR
-    const keys: string[] = ['libraries']
+    const types: string[] = uniq([
+        ...keys(get(pkg, 'production')),
+        ...keys(get(pkg, 'development')),
+    ])
     return {
         packages: {
             path: fromPairs(
-                map(keys, (k: string) => [
+                map(types, (k: string) => [
                     k,
                     map(
                         [
@@ -33,7 +37,7 @@ export function fromPackageDefinition(
                 ])
             ),
             git: fromPairs(
-                map(keys, (k: string) => [
+                map(types, (k: string) => [
                     k,
                     map(
                         [

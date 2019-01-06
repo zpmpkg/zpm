@@ -3,8 +3,11 @@ import { createSourceResolver, isGitEntry, isPathEntry } from '~/resolver/source
 import { SourceResolver } from '~/resolver/source/sourceResolver'
 import { RegistryEntry } from '~/types/definitions.v1'
 import { Manifest } from './manifest'
+import { normalize } from 'upath'
 
 export interface PackageOptions {
+    parent?: Package
+    root?: Package
     isRoot?: boolean
 }
 
@@ -15,11 +18,13 @@ export class Package {
     public resolver: SourceResolver
     public manifest: Manifest
     public options: PackageOptions
+    public entry: RegistryEntry
     private loaded: boolean = false
 
     constructor(manifest: Manifest, entry: RegistryEntry, options?: PackageOptions) {
         this.manifest = manifest
         this.resolver = createSourceResolver(entry, this)
+        this.entry = entry
         this.options = {
             isRoot: false,
             ...options,
@@ -31,7 +36,7 @@ export class Package {
             this.name = split[1]
             this.vendor = split[0]
         } else if (isPathEntry(entry)) {
-            this.fullName = entry.path
+            this.fullName = this.getFullName()
             this.name = path.basename(entry.path)
             this.vendor = 'Local'
         }
@@ -50,5 +55,24 @@ export class Package {
 
     public async extract(hash: string) {
         await this.resolver.extract(hash)
+    }
+
+    public getFullName(): string {
+        if (this.options.isRoot) {
+            return '$ROOT'
+        } else if (this.options.root) {
+            return `${this.getRootName()}:${normalize(this.resolver.getPath())}`
+        }
+        return this.resolver.getPath()
+    }
+
+    public getRootName(): string {
+        if (this.options.isRoot) {
+            return '$ROOT'
+        } else if (this.options.root) {
+            return this.options.root.options.isRoot ? '$ROOT' : this.options.root.fullName
+        } else {
+            throw new Error('This should not be called')
+        }
     }
 }

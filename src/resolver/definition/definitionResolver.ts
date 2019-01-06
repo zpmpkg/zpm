@@ -1,6 +1,6 @@
 import * as fs from 'fs-extra'
 import { loadJsonOrYaml } from '~/common/io'
-import { PackageSchema } from '~/types/package.v1'
+import { PackageSchema, PackageDefinition } from '~/types/package.v1'
 import { SourceResolver } from '../source/sourceResolver'
 import { PackageDefinitionSummary } from './packageDefinition'
 
@@ -17,9 +17,7 @@ export abstract class DefinitionResolver {
         return this.source.getDefinitionPath()
     }
 
-    public async loadFile(
-        file: string
-    ): Promise<PackageSchema[] | PackageDefinitionSummary | undefined> {
+    public async loadFile(file: string): Promise<PackageSchema[] | PackageDefinition | undefined> {
         let content
         if (await fs.pathExists(file)) {
             content = await loadJsonOrYaml(file)

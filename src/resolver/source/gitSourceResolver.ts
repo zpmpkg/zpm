@@ -9,6 +9,8 @@ import {
     cloneOrPull,
     CloneOrPullResult,
     showRef,
+    hasHash,
+    checkout,
 } from '~/common/git'
 //import { copy } from '~/common/io'
 import { logger } from '~/common/logger'
@@ -17,6 +19,7 @@ import { Version } from '~/common/version'
 import { SourceResolver } from '~/resolver/source/sourceResolver'
 import { GitDefinitionResolver } from '../definition/gitDefinitionResolver'
 import { PathDefinitionResolver } from '../definition/pathDefinitionResolver'
+import { isGitEntry } from './factory'
 
 export class GitSourceResolver extends SourceResolver {
     public loaded = false
@@ -117,6 +120,14 @@ export class GitSourceResolver extends SourceResolver {
             .filter(isDefined)
     }
 
+    public getPath(): string {
+        if (isGitEntry(this.package.entry)) {
+            return this.package.entry.name
+        } else {
+            throw new Error('not implemented')
+        }
+    }
+
     public getCachePath() {
         return join(
             environment.directory.packages,
@@ -127,20 +138,43 @@ export class GitSourceResolver extends SourceResolver {
     }
 
     public async extract(hash?: string): Promise<void> {
-        if (await this.needsExtraction(hash)) {
+        if (hash && (await this.needsExtraction(hash))) {
+            const spin = spinners.create(`Extracting ${this.package.fullName}`)
             try {
                 await fs.remove(this.getExtractionPath())
                 await fs.ensureDir(this.getExtractionPath())
-                // await copy(
-                //     (await this.definitionResolver.getPackageDefinition(hash)).includes,
-                //     this.getRepositoryPath(),
-                //     this.getExtractionPath()
-                // )
+
+                if (await this.ensureSourceHash(hash)) {
+                    await checkout(this.getRepositoryPath(), hash, { stream: spin.stream })
+                    // await copy(
+                    //     //     (await this.definitionResolver.getPackageDefinition(hash)).includes,
+                    //     ['**/*.h'],
+                    //     this.getRepositoryPath(),
+                    //     this.getExtractionPath()
+                    // )
+                } else {
+                    logger.error(
+                        `Failed to find hash '${hash}' on package '${this.package.fullName}'`
+                    )
+                }
+
+                console.log(await this.definitionResolver.getPackageDefinition(hash))
+
                 await this.writeExtractionHash(hash)
             } catch (err) {
                 logger.error(err)
             }
+            spin.succeed(`Extracted ${this.package.fullName}`)
         }
+    }
+
+    public async ensureSourceHash(hash: string) {
+        if (await hasHash(this.getRepositoryPath(), hash)) {
+            return true
+        } else {
+            throw new Error(`Repository '${this.package.fullName}' does not contain hash '${hash}'`)
+        }
+        return false
     }
 
     public mayPull() {

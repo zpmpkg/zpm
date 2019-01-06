@@ -174,6 +174,17 @@ export async function _hasSubmodules(destination: string): Promise<boolean> {
     )
 }
 
+export async function hasHash(destination: string, hash: string): Promise<boolean> {
+    try {
+        await git(destination)
+            .silent(true)
+            .raw(['reflog', 'show', hash])
+        return true
+    } catch (error) {
+        return false
+    }
+}
+
 export async function catFile(
     destination: string,
     options: string[] = []
@@ -188,17 +199,30 @@ export async function catFile(
     }
 }
 
-export async function checkout(destination: string, hash: string) {
+export async function checkout(
+    destination: string,
+    hash: string,
+    options: { branch?: string; stream?: NodeJS.WritableStream } = {}
+) {
     const current = await git(destination).revparse(['HEAD'])
     if (!current.includes(hash)) {
-        await git(destination).checkout([hash, '-f'])
+        await git(destination)
+            .outputHandler((command, stdout, stderr) => {
+                if (options.stream) {
+                    stdout.pipe(options.stream)
+                    stderr.pipe(options.stream)
+                }
+            })
+            .raw(`-c core.longpaths=true checkout ${hash} --force`)
         if (await _hasSubmodules(destination)) {
-            await git(destination).submoduleInit([
-                '--recursive',
-                '-j8',
-                '--recommend-shallow',
-                '--force',
-            ])
+            await git(destination)
+                .outputHandler((command, stdout, stderr) => {
+                    if (options.stream) {
+                        stdout.pipe(options.stream)
+                        stderr.pipe(options.stream)
+                    }
+                })
+                .submoduleInit(['--recursive', '-j8', '--recommend-shallow', '--force'])
         }
     }
 }

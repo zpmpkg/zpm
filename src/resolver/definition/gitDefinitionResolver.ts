@@ -4,6 +4,7 @@ import { logger } from '~/common/logger'
 import { isDefined } from '~/common/util'
 import { buildSchema, validateSchema } from '~/common/validation'
 import { packageV1 } from '~/schemas/schemas'
+import { PackageDefinition } from '~/types/package.v1'
 import { DefinitionResolver } from './definitionResolver'
 import { fromPackageDefinition, PackageDefinitionSummary } from './packageDefinition'
 
@@ -12,7 +13,7 @@ export class GitDefinitionResolver extends DefinitionResolver {
     public async getPackageDefinition(hash?: string): Promise<PackageDefinitionSummary> {
         const directory = this.getDefinitionPath()
 
-        let content: { content: PackageDefinitionSummary | undefined; path?: string } = {
+        let content: { content: PackageDefinition | undefined; path?: string } = {
             content: undefined,
         }
         try {
@@ -41,12 +42,12 @@ export class GitDefinitionResolver extends DefinitionResolver {
     private async getContent(
         directory: string,
         hash: string
-    ): Promise<{ content: PackageDefinitionSummary | undefined; path?: string }> {
+    ): Promise<{ content: PackageDefinition | undefined; path?: string }> {
         for (const prefix of ['.', '']) {
             for (const file of [`${prefix}package.json`, `${prefix}package.yml`]) {
                 const fileContents = await catFile(directory, ['-p', `${hash}:${file}`])
                 if (isDefined(fileContents)) {
-                    const content: PackageDefinitionSummary | undefined = safeLoad(fileContents)
+                    const content: PackageDefinition | undefined = safeLoad(fileContents)
                     return { content, path: file }
                 }
             }
