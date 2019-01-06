@@ -25,7 +25,7 @@ export abstract class SourceResolver {
         this.package = pkg
     }
 
-    public abstract async load(): Promise<void>
+    public abstract async load(): Promise<boolean>
     public abstract async extract(hash?: string): Promise<void>
 
     public abstract getDefinitionPath(): string

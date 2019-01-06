@@ -169,8 +169,14 @@ export async function _getBranchSHA1(destination: string, branch?: string) {
 
 export async function _hasSubmodules(destination: string): Promise<boolean> {
     return (
-        (await git(destination).raw('config --file .gitmodules --name-only --get-regexp path'))
-            .length > 0
+        (await git(destination).raw([
+            'config',
+            '--file',
+            '.gitmodules',
+            '--name-only',
+            '--get-regexp',
+            'path',
+        ])).length > 0
     )
 }
 
@@ -213,16 +219,16 @@ export async function checkout(
                     stderr.pipe(options.stream)
                 }
             })
-            .raw(`-c core.longpaths=true checkout ${hash} --force`)
+            .checkout([hash, '--force'])
         if (await _hasSubmodules(destination)) {
-            await git(destination)
-                .outputHandler((command, stdout, stderr) => {
-                    if (options.stream) {
-                        stdout.pipe(options.stream)
-                        stderr.pipe(options.stream)
-                    }
-                })
-                .submoduleInit(['--recursive', '-j8', '--recommend-shallow', '--force'])
+            // await git(destination)
+            //     .outputHandler((command, stdout, stderr) => {
+            //         if (options.stream) {
+            //             stdout.pipe(options.stream)
+            //             stderr.pipe(options.stream)
+            //         }
+            //     })
+            //     .submoduleInit(['--recursive', '-j8', '--recommend-shallow', '--force'])
         }
     }
 }

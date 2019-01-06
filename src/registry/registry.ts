@@ -1,7 +1,8 @@
 import * as fs from 'fs-extra'
 import gitUrlParse from 'git-url-parse'
 import { join } from 'upath'
-import { update } from '~/cli/program'
+import { askRegistry } from '~/cli/inquiries'
+import { headless, update } from '~/cli/program'
 import { spinners } from '~/cli/spinner'
 import { environment } from '~/common/environment'
 import { cloneOrPull, CloneOrPullResult } from '~/common/git'
@@ -36,7 +37,7 @@ export class Registry {
             }
         } else {
             this.directory = join(environment.directory.registries, shortHash(this.url))
-            if (this.mayPull()) {
+            if (await this.mayPull()) {
                 const spin = spinners.create(`Pulling registry ${this.url}`)
                 const fetched = await cloneOrPull(this.directory, this.url, {
                     branch: this.branch,
@@ -50,8 +51,11 @@ export class Registry {
         return []
     }
 
-    private mayPull() {
-        return update()
+    private async mayPull() {
+        return (
+            update() ||
+            (!(await fs.pathExists(this.directory!)) && (headless() || askRegistry(this.url)))
+        )
     }
 
     private getHitInfo(fetched: CloneOrPullResult): string {

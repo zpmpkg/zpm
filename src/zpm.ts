@@ -71,11 +71,11 @@ export class ZPM {
             spinners.start()
             const builder = new Builder(this.registries, this.root, lockFile)
             await builder.load()
-            spinners.stop()
         } else {
             logger.error(`We did not find a valid dependency graph, please check your requirements`)
         }
 
+        spinners.stop()
         return true
     }
 }

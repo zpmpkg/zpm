@@ -4,8 +4,9 @@ import { PathDefinitionResolver } from '../definition/pathDefinitionResolver'
 import { isPathEntry } from './factory'
 
 export class PathSourceResolver extends SourceResolver {
-    public async load(): Promise<void> {
+    public async load(): Promise<boolean> {
         this.definitionResolver = new PathDefinitionResolver(this)
+        return true
     }
     public getName(): string {
         return 'PATH'
