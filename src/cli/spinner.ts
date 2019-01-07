@@ -3,15 +3,18 @@ import symbols from 'log-symbols'
 import logUpdate from 'log-update'
 import { WritableStreamBuffer } from 'stream-buffers'
 import { logger } from '~/common/logger'
+import figures from 'figures'
 
 export class Spinner {
     public stream: WritableStreamBuffer = new WritableStreamBuffer()
     public spinner: any
     public text: string
-    public suffix!: string
-    public frame!: string
+    public suffix: string = ''
+    public frame: string = ''
     public frameIndex: number = 0
     public running: boolean = true
+    public children: Spinner[] = []
+
     constructor(text: string = '') {
         this.spinner = cliSpinners.dots
         this.text = text
@@ -37,9 +40,22 @@ export class Spinner {
         } else {
             this.frame = this.text
         }
+
+        const childText = this.children.map(c => c.render()).map(t => `  ${figures.play} ${t}\n`)
+
+        this.frame = `${this.frame}\n${childText}`.trimRight()
+
         if (oldFrame !== this.frame) {
             logger.logfile.info(this.frame)
         }
+
+        return this.frame
+    }
+
+    public addChild(text?: string) {
+        const child = new Spinner(text)
+        this.children.push(child)
+        return child
     }
 
     public stop() {

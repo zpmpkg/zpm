@@ -1,9 +1,9 @@
 import path from 'path'
+import { normalize } from 'upath'
 import { createSourceResolver, isGitEntry, isPathEntry } from '~/resolver/source/factory'
 import { SourceResolver } from '~/resolver/source/sourceResolver'
 import { RegistryEntry } from '~/types/definitions.v1'
 import { Manifest } from './manifest'
-import { normalize } from 'upath'
 
 export interface PackageOptions {
     parent?: Package

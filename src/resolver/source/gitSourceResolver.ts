@@ -143,13 +143,13 @@ export class GitSourceResolver extends SourceResolver {
 
     public async extract(hash?: string): Promise<void> {
         if (hash && (await this.needsExtraction(hash))) {
-            const spin = spinners.create(`Extracting ${this.package.fullName}`)
+            const spin = spinners.create(`Extracting '${this.package.fullName}@${hash}':`)
             try {
                 await fs.remove(this.getExtractionPath())
                 await fs.ensureDir(this.getExtractionPath())
 
                 if (await this.ensureSourceHash(hash)) {
-                    await checkout(this.getRepositoryPath(), hash, { stream: spin.stream })
+                    await checkout(this.getRepositoryPath(), hash, { spinner: spin })
                     // await copy(
                     //     //     (await this.definitionResolver.getPackageDefinition(hash)).includes,
                     //     ['**/*.h'],
@@ -168,7 +168,7 @@ export class GitSourceResolver extends SourceResolver {
             } catch (err) {
                 logger.error(err)
             }
-            spin.succeed(`Extracted ${this.package.fullName}`)
+            spin.succeed(`Extracted '${this.package.fullName}'`)
         }
     }
 

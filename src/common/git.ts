@@ -1,6 +1,8 @@
 import * as fs from 'fs-extra'
 import { toSafeInteger } from 'lodash'
 import simplegit, { Options } from 'simple-git/promise'
+import { force } from '~/cli/program'
+import { Spinner } from '~/cli/spinner'
 import { storage } from './storage'
 import { isDefined, shorten } from './util'
 
@@ -168,16 +170,15 @@ export async function _getBranchSHA1(destination: string, branch?: string) {
 }
 
 export async function _hasSubmodules(destination: string): Promise<boolean> {
-    return (
-        (await git(destination).raw([
-            'config',
-            '--file',
-            '.gitmodules',
-            '--name-only',
-            '--get-regexp',
-            'path',
-        ])).length > 0
-    )
+    const output = await git(destination).raw([
+        'config',
+        '--file',
+        '.gitmodules',
+        '--name-only',
+        '--get-regexp',
+        'path',
+    ])
+    return isDefined(output) && output.length > 0
 }
 
 export async function hasHash(destination: string, hash: string): Promise<boolean> {
@@ -208,27 +209,42 @@ export async function catFile(
 export async function checkout(
     destination: string,
     hash: string,
-    options: { branch?: string; stream?: NodeJS.WritableStream } = {}
+    options: { branch?: string; spinner?: Spinner } = {}
 ) {
     const current = await git(destination).revparse(['HEAD'])
-    if (!current.includes(hash)) {
+    if (!current.includes(hash) || force()) {
         await git(destination)
             .outputHandler((command, stdout, stderr) => {
-                if (options.stream) {
-                    stdout.pipe(options.stream)
-                    stderr.pipe(options.stream)
+                if (options.spinner) {
+                    stdout.pipe(options.spinner.stream)
+                    stderr.pipe(options.spinner.stream)
                 }
             })
             .checkout([hash, '--force'])
         if (await _hasSubmodules(destination)) {
-            // await git(destination)
-            //     .outputHandler((command, stdout, stderr) => {
-            //         if (options.stream) {
-            //             stdout.pipe(options.stream)
-            //             stderr.pipe(options.stream)
-            //         }
-            //     })
-            //     .submoduleInit(['--recursive', '-j8', '--recommend-shallow', '--force'])
+            const spin = options.spinner ? options.spinner.addChild('') : undefined
+            await git(destination)
+                .outputHandler((command, stdout, stderr) => {
+                    if (spin) {
+                        stdout.pipe(spin.stream)
+                        stderr.pipe(spin.stream)
+                    }
+                })
+                .raw([
+                    '-c',
+                    'core.longpaths=true',
+                    'submodule',
+                    'update',
+                    '--checkout',
+                    '-j',
+                    '16',
+                    '--force',
+                    '--progress',
+                ])
+
+            if (spin) {
+                spin.succeed(`Extracted submodules`)
+            }
         }
     }
 }

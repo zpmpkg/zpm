@@ -3,6 +3,7 @@ import { isDefined } from '~/common/util'
 import { Package } from '~/registry/package'
 import { Registries } from '~/registry/registries'
 import { SATSolution } from '~/solver/solution'
+import { logger } from '~/common/logger'
 
 export class Builder {
     public registries: Registries
@@ -20,12 +21,18 @@ export class Builder {
             ...keys(get(this.lockFile, 'path')),
         ])
         for (const type of types) {
-            for (const pkg of this.lockFile.git.libraries) {
-                const found: Package = get(this.registries.manifests, [type, 'entries', pkg.name])
-                if (isDefined(found)) {
-                    await found.extract(pkg.hash)
-                }
-            }
+            await Promise.all(
+                this.lockFile.git.libraries.map(async pkg => {
+                    const found: Package = get(this.registries.manifests, [
+                        type,
+                        'entries',
+                        pkg.name,
+                    ])
+                    if (isDefined(found)) {
+                        await found.extract(pkg.hash)
+                    }
+                })
+            )
         }
     }
 }
