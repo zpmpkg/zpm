@@ -5,12 +5,21 @@ import { filter } from 'lodash'
 import path from 'path'
 import { join, relative } from 'upath'
 
+export async function loadJson(file: string) {
+    const content = await fs.readFile(file)
+    return JSON.parse(content.toString())
+}
+
 export async function loadJsonOrYaml(file: string) {
     const content = await fs.readFile(file)
     if (file.endsWith('json')) {
         return JSON.parse(content.toString())
     }
     return safeLoadAll(content.toString())
+}
+export async function writeJson(file: string, object: any) {
+    await fs.writeFile(file, JSON.stringify(object, undefined, 2))
+    return true
 }
 
 export async function copy(source: string | string[], root: string, destination: string) {

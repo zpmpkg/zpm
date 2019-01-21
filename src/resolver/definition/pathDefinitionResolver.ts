@@ -1,15 +1,15 @@
 import * as fs from 'fs-extra'
 import { find, has, isArray } from 'lodash'
 import { join } from 'upath'
+import { logger } from '~/common/logger'
 import { VersionRange } from '~/common/range'
 import { isDefined } from '~/common/util'
 import { buildSchema, validateSchema } from '~/common/validation'
 import { packageV1 } from '~/schemas/schemas'
 // tslint:disable-next-line:ordered-imports
-import { PackageSchema, PackageDefinition } from '~/types/package.v1'
+import { PackageDefinition, PackageSchema } from '~/types/package.v1'
 import { DefinitionResolver } from './definitionResolver'
 import { fromPackageDefinition, PackageDefinitionSummary } from './packageDefinition'
-import { logger } from '~/common/logger'
 
 export class PathDefinitionResolver extends DefinitionResolver {
     private validator = buildSchema(packageV1)

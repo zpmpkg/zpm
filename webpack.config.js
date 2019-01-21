@@ -14,7 +14,7 @@ module.exports = {
         path: path.join(__dirname, 'build'),
         filename: '[name].js',
     },
-    mode: 'production',
+    mode: 'requires',
     devtool: 'inline-source-map',
     target: 'node',
     module: {

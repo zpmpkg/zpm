@@ -27,7 +27,7 @@
         "development": {
           "$ref": "#/definitions/PackageEntries"
         },
-        "production": {
+        "requires": {
           "$ref": "#/definitions/PackageEntries"
         }
       }

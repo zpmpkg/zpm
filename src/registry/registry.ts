@@ -6,6 +6,7 @@ import { headless, update } from '~/cli/program'
 import { spinners } from '~/cli/spinner'
 import { environment } from '~/common/environment'
 import { cloneOrPull, CloneOrPullResult } from '~/common/git'
+import { logger } from '~/common/logger'
 import { shortHash } from '~/common/util'
 import { RegistryDefinition } from '~/types/definitions.v1'
 
@@ -27,12 +28,10 @@ export class Registry {
         }
 
         if (gitUrlParse(this.url).protocol === 'file') {
-            const spin = spinners.create(`Loading registry ${this.url}`)
             if (await fs.pathExists(this.url)) {
                 this.directory = this.url
-                spin.succeed(`Loaded registry '${this.url}'`)
             } else {
-                spin.fail(`We do not support file protocol for registry: ${this.url}`)
+                logger.error(`We do not support file protocol for registry: ${this.url}`)
                 this.valid = false
             }
         } else {

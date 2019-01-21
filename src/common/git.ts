@@ -1,7 +1,6 @@
 import * as fs from 'fs-extra'
 import { toSafeInteger } from 'lodash'
 import simplegit, { Options } from 'simple-git/promise'
-import { force } from '~/cli/program'
 import { Spinner } from '~/cli/spinner'
 import { storage } from './storage'
 import { isDefined, shorten } from './util'
@@ -212,17 +211,27 @@ export async function checkout(
     options: { branch?: string; spinner?: Spinner } = {}
 ) {
     const current = await git(destination).revparse(['HEAD'])
-    if (!current.includes(hash) || force()) {
+    if (!current.includes(hash)) {
+        const checkoutSpin = options.spinner
+            ? options.spinner.addChild('Checking out hash')
+            : undefined
         await git(destination)
             .outputHandler((command, stdout, stderr) => {
-                if (options.spinner) {
-                    stdout.pipe(options.spinner.stream)
-                    stderr.pipe(options.spinner.stream)
+                if (checkoutSpin) {
+                    stdout.pipe(checkoutSpin.stream)
+                    stderr.pipe(checkoutSpin.stream)
                 }
             })
             .checkout([hash, '--force'])
+
+        if (checkoutSpin) {
+            checkoutSpin.succeed('Checked out repository')
+        }
+
         if (await _hasSubmodules(destination)) {
-            const spin = options.spinner ? options.spinner.addChild('') : undefined
+            const spin = options.spinner
+                ? options.spinner.addChild('Checking out submodules')
+                : undefined
             await git(destination)
                 .outputHandler((command, stdout, stderr) => {
                     if (spin) {

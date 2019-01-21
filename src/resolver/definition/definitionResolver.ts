@@ -1,6 +1,6 @@
 import * as fs from 'fs-extra'
 import { loadJsonOrYaml } from '~/common/io'
-import { PackageSchema, PackageDefinition } from '~/types/package.v1'
+import { PackageDefinition, PackageSchema } from '~/types/package.v1'
 import { SourceResolver } from '../source/sourceResolver'
 import { PackageDefinitionSummary } from './packageDefinition'
 

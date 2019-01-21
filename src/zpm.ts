@@ -1,15 +1,15 @@
 import { Configuration } from '~/common/config'
 import { environment, loadEnvironment } from '~/common/environment'
 import { Registries } from '~/registry/registries'
+import { Builder } from './builder/builder'
 import { loadCLI } from './cli/program'
+import { spinners } from './cli/spinner'
 import { logger } from './common/logger'
 import { storage } from './common/storage'
+import { isDefined } from './common/util'
 import { Package } from './registry/package'
 import { SATSolver } from './solver/sat'
-import { spinners } from './cli/spinner'
 import { SATSolution } from './solver/solution'
-import { isDefined } from './common/util'
-import { Builder } from './builder/builder'
 
 export class ZPM {
     public root!: Package
@@ -48,34 +48,40 @@ export class ZPM {
             return false
         }
 
+        const solver = new SATSolver(this.registries)
         let lockFile: SATSolution | undefined
         try {
             spinners.start()
-            const solver = new SATSolver(this.registries)
             await solver.addPackage(this.root)
 
             spinners.stop()
-
-            solver.solve()
-            lockFile = solver.optimize()
+            await solver.load()
+            lockFile = await solver.optimize()
+            spinners.stop()
         } catch (error) {
+            spinners.stop()
             logger.error(
                 `Failed to resolve the dependency graph:\n\n${error.message}\n${error.stack}`
             )
             return false
-        } finally {
-            spinners.stop()
         }
 
         if (isDefined(lockFile)) {
             spinners.start()
+
             const builder = new Builder(this.registries, this.root, lockFile)
             await builder.load()
+
+            await builder.extract()
+
+            await solver.save()
+
+            spinners.stop()
         } else {
+            await solver.rollback()
             logger.error(`We did not find a valid dependency graph, please check your requirements`)
         }
 
-        spinners.stop()
         return true
     }
 }

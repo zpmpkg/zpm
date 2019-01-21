@@ -53,3 +53,10 @@ compile(readSchema('src/schemas/package.v1.json'), 'PackageSchema', {
     style: prettier,
     bannerComment: `\nimport {${definitionKeys.join(', ')}} from './definitions.v1'`,
 }).then(ts => writeFileSync('src/types/package.v1.ts', ts))
+
+compile(readSchema('src/schemas/lockfile.v1.json'), 'LockfileSchema', {
+    unreachableDefinitions: false,
+    declareExternallyReferenced: true,
+    style: prettier,
+    bannerComment: `\nimport {${definitionKeys.join(', ')}} from './definitions.v1'`,
+}).then(ts => writeFileSync('src/types/lockfile.v1.ts', ts))

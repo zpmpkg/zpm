@@ -5,14 +5,15 @@ import { headless, update } from '~/cli/program'
 import { spinners } from '~/cli/spinner'
 import { environment } from '~/common/environment'
 import {
+    checkout,
     cloneOrFetch,
     CloneOrFetchResult,
     cloneOrPull,
     CloneOrPullResult,
-    showRef,
     hasHash,
-    checkout,
+    showRef,
 } from '~/common/git'
+import { copy } from '~/common/io'
 // import { copy } from '~/common/io'
 import { logger } from '~/common/logger'
 import { isDefined } from '~/common/util'
@@ -150,19 +151,28 @@ export class GitSourceResolver extends SourceResolver {
 
                 if (await this.ensureSourceHash(hash)) {
                     await checkout(this.getRepositoryPath(), hash, { spinner: spin })
-                    // await copy(
-                    //     //     (await this.definitionResolver.getPackageDefinition(hash)).includes,
-                    //     ['**/*.h'],
-                    //     this.getRepositoryPath(),
-                    //     this.getExtractionPath()
-                    // )
+                    await copy(
+                        //     (await this.definitionResolver.getPackageDefinition(hash)).includes,
+                        [
+                            '**/*.h',
+                            '**/*.cpp',
+                            '**/*.cc',
+                            '**/*.cxx',
+                            '**/*.c',
+                            '**/*.s',
+                            '**/*.m',
+                            '**/*.mm',
+                        ],
+                        this.getRepositoryPath(),
+                        this.getExtractionPath()
+                    )
                 } else {
                     logger.error(
                         `Failed to find hash '${hash}' on package '${this.package.fullName}'`
                     )
                 }
 
-                //console.log(await this.definitionResolver.getPackageDefinition(hash))
+                // console.log(await this.definitionResolver.getPackageDefinition(hash))
 
                 await this.writeExtractionHash(hash)
             } catch (err) {

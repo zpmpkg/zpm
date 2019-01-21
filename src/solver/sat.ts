@@ -1,14 +1,34 @@
-import { concat, flatten, get, isEmpty, reverse, set, toPairs, unzip, has } from 'lodash'
+import { pathExists } from 'fs-extra'
+import {
+    concat,
+    flatten,
+    get,
+    has,
+    isEmpty,
+    keys,
+    reverse,
+    set,
+    toPairs,
+    uniq,
+    unzip,
+} from 'lodash'
 import * as Logic from 'logic-solver'
+import { join } from 'upath'
+import { update } from '~/cli/program'
+import { loadJson, writeJson } from '~/common/io'
 import { logger } from '~/common/logger'
 import { VersionRange } from '~/common/range'
 import { isDefined } from '~/common/util'
 import { Version } from '~/common/version'
 import { Package } from '~/registry/package'
 import { Registries } from '~/registry/registries'
-import { PackageDefinitionSummary } from '~/resolver/definition/packageDefinition'
+import {
+    PackageDefinitionSummary,
+    PackageGitSummary,
+    PackagePathSummary,
+} from '~/resolver/definition/packageDefinition'
 import { SourceVersions } from '~/resolver/source/sourceResolver'
-import { PackageGitEntry, PackagePathEntry } from '~/types/package.v1'
+import { LockfileSchema } from '~/types/lockfile.v1'
 import { isGitPackageEntry, isPathPackageEntry } from './package'
 import { SATSolution } from './solution'
 
@@ -28,11 +48,11 @@ export interface SATRequirements {
 }
 
 export interface SATGitEntry {
-    description: PackageGitEntry
+    description: PackageGitSummary
     type: string
 }
 export interface SATPathEntry {
-    description: PackagePathEntry
+    description: PackagePathSummary
     type: string
 }
 
@@ -41,8 +61,18 @@ export class SATSolver {
     public loadedCache: { [k: string]: boolean } = {}
     public versions: { [k: string]: string } = {}
     public termMap: {
-        git: { [k: string]: { package: Package; version: string; hash: string } }
-        path: { [k: string]: { package: Package } }
+        git: {
+            [k: string]: {
+                package: Package
+                version: string
+                hash: string
+            }
+        }
+        path: {
+            [k: string]: {
+                package: Package
+            }
+        }
     } = {
         git: {},
         path: {},
@@ -51,11 +81,53 @@ export class SATSolver {
     public weights: SATWeights = { terms: [], weights: [] }
 
     public solution: any
+    public lockContent: LockfileSchema | undefined
 
     public registries: Registries
+    public assumptions: string[] | undefined
+    public minimize: boolean = true
 
     constructor(registries: Registries) {
         this.registries = registries
+    }
+
+    public async load(): Promise<boolean> {
+        this.lockContent = await this.getLockFile()
+
+        if (isDefined(this.lockContent)) {
+            const types: string[] = uniq([
+                ...keys(get(this.lockContent, 'git')),
+                ...keys(get(this.lockContent, 'path')),
+            ])
+            this.assumptions = []
+            for (const type of types) {
+                this.lockContent.git[type].forEach(pkg => {
+                    const found: Package = get(this.registries.manifests, [
+                        type,
+                        'entries',
+                        pkg.name,
+                    ])
+                    if (isDefined(found)) {
+                        this.assumptions!.push(
+                            this.toTerm(found.getHash(), new Version(pkg.version))
+                        )
+                    } else {
+                        // @todo
+                    }
+                })
+            }
+        }
+        return true
+    }
+
+    public async save() {
+        if (isDefined(this.lockContent)) {
+            await writeJson(this.getLockFilePath(), this.lockContent)
+        }
+    }
+
+    public async rollback() {
+        //
     }
 
     public async addPackage(pkg: Package): Promise<SourceVersions[]> {
@@ -76,14 +148,11 @@ export class SATSolver {
                     })
                 )
             } else {
+                const definition = await pkg.resolver.definitionResolver.getPackageDefinition()
                 this.termMap.path[hash] = {
                     package: pkg,
                 }
-                await this.addDefinition(
-                    hash,
-                    await pkg.resolver.definitionResolver.getPackageDefinition(),
-                    pkg
-                )
+                await this.addDefinition(hash, definition, pkg)
                 this.solver.require(Logic.exactlyOne(hash))
             }
             // await this.addDefinition(hash, pkg.resolver.definitionResolver.getPackageDefinition())
@@ -122,16 +191,22 @@ export class SATSolver {
         ])
     }
 
-    public solve() {
-        this.solution = this.solver.solve()
-        console.log(this.solution.getTrueVars())
-    }
+    public async optimize(): Promise<SATSolution> {
+        if (isDefined(this.assumptions)) {
+            this.solution = this.solver.solveAssuming(Logic.and(...this.assumptions))
+            this.minimize = update()
+        }
 
-    public optimize(): SATSolution {
+        if (!isDefined(this.solution)) {
+            this.solution = this.solver.solve()
+        }
+
         this.solution.ignoreUnknownVariables()
-        const minimum = this.solver
-            .minimizeWeightedSum(this.solution, this.weights.terms, this.weights.weights)
-            .getTrueVars()
+        const minimum = this.minimize
+            ? this.solver
+                  .minimizeWeightedSum(this.solution, this.weights.terms, this.weights.weights)
+                  .getTrueVars()
+            : this.solution.getTrueVars()
 
         console.log(minimum)
 
@@ -140,33 +215,47 @@ export class SATSolver {
             path: {},
         }
         if (minimum) {
-            minimum.forEach((term: string) => {
-                if (has(this.termMap.git, term)) {
-                    const pkg = this.termMap.git[term]
-                    if (!get(solution.git, pkg.package.manifest.type)) {
-                        set(solution.git, pkg.package.manifest.type, [])
-                    }
-                    solution.git[pkg.package.manifest.type].push({
-                        name: pkg.package.fullName,
-                        version: pkg.version,
-                        hash: pkg.hash,
-                    })
-                } else if (has(this.termMap.path, term)) {
-                    const pkg = this.termMap.path[term]
-                    if (!get(solution.path, pkg.package.manifest.type)) {
-                        set(solution.path, pkg.package.manifest.type, [])
-                    }
+            await Promise.all(
+                minimum.map(async (term: string) => {
+                    if (has(this.termMap.git, term)) {
+                        const pkg = this.termMap.git[term]
+                        //const description = await pkg.description()
+                        if (!get(solution.git, pkg.package.manifest.type)) {
+                            set(solution.git, pkg.package.manifest.type, [])
+                        }
+                        solution.git[pkg.package.manifest.type].push({
+                            name: pkg.package.fullName,
+                            version: pkg.version,
+                            hash: pkg.hash,
+                            // meta: {
+                            //     settingList: [],
+                            //     settings: {},
+                            //     //description,
+                            // },
+                        })
+                    } else if (has(this.termMap.path, term)) {
+                        const pkg = this.termMap.path[term]
+                        //const description = await pkg.description()
+                        if (!get(solution.path, pkg.package.manifest.type)) {
+                            set(solution.path, pkg.package.manifest.type, [])
+                        }
 
-                    solution.path[pkg.package.manifest.type].push({
-                        root: pkg.package.getRootName(),
-                        path: pkg.package.resolver.getPath(),
-                        name: pkg.package.getHash(),
-                    })
-                }
-            })
+                        solution.path[pkg.package.manifest.type].push({
+                            root: pkg.package.getRootName(),
+                            path: pkg.package.resolver.getPath(),
+                            name: pkg.package.getHash(),
+                            // meta: {
+                            //     settingList: [],
+                            //     settings: {},
+                            //     //description,
+                            // },
+                        })
+                    }
+                })
+            )
         }
-        logger.log(solution)
-
+        // logger.log(solution)
+        this.lockContent = solution
         return solution
     }
 
@@ -208,6 +297,11 @@ export class SATSolver {
                         package: pkg,
                         version: v.version.toString(),
                         hash: v.hash,
+                        // description: async () => {
+                        //     return (await pkg.resolver.definitionResolver.getPackageDefinition(
+                        //         v.hash
+                        //     )).description
+                        // },
                     }
                     return [term, v.version.cost]
                 })
@@ -216,9 +310,23 @@ export class SATSolver {
         if (!isEmpty(newTerms[0]) && !isEmpty(newTerms[1])) {
             this.weights.terms = concat(this.weights.terms || [], newTerms[0] as string[])
             this.weights.weights = concat(this.weights.weights || [], newTerms[1] as number[])
-            //this.solver.require(Logic.atMostOne(...newTerms[0]))
+            // this.solver.require(Logic.atMostOne(...newTerms[0]))
         }
     }
+
+    public async getLockFile(): Promise<LockfileSchema | undefined> {
+        const file = this.getLockFilePath()
+        let content
+        if (await pathExists(file)) {
+            content = await loadJson(file)
+        }
+        return content
+    }
+
+    private getLockFilePath() {
+        return join(process.cwd(), '.package.lock')
+    }
+
     private async addPathEntry(pkg: SATPathEntry, parent: Package) {
         const added = this.registries.addPackage(
             pkg.type,
@@ -240,7 +348,7 @@ export class SATSolver {
                 }`
             )
         }
-        //console.log(added)
+        // console.log(added)
         await this.addPackage(added)
     }
 

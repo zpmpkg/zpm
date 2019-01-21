@@ -1,9 +1,9 @@
 import cliSpinners from 'cli-spinners'
+import figures from 'figures'
 import symbols from 'log-symbols'
 import logUpdate from 'log-update'
 import { WritableStreamBuffer } from 'stream-buffers'
 import { logger } from '~/common/logger'
-import figures from 'figures'
 
 export class Spinner {
     public stream: WritableStreamBuffer = new WritableStreamBuffer()
@@ -36,7 +36,9 @@ export class Spinner {
             const frame = this.spinner.frames[this.frameIndex]
             this.frameIndex = ++this.frameIndex % this.spinner.frames.length
 
-            this.frame = `${frame} ${this.text} ${this.suffix}`
+            this.frame = this.text
+                ? `${frame} ${this.text} ${this.suffix}`
+                : `${frame} ${this.suffix}`
         } else {
             this.frame = this.text
         }

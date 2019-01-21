@@ -2,21 +2,79 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "type": "object",
   "properties": {
-    "registries": {
-      "type": "array",
-      "items": {
-        "$ref": "#/definitions/RegistryDefinition"
+    "git": {
+      "type": "object",
+      "patternProperties": {
+        "\\w+": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/GitLock"
+          },
+          "additionalItems": false
+        }
       },
-      "additionalItems": false
+      "additionalProperties": false
     },
-    "registry": {}
+    "path": {
+      "type": "object",
+      "patternProperties": {
+        "\\w+": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/PathLock"
+          },
+          "additionalItems": false
+        }
+      },
+      "additionalProperties": false
+    }
   },
+  "additionalProperties": false,
   "required": [
-    "registries"
+    "git",
+    "path"
   ],
   "definitions": {
-    "ConfigurationRegistries": {
-      "type": "object"
+    "GitLock": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "pattern": "^([a-zA-Z0-9_-]{2,50}/[a-zA-Z0-9_-]{2,50})$"
+        },
+        "version": {
+          "type": "string"
+        },
+        "hash": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "version",
+        "hash"
+      ]
+    },
+    "PathLock": {
+      "type": "object",
+      "properties": {
+        "root": {
+          "type": "string"
+        },
+        "path": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "root",
+        "path",
+        "name"
+      ]
     }
   }
 }

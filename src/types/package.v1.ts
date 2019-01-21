@@ -8,7 +8,7 @@ export type PackageEntry = PackageGitEntry | PackagePathEntry
 
 export interface PackageDefinition {
     development?: PackageEntries
-    production?: PackageEntries
+    requires?: PackageEntries
     [k: string]: any
 }
 export interface PackageEntries {
@@ -18,12 +18,10 @@ export interface PackageEntries {
      */
     [k: string]: PackageEntry[]
 }
-
 export interface PackageGitEntry {
     name: string
     version: string
 }
-
 export interface PackagePathEntry {
     path: string
 }
