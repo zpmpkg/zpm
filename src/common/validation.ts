@@ -21,18 +21,16 @@ export function validateSchema<T, R = T>(
         throw: true,
         ...(options || {}),
     }
-    if (schema) {
-        const validate = options.validator || buildSchema(schema)
-        if (!validate(instance)) {
-            if (options.throw) {
-                throw new Error(
-                    `Failed to validate${
-                        options.origin ? ` ${options.origin}` : ''
-                    }:\n\n${betterAjvErrors(schema, instance, [validate.errors![0]], {
-                        indent: 2,
-                    })}`
-                )
-            }
+    const validate = options.validator || buildSchema(schema)
+    if (!validate(instance)) {
+        if (options.throw) {
+            throw new Error(
+                `Failed to validate${
+                    options.origin ? ` ${options.origin}` : ''
+                }:\n\n${betterAjvErrors(schema, instance, [validate.errors![0]], {
+                    indent: 2,
+                })}`
+            )
         }
     }
     return (instance as unknown) as R

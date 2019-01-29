@@ -11,26 +11,31 @@ import {
     toPairs,
     uniq,
     unzip,
+    merge,
 } from 'lodash'
 import * as Logic from 'logic-solver'
-import { join } from 'upath'
+import { join, normalize } from 'upath'
 import { update } from '~/cli/program'
 import { loadJson, writeJson } from '~/common/io'
 import { logger } from '~/common/logger'
 import { VersionRange } from '~/common/range'
 import { isDefined } from '~/common/util'
+import { buildSchema, validateSchema } from '~/common/validation'
 import { Version } from '~/common/version'
 import { Package } from '~/registry/package'
 import { Registries } from '~/registry/registries'
 import {
     PackageDefinitionSummary,
-    PackageGitSummary,
-    PackagePathSummary,
+    PackageDescription,
 } from '~/resolver/definition/packageDefinition'
 import { SourceVersions } from '~/resolver/source/sourceResolver'
+import { lockFileV1 } from '~/schemas/schemas'
+import { RegistryPathEntry } from '~/types/definitions.v1'
 import { LockfileSchema } from '~/types/lockfile.v1'
 import { isGitPackageEntry, isPathPackageEntry } from './package'
 import { SATSolution } from './solution'
+import { PackageGitEntry, PackagePathEntry } from '~/types/package.v1'
+import { minBy } from 'lodash'
 
 export interface SATOptions {
     branchHeuristic: boolean
@@ -48,11 +53,11 @@ export interface SATRequirements {
 }
 
 export interface SATGitEntry {
-    description: PackageGitSummary
+    description: PackageGitEntry
     type: string
 }
 export interface SATPathEntry {
-    description: PackagePathSummary
+    description: PackagePathEntry
     type: string
 }
 
@@ -66,11 +71,17 @@ export class SATSolver {
                 package: Package
                 version: string
                 hash: string
+                description: PackageDescription
+                settings: { [k: string]: any }
+                // roots: Set<string>
             }
         }
         path: {
             [k: string]: {
                 package: Package
+                description: PackageDescription
+                settings: { [k: string]: any }
+                // root: string
             }
         }
     } = {
@@ -86,6 +97,7 @@ export class SATSolver {
     public registries: Registries
     public assumptions: string[] | undefined
     public minimize: boolean = true
+    private lockValidator = buildSchema(lockFileV1)
 
     constructor(registries: Registries) {
         this.registries = registries
@@ -120,25 +132,23 @@ export class SATSolver {
         return true
     }
 
-    public async save() {
+    public async save(): Promise<void> {
         if (isDefined(this.lockContent)) {
             await writeJson(this.getLockFilePath(), this.lockContent)
         }
     }
 
-    public async rollback() {
+    public async rollback(): Promise<void> {
         //
     }
 
     public async addPackage(pkg: Package): Promise<SourceVersions[]> {
         const hash = pkg.getHash()
-        // console.log('%%%%%%%%%%%%%%', hash)
         if (this.tryInsertPackage(hash)) {
             const versions = await pkg.resolver.getVersions()
-            // console.log(versions)
 
             if (versions.length > 0) {
-                this.addPackageVersions(hash, versions, pkg)
+                await this.addPackageVersions(hash, versions, pkg)
                 await Promise.all(
                     versions.map(async v => {
                         await this.addDefinition(
@@ -149,10 +159,14 @@ export class SATSolver {
                 )
             } else {
                 const definition = await pkg.resolver.definitionResolver.getPackageDefinition()
-                this.termMap.path[hash] = {
-                    package: pkg,
+                if (!has(this.termMap.path, hash)) {
+                    this.termMap.path[hash] = {
+                        package: pkg,
+                        description: definition.description,
+                        settings: {},
+                    }
                 }
-                await this.addDefinition(hash, definition, pkg)
+                await this.addDefinition(hash, definition, { package: pkg, hash })
                 this.solver.require(Logic.exactlyOne(hash))
             }
             // await this.addDefinition(hash, pkg.resolver.definitionResolver.getPackageDefinition())
@@ -164,11 +178,8 @@ export class SATSolver {
     public async addDefinition(
         hash: string,
         definition: PackageDefinitionSummary,
-        parent?: Package
+        parent?: { package: Package; hash: string }
     ) {
-        // this.solver.require(Logic.implies(hash))
-        // logger.info(hash, definition, '@@@')
-
         await Promise.all([
             ...flatten(
                 toPairs(definition.packages.git).map(p =>
@@ -177,7 +188,7 @@ export class SATSolver {
                         .map((e): SATGitEntry => ({ description: e, type: p[0] }))
                 )
             ).map(async pkg => {
-                await this.addGitEntry(pkg, hash)
+                await this.addGitEntry(pkg, hash, parent)
             }),
             ...flatten(
                 toPairs(definition.packages.path).map(p =>
@@ -186,7 +197,7 @@ export class SATSolver {
                         .map((e): SATPathEntry => ({ description: e, type: p[0] }))
                 )
             ).map(async pkg => {
-                await this.addPathEntry(pkg, parent!)
+                await this.addPathEntry(pkg, hash, parent!)
             }),
         ])
     }
@@ -194,7 +205,7 @@ export class SATSolver {
     public async optimize(): Promise<SATSolution> {
         if (isDefined(this.assumptions)) {
             this.solution = this.solver.solveAssuming(Logic.and(...this.assumptions))
-            this.minimize = update()
+            this.minimize = this.solution || update()
         }
 
         if (!isDefined(this.solution)) {
@@ -202,40 +213,35 @@ export class SATSolver {
         }
 
         this.solution.ignoreUnknownVariables()
-        const minimum = this.minimize
+        const minimum: string[] | undefined = this.minimize
             ? this.solver
                   .minimizeWeightedSum(this.solution, this.weights.terms, this.weights.weights)
                   .getTrueVars()
             : this.solution.getTrueVars()
-
-        console.log(minimum)
 
         const solution: SATSolution = {
             git: {},
             path: {},
         }
         if (minimum) {
+            // make settings stable
+            minimum.sort()
             await Promise.all(
                 minimum.map(async (term: string) => {
                     if (has(this.termMap.git, term)) {
                         const pkg = this.termMap.git[term]
-                        //const description = await pkg.description()
                         if (!get(solution.git, pkg.package.manifest.type)) {
                             set(solution.git, pkg.package.manifest.type, [])
                         }
+
                         solution.git[pkg.package.manifest.type].push({
                             name: pkg.package.fullName,
                             version: pkg.version,
                             hash: pkg.hash,
-                            // meta: {
-                            //     settingList: [],
-                            //     settings: {},
-                            //     //description,
-                            // },
+                            settings: this.buildBranch(minimum!, term),
                         })
                     } else if (has(this.termMap.path, term)) {
                         const pkg = this.termMap.path[term]
-                        //const description = await pkg.description()
                         if (!get(solution.path, pkg.package.manifest.type)) {
                             set(solution.path, pkg.package.manifest.type, [])
                         }
@@ -244,23 +250,59 @@ export class SATSolver {
                             root: pkg.package.getRootName(),
                             path: pkg.package.resolver.getPath(),
                             name: pkg.package.getHash(),
-                            // meta: {
-                            //     settingList: [],
-                            //     settings: {},
-                            //     //description,
-                            // },
+                            settings: this.buildBranch(minimum!, term),
                         })
                     }
                 })
             )
         }
-        // logger.log(solution)
-        this.lockContent = solution
+
+        this.lockContent = validateSchema(solution, undefined, {
+            throw: true,
+            validator: this.lockValidator,
+        })
+
         return solution
     }
 
+    public buildBranch(minimum: string[], term: string) {
+        const levels: Array<{ settings: any; depth: number }> = []
+        minimum.map(m => {
+            let settings: any
+            if (has(this.termMap.git, [term, 'settings', m])) {
+                settings = get(this.termMap.git, [term, 'settings', m])
+            } else if (has(this.termMap.path, [term, 'settings', m])) {
+                settings = get(this.termMap.path, [term, 'settings', m])
+            }
+            if (isDefined(settings)) {
+                levels.push({ settings, depth: this.countParents(minimum, m) })
+            }
+        })
+        // @todo: allow merge strategies https://www.npmjs.com/package/deeply#default-behavior
+        return merge({}, ...levels.sort((a, b) => a.depth - b.depth).map(l => l.settings))
+    }
+
+    public countParents(minimum: string[], parent: string, depth: number = 0) {
+        const parents: Array<{ parent: string; depth: number }> = []
+        minimum.map(m => {
+            let settings: any | undefined
+            if (has(this.termMap.git, [parent, 'settings', m])) {
+                settings = get(this.termMap.git, [parent, 'settings', m])
+            } else if (has(this.termMap.path, [parent, 'settings', m])) {
+                settings = get(this.termMap.path, [parent, 'settings', m])
+            }
+            if (isDefined(settings)) {
+                parents.push({ parent: m, depth: this.countParents(minimum, m, depth + 1) })
+            }
+        })
+        if (isEmpty(parents)) {
+            return depth
+        } else {
+            return minBy(parents, p => p.depth)!.depth
+        }
+    }
+
     public addPackageRequirements(value: SATRequirements) {
-        // console.log(value)
         if (value.hash) {
             if (isDefined(value.required)) {
                 value.required.forEach(r => {
@@ -288,23 +330,31 @@ export class SATSolver {
         // onsole.log(this.solver.solve().getMap())
     }
 
-    public addPackageVersions(hash: string, versions: SourceVersions[], pkg: Package) {
+    public async addPackageVersions(
+        hash: string,
+        versions: SourceVersions[],
+        pkg: Package
+    ): Promise<void> {
         const newTerms = unzip(
             reverse(
-                versions.map(v => {
-                    const term = this.toTerm(hash, v.version)
-                    this.termMap.git[term] = {
-                        package: pkg,
-                        version: v.version.toString(),
-                        hash: v.hash,
-                        // description: async () => {
-                        //     return (await pkg.resolver.definitionResolver.getPackageDefinition(
-                        //         v.hash
-                        //     )).description
-                        // },
-                    }
-                    return [term, v.version.cost]
-                })
+                await Promise.all(
+                    versions.map(async v => {
+                        const definition = await pkg.resolver.definitionResolver.getPackageDefinition(
+                            v.hash
+                        )
+                        const term = this.toTerm(hash, v.version)
+                        if (!has(this.termMap.git, hash)) {
+                            this.termMap.git[term] = {
+                                package: pkg,
+                                version: v.version.toString(),
+                                hash: v.hash,
+                                description: definition.description,
+                                settings: {},
+                            }
+                        }
+                        return [term, v.version.cost]
+                    })
+                )
             )
         )
         if (!isEmpty(newTerms[0]) && !isEmpty(newTerms[1])) {
@@ -318,7 +368,16 @@ export class SATSolver {
         const file = this.getLockFilePath()
         let content
         if (await pathExists(file)) {
-            content = await loadJson(file)
+            try {
+                content = await loadJson(file)
+                content = validateSchema(content, undefined, {
+                    throw: true,
+                    validator: this.lockValidator,
+                })
+            } catch (e) {
+                logger.warn('Lock file format is invalid, generating a new one...')
+                content = undefined
+            }
         }
         return content
     }
@@ -327,16 +386,34 @@ export class SATSolver {
         return join(process.cwd(), '.package.lock')
     }
 
-    private async addPathEntry(pkg: SATPathEntry, parent: Package) {
+    private async addPathEntry(
+        pkg: SATPathEntry,
+        hash: string,
+        parent: { package: Package; hash: string }
+    ): Promise<void> {
+        const absolutePath = normalize(
+            join(
+                ...[
+                    ...(parent.package.options.root
+                        ? [(parent.package.entry as RegistryPathEntry).path]
+                        : []),
+                    pkg.description.path,
+                ]
+            )
+        )
+        const rootHash = parent.package.options.rootHash || parent.hash
+        const name = `${rootHash}:${absolutePath}`
         const added = this.registries.addPackage(
             pkg.type,
             {
-                path: pkg.description.path,
+                path: absolutePath,
+                name,
             },
             {
-                root: parent.options.root || parent,
+                rootHash,
+                root: parent.package.options.root || parent.package,
                 isRoot: false,
-                parent,
+                parent: parent.package,
             }
         )
         try {
@@ -350,12 +427,21 @@ export class SATSolver {
         }
         // console.log(added)
         await this.addPackage(added)
+
+        if (!has(this.termMap.path, [name, 'settings', hash])) {
+            set(this.termMap.path, [name, 'settings', hash], pkg.description.settings)
+        }
     }
 
-    private async addGitEntry(pkg: SATGitEntry, hash: string) {
+    private async addGitEntry(
+        pkg: SATGitEntry,
+        hash: string,
+        parent?: { package: Package; hash: string }
+    ): Promise<void> {
         const found = get(this.registries.manifests, [pkg.type, 'entries', pkg.description.name])
         if (found) {
             const versions = await this.addPackage(found)
+            const fhash = found.getHash()
             const range = new VersionRange(pkg.description.version)
             versions.filter(v => range.satisfies(v.version))
             this.addPackageRequirements({
@@ -363,9 +449,21 @@ export class SATSolver {
                 required: [
                     versions
                         .filter(v => range.satisfies(v.version))
-                        .map(x => this.toTerm(found.getHash(), x.version)),
+                        .map(x => this.toTerm(fhash, x.version)),
                 ],
             })
+
+            if (isDefined(parent)) {
+                versions.forEach(x => {
+                    if (!has(this.termMap.git, [this.toTerm(fhash, x.version), 'settings', hash])) {
+                        set(
+                            this.termMap.git,
+                            [this.toTerm(fhash, x.version), 'settings', hash],
+                            pkg.description.settings
+                        )
+                    }
+                })
+            }
         } else {
             throw new Error('not implemented')
         }

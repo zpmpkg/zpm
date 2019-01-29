@@ -12,3 +12,6 @@ export const definitionsV1 = require('./definitions.v1.json')
 
 // tslint:disable-next-line:no-var-requires
 export const packageV1 = require('./package.v1.json')
+
+// tslint:disable-next-line:no-var-requires
+export const lockFileV1 = require('./lockfile.v1.json')

@@ -10,3 +10,6 @@ requires:
     #- name: Zefiros-Software/GoogleTest
     #  version: ^1.7.0
     - path: sandbox3
+      settings: 
+        wooo: fooo
+    #- path: ../sandbox2/sandbox3

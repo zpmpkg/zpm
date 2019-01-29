@@ -51,6 +51,17 @@
         },
         "version": {
           "type": "string"
+        },
+        "settings": {
+          "type": "object",
+          "patternProperties": {
+            "\\w+": {
+              "type": "array",
+              "items": {},
+              "additionalItems": false
+            }
+          },
+          "additionalProperties": false
         }
       },
       "additionalProperties": false,
@@ -64,6 +75,13 @@
       "properties": {
         "path": {
           "type": "string"
+        },
+        "settings": {
+          "type": "object",
+          "patternProperties": {
+            "\\w+": {}
+          },
+          "additionalProperties": false
         }
       },
       "additionalProperties": false,
@@ -74,13 +92,7 @@
     "PackageEntries": {
       "type": "object",
       "patternProperties": {
-        "\\w+": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/PackageEntry"
-          },
-          "additionalItems": false
-        }
+        "\\w+": {}
       },
       "additionalProperties": false
     }

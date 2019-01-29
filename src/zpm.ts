@@ -51,11 +51,11 @@ export class ZPM {
         const solver = new SATSolver(this.registries)
         let lockFile: SATSolution | undefined
         try {
+            await solver.load()
+
             spinners.start()
             await solver.addPackage(this.root)
-
             spinners.stop()
-            await solver.load()
             lockFile = await solver.optimize()
             spinners.stop()
         } catch (error) {

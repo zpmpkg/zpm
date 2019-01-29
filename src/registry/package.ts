@@ -9,6 +9,7 @@ export interface PackageOptions {
     parent?: Package
     root?: Package
     isRoot?: boolean
+    rootHash?: string
 }
 
 export class Package {
@@ -60,7 +61,7 @@ export class Package {
     public getFullName(): string {
         if (this.options.isRoot) {
             return '$ROOT'
-        } else if (this.options.root) {
+        } else if (this.options.rootHash) {
             return `${this.getRootName()}:${normalize(this.resolver.getPath())}`
         }
         return this.resolver.getPath()
@@ -70,7 +71,7 @@ export class Package {
         if (this.options.isRoot) {
             return '$ROOT'
         } else if (this.options.root) {
-            return this.options.root.options.isRoot ? '$ROOT' : this.options.root.fullName
+            return this.options.root.options.isRoot ? '$ROOT' : this.options.rootHash!
         } else {
             throw new Error('This should not be called')
         }

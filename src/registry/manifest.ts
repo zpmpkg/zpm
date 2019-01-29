@@ -1,6 +1,6 @@
 import * as fs from 'fs-extra'
 import { has } from 'lodash'
-import { join, normalize } from 'upath'
+import { join } from 'upath'
 import { loadJsonOrYaml } from '~/common/io'
 import { logger } from '~/common/logger'
 import { buildSchema, validateSchema } from '~/common/validation'
@@ -65,17 +65,20 @@ export class Manifest {
         }
     }
 
-    public add(entry: RegistryEntry, options?: PackageOptions): Package {
+    public add(entry: RegistryEntry & { name?: string }, options?: PackageOptions): Package {
         let name: string
         if (isGitEntry(entry)) {
             name = entry.name
         } else if (isPathEntry(entry)) {
-            entry.path = normalize(entry.path)
-            name = entry.path
+            entry.name =
+                options && options.rootHash ? `${options!.rootHash}:${entry.path}` : entry.path
+            name = entry.name
         } else {
             throw new Error('Failed to determine package type')
         }
-        this.entries[name] = new Package(this, entry, options)
+        if (!has(this.entries, name)) {
+            this.entries[name] = new Package(this, entry, options)
+        }
 
         return this.entries[name]
     }

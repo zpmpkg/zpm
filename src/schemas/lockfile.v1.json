@@ -47,13 +47,21 @@
         },
         "hash": {
           "type": "string"
+        },
+        "settings": {
+          "type": "object",
+          "patternProperties": {
+            "\\w+": {}
+          },
+          "additionalProperties": false
         }
       },
       "additionalProperties": false,
       "required": [
         "name",
         "version",
-        "hash"
+        "hash",
+        "settings"
       ]
     },
     "PathLock": {
@@ -67,13 +75,21 @@
         },
         "name": {
           "type": "string"
+        },
+        "settings": {
+          "type": "object",
+          "patternProperties": {
+            "\\w+": {}
+          },
+          "additionalProperties": false
         }
       },
       "additionalProperties": false,
       "required": [
         "root",
         "path",
-        "name"
+        "name",
+        "settings"
       ]
     }
   }

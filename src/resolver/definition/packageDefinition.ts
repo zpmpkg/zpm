@@ -5,22 +5,10 @@ import { isGitPackageEntry, isPathPackageEntry } from '~/solver/package'
 import { PackageDefinition, PackageGitEntry, PackagePathEntry } from '~/types/package.v1'
 import { PackageOptions } from '../../registry/package'
 
-export interface PackagePathSummary extends PackagePathEntry {
-    settings: {
-        [k: string]: any
-    }
-}
-
-export interface PackageGitSummary extends PackageGitEntry {
-    settings: {
-        [k: string]: any
-    }
-}
-
 export interface PackageDefinitionSummary {
     packages: {
-        path: { [k: string]: PackagePathSummary[] }
-        git: { [k: string]: PackageGitSummary[] }
+        path: { [k: string]: PackagePathEntry[] }
+        git: { [k: string]: PackageGitEntry[] }
     }
     description: PackageDescription
 }
@@ -49,9 +37,9 @@ export function fromPackageDefinition(
                             ...get(pkg, ['requires', k], []),
                             ...(options.isRoot ? get(pkg, ['development', k], []) : []),
                         ].filter(isPathPackageEntry),
-                        (p): PackagePathSummary => ({
+                        (p): PackagePathEntry => ({
                             path: p.path,
-                            settings: {},
+                            settings: p.settings || {},
                         })
                     ),
                 ])
@@ -64,10 +52,10 @@ export function fromPackageDefinition(
                             ...get(pkg, ['requires', k], []),
                             ...(options.isRoot ? get(pkg, ['development', k], []) : []),
                         ].filter(isGitPackageEntry),
-                        (p): PackageGitSummary => ({
+                        (p): PackageGitEntry => ({
                             name: p.name,
                             version: p.version,
-                            settings: {},
+                            settings: p.settings || {},
                         })
                     ),
                 ])

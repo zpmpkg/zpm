@@ -10,3 +10,5 @@ requires:
     #- name: Zefiros-Software/GoogleTest
     #  version: ^1.7.0
     - path: ../sandbox4
+      settings: 
+        wooo: fooodd

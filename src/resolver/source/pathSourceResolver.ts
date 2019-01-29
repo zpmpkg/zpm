@@ -17,10 +17,10 @@ export class PathSourceResolver extends SourceResolver {
     }
 
     public getDefinitionPath(): string {
-        if (this.package.options.parent) {
+        if (this.package.options.root) {
             return normalizeSafe(
                 join(
-                    this.package.options.parent.resolver.getDefinitionPath(),
+                    this.package.options.root.resolver.getDefinitionPath(),
                     this.definition || this.repository
                 )
             )
@@ -46,9 +46,10 @@ export class PathSourceResolver extends SourceResolver {
 
     public getPath(): string {
         if (isPathEntry(this.package.entry)) {
-            if (this.package.options.parent) {
+            if (this.package.options.root) {
+                // @todo, check whether escaping sandbox
                 return normalizeSafe(
-                    `${this.package.options.parent.resolver.getPath()}/${this.package.entry.path}`
+                    `${this.package.options.root.resolver.getPath()}/${this.package.entry.path}`
                 )
             }
             return this.package.entry.path
