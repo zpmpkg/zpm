@@ -1,4 +1,5 @@
-import { filter, flatten } from 'lodash'
+import { filter, flatten, get } from 'lodash'
+import { environment } from '~/common/environment'
 import { isDefined } from '~/common/util'
 import { Manifest } from '~/registry/manifest'
 import { ConfigurationSchema } from '~/types/configuration.v1'
@@ -12,7 +13,7 @@ export class Registries {
     public registries!: Registry[]
 
     public config!: ConfigurationSchema
-    public manifests: { [k: string]: Manifest } = {}
+    private manifests: { [k: string]: Manifest } = {}
 
     constructor(zpm: ZPM) {
         this.zpm = zpm
@@ -23,22 +24,31 @@ export class Registries {
         await this.loadManifests()
     }
 
+    public searchPackage(type: string, search: { name: string }) {
+        return get(this.manifests, [type, 'entries', search.name])
+    }
+
     public addPackage(type: string, entry: RegistryEntry, options?: PackageOptions) {
         return this.manifests[type].add(entry, options)
     }
 
     private async loadManifests() {
-        this.manifests.libraries = new Manifest(this, 'libraries')
+        await Promise.all(
+            this.zpm.config.values.registry.map(async r => {
+                this.manifests[r.name] = new Manifest(this, r.name, r.options)
 
-        await this.manifests.libraries.load()
+                await this.manifests[r.name].load()
+            })
+        )
     }
 
     private async findRegistries() {
         const registries: Registry[] = [
             ...this.zpm.config.values.registries.map(
-                registry => new Registry(registry.url, registry.branch)
+                registry => new Registry(registry.url, { branch: registry.branch })
             ),
-            new Registry(process.cwd()),
+            new Registry(environment.directory.zpm, { name: '$ZPM' }),
+            new Registry(environment.directory.workingdir, { name: '$ROOT' }),
         ]
         const newRegistries: RegistryDefinition[] = flatten(
             filter(
@@ -48,7 +58,7 @@ export class Registries {
         )
         // go one deeper in the registry chain (each registry may also host a registry list)
         newRegistries.forEach(r => {
-            registries.push(new Registry(r.url, r.branch))
+            registries.push(new Registry(r.url, { branch: r.branch }))
         })
         await Promise.all(
             registries.map(async registry => {

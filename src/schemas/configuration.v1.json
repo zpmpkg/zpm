@@ -9,14 +9,28 @@
       },
       "additionalItems": false
     },
-    "registry": {}
+    "registry": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "options": {
+            "$ref": "#/definitions/ManifestOptions"
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "name"
+        ]
+      },
+      "additionalItems": false
+    }
   },
   "required": [
-    "registries"
-  ],
-  "definitions": {
-    "ConfigurationRegistries": {
-      "type": "object"
-    }
-  }
+    "registries",
+    "registry"
+  ]
 }

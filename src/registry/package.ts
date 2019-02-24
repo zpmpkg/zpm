@@ -10,6 +10,7 @@ export interface PackageOptions {
     root?: Package
     isRoot?: boolean
     rootHash?: string
+    forceName?: boolean
 }
 
 export class Package {

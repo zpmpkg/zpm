@@ -19,7 +19,6 @@ export interface SATGitPackage {
     name: string
     version: string
     hash: string
-    // meta: SATMeta
     settings: any
 }
 
@@ -27,11 +26,19 @@ export interface SATPathPackage {
     root: string
     path: string
     name: string
-    // meta: SATMeta
+    settings: any
+}
+
+export interface SATNamedPackage {
+    name: string
+    path: string
+    version: string
+    hash: string
     settings: any
 }
 
 export interface SATSolution {
     git: { [k: string]: SATGitPackage[] }
     path: { [k: string]: SATPathPackage[] }
+    named: { [k: string]: SATNamedPackage[] }
 }

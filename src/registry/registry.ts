@@ -17,9 +17,12 @@ export class Registry {
     public directory: string | undefined
     public isLocal: boolean = false
     public isUpdated: boolean = false
-    constructor(url: string, branch?: string) {
+    public name?: string
+    constructor(url: string, options?: { branch?: string; name?: string }) {
+        const { branch, name } = options || { branch: undefined, name: undefined }
         this.url = url
         this.branch = branch
+        this.name = name
     }
 
     public async update(): Promise<RegistryDefinition[] | undefined> {

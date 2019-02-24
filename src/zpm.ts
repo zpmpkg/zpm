@@ -1,8 +1,7 @@
 import { Configuration } from '~/common/config'
 import { environment, loadEnvironment } from '~/common/environment'
 import { Registries } from '~/registry/registries'
-import { Builder } from './builder/builder'
-import { loadCLI } from './cli/program'
+// import { Builder } from './builder/builder'
 import { spinners } from './cli/spinner'
 import { logger } from './common/logger'
 import { storage } from './common/storage'
@@ -17,7 +16,6 @@ export class ZPM {
     public registries: Registries = new Registries(this)
 
     public async load(): Promise<boolean> {
-        loadCLI()
         await loadEnvironment()
 
         await storage.init({
@@ -27,11 +25,10 @@ export class ZPM {
         this.config.load()
         await this.registries.load()
 
-        const path = './'
         this.root = this.registries.addPackage(
             'libraries',
             {
-                path,
+                path: environment.directory.workingdir,
             },
             {
                 isRoot: true,
@@ -69,10 +66,10 @@ export class ZPM {
         if (isDefined(lockFile)) {
             spinners.start()
 
-            const builder = new Builder(this.registries, this.root, lockFile)
-            await builder.load()
+            // const builder = new Builder(this.registries, this.root, lockFile)
+            // await builder.load()
 
-            await builder.extract()
+            // await builder.extract()
 
             await solver.save()
 

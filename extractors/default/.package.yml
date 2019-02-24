@@ -1,0 +1,6 @@
+extractor:
+  checkout: extract.ts
+  extract: index.ts
+
+packages:
+  - path: extractor/default

@@ -1,14 +1,18 @@
-// tslint:disable-next-line:ordered-imports
 import { fromPairs, get, keys, map, uniq } from 'lodash'
-import { isGitPackageEntry, isPathPackageEntry } from '~/solver/package'
-// tslint:disable-next-line:ordered-imports
-import { PackageDefinition, PackageGitEntry, PackagePathEntry } from '~/types/package.v1'
+import { isGitPackageEntry, isNamedPathPackageEntry, isPathPackageEntry } from '~/solver/package'
+import {
+    PackageDefinition,
+    PackageGitEntry,
+    PackageNamedPathEntry,
+    PackagePathEntry,
+} from '~/types/package.v1'
 import { PackageOptions } from '../../registry/package'
 
 export interface PackageDefinitionSummary {
     packages: {
         path: { [k: string]: PackagePathEntry[] }
         git: { [k: string]: PackageGitEntry[] }
+        named: { [k: string]: PackageNamedPathEntry[] }
     }
     description: PackageDescription
 }
@@ -27,7 +31,7 @@ export function fromPackageDefinition(
     options: PackageOptions
 ): PackageDefinitionSummary {
     const types: string[] = uniq([...keys(get(pkg, 'requires')), ...keys(get(pkg, 'development'))])
-    return {
+    const definition = {
         packages: {
             path: fromPairs(
                 map(types, (k: string) => [
@@ -60,6 +64,23 @@ export function fromPackageDefinition(
                     ),
                 ])
             ),
+            named: fromPairs(
+                map(types, (k: string) => [
+                    k,
+                    map(
+                        [
+                            ...get(pkg, ['requires', k], []),
+                            ...(options.isRoot ? get(pkg, ['development', k], []) : []),
+                        ].filter(isNamedPathPackageEntry),
+                        (p): PackageNamedPathEntry => ({
+                            name: p.name.split(':')[0]!,
+                            path: p.name.split(':')[1] || p.path,
+                            version: p.version,
+                            settings: p.settings || {},
+                        })
+                    ),
+                ])
+            ),
         },
         description: {
             extraction: {
@@ -70,4 +91,7 @@ export function fromPackageDefinition(
             },
         },
     }
+    console.log(definition)
+
+    return definition
 }

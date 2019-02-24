@@ -1,0 +1,14 @@
+{
+  "git": {},
+  "path": {
+    "libraries": [
+      {
+        "root": "$ROOT",
+        "path": "sandbox/",
+        "name": "libraries:PATH:$ROOT",
+        "settings": {}
+      }
+    ]
+  },
+  "named": {}
+}

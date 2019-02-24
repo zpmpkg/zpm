@@ -26,9 +26,20 @@ export class PathDefinitionResolver extends DefinitionResolver {
         }
         content.content = validateSchema(content.content || {}, undefined, {
             throw: true,
-            origin: `package '${this.source.package.name}' definition on path '${content.path}'`,
+            origin: `package '${this.source.package.fullName}' definition on path '${
+                content.path
+            }'`,
             validator: this.validator,
         })
+        if (this.source.package.manifest.packageValidator) {
+            content.content = validateSchema(content.content || {}, undefined, {
+                throw: true,
+                origin: `package '${this.source.package.fullName}' definition on path '${
+                    content.path
+                }'`,
+                validator: this.source.package.manifest.packageValidator,
+            })
+        }
         if (!isDefined(content.content)) {
             throw new Error(`Could not find a matching schema for version '${version}'`)
         }
@@ -53,7 +64,7 @@ export class PathDefinitionResolver extends DefinitionResolver {
         for (const prefix of ['.', '']) {
             const json = join(directory, `${prefix}package.json`)
             const yml = join(directory, `${prefix}package.yml`)
-            let pth: string | undefined
+            let pth: string = directory
             let content: PackageDefinition | undefined
             if (await fs.pathExists(json)) {
                 content = (await this.loadFile(json)) as PackageDefinition
@@ -68,7 +79,7 @@ export class PathDefinitionResolver extends DefinitionResolver {
 
             return { content, path: pth }
         }
-        return { content: undefined }
+        return { content: undefined, path: directory }
     }
 
     private getYamlDefinition(

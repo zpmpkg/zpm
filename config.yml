@@ -1,8 +1,10 @@
 registries:
-  - url: 'https://github.com/zpmpkg/registry.git'
-    branch: 'master'
-
+  # - url: 'https://github.com/zpmpkg/registry.git'
+  #   branch: 'master'
+  - url: manifest
 registry:
-  libraries:
-    manifest: registry.json
-    name: library
+  - name: libraries
+  - name: extractors
+    options:
+      schema: extractors/extractor.v1.json
+  - name: builders

@@ -1,5 +1,13 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
+  "ManifestOptions": {
+    "type": "object",
+    "properties": {
+      "schema": {
+        "type": "string"
+      }
+    }
+  },
   "RegistryDefinition": {
     "type": "object",
     "properties": {
@@ -23,6 +31,9 @@
       },
       {
         "$ref": "#/definitions/RegistryPathEntry"
+      },
+      {
+        "$ref": "#/definitions/RegistryNamedPathEntry"
       }
     ]
   },
@@ -39,14 +50,30 @@
       },
       "definition": {
         "type": "string",
-        "pattern": "^(https://.*\\.git)$",
-        "optional": true
+        "pattern": "^(https://.*\\.git)$"
       }
     },
     "additionalProperties": false,
     "required": [
       "name",
       "repository"
+    ]
+  },
+  "RegistryNamedPathEntry": {
+    "type": "object",
+    "properties": {
+      "name": {
+        "type": "string",
+        "pattern": "^([a-zA-Z0-9_-]{2,50}/[a-zA-Z0-9_-]{2,50})$"
+      },
+      "path": {
+        "type": "string"
+      }
+    },
+    "additionalProperties": false,
+    "required": [
+      "name",
+      "path"
     ]
   },
   "RegistryPathEntry": {

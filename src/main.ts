@@ -1,5 +1,9 @@
-import { ZPM } from '~/zpm'
+import { loadCLI } from './cli/program'
+// first thing
+loadCLI()
+
 import { logger } from './common/logger'
+import { ZPM } from './zpm'
 
 const zpm = new ZPM()
 

@@ -22,7 +22,11 @@ export class Builder {
         this.root = root
         this.lockFile = lockFile
 
-        this.types = uniq([...keys(get(this.lockFile, 'git')), ...keys(get(this.lockFile, 'path'))])
+        this.types = uniq([
+            ...keys(get(this.lockFile, 'git')),
+            ...keys(get(this.lockFile, 'path')),
+            ...keys(get(this.lockFile, 'named')),
+        ])
 
         logger.info(lockFile)
     }
@@ -40,7 +44,9 @@ export class Builder {
     private async createBuilders(type: string) {
         await Promise.all(
             this.lockFile.git[type].map(async pkg => {
-                const found: Package = get(this.registries.manifests, [type, 'entries', pkg.name])
+                const found: Package = this.registries.searchPackage(type, {
+                    name: pkg.name,
+                })
                 if (isDefined(found)) {
                     this.builders.push(new GitBuilder(found, pkg.hash))
                 } else {
@@ -53,11 +59,9 @@ export class Builder {
                 if (pkg.root === '$ROOT') {
                     this.builders.push(new RootBuilder())
                 } else {
-                    const root: Package = get(this.registries.manifests, [
-                        type,
-                        'entries',
-                        pkg.root,
-                    ])
+                    const root: Package = this.registries.searchPackage(type, {
+                        name: pkg.root,
+                    })
                     if (isDefined(root)) {
                         this.builders.push(new PathBuilder())
                     } else {

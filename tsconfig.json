@@ -11,9 +11,9 @@
       "esnext",
       "dom"
     ],
-    "baseUrl": ".",
+    "baseUrl": "./",
     "paths": {
-      "~/*": ["src/*"],      
+      "~/*": ["./src/*"],      
       "*": [
         "./typings/*"
       ]

@@ -6,16 +6,18 @@ import {
     has,
     isEmpty,
     keys,
+    merge,
+    minBy,
     reverse,
     set,
     toPairs,
     uniq,
     unzip,
-    merge,
 } from 'lodash'
 import * as Logic from 'logic-solver'
 import { join, normalize } from 'upath'
 import { update } from '~/cli/program'
+import { environment } from '~/common/environment'
 import { loadJson, writeJson } from '~/common/io'
 import { logger } from '~/common/logger'
 import { VersionRange } from '~/common/range'
@@ -32,10 +34,9 @@ import { SourceVersions } from '~/resolver/source/sourceResolver'
 import { lockFileV1 } from '~/schemas/schemas'
 import { RegistryPathEntry } from '~/types/definitions.v1'
 import { LockfileSchema } from '~/types/lockfile.v1'
-import { isGitPackageEntry, isPathPackageEntry } from './package'
+import { PackageGitEntry, PackageNamedPathEntry, PackagePathEntry } from '~/types/package.v1'
+import { isGitPackageEntry, isNamedPathPackageEntry, isPathPackageEntry } from './package'
 import { SATSolution } from './solution'
-import { PackageGitEntry, PackagePathEntry } from '~/types/package.v1'
-import { minBy } from 'lodash'
 
 export interface SATOptions {
     branchHeuristic: boolean
@@ -61,6 +62,11 @@ export interface SATPathEntry {
     type: string
 }
 
+export interface SATNamedEntry {
+    description: PackageNamedPathEntry
+    type: string
+}
+
 export class SATSolver {
     public solver = new Logic.Solver()
     public loadedCache: { [k: string]: boolean } = {}
@@ -73,7 +79,16 @@ export class SATSolver {
                 hash: string
                 description: PackageDescription
                 settings: { [k: string]: any }
-                // roots: Set<string>
+            }
+        }
+        named: {
+            [k: string]: {
+                package: Package
+                version: string
+                path: string
+                hash: string
+                description: PackageDescription
+                settings: { [k: string]: any }
             }
         }
         path: {
@@ -81,12 +96,12 @@ export class SATSolver {
                 package: Package
                 description: PackageDescription
                 settings: { [k: string]: any }
-                // root: string
             }
         }
     } = {
         git: {},
         path: {},
+        named: {},
     }
 
     public weights: SATWeights = { terms: [], weights: [] }
@@ -110,15 +125,22 @@ export class SATSolver {
             const types: string[] = uniq([
                 ...keys(get(this.lockContent, 'git')),
                 ...keys(get(this.lockContent, 'path')),
+                ...keys(get(this.lockContent, 'named')),
             ])
             this.assumptions = []
             for (const type of types) {
-                this.lockContent.git[type].forEach(pkg => {
-                    const found: Package = get(this.registries.manifests, [
-                        type,
-                        'entries',
-                        pkg.name,
-                    ])
+                get(this.lockContent.git, type, []).forEach(pkg => {
+                    const found: Package = this.registries.searchPackage(type, { name: pkg.name })
+                    if (isDefined(found)) {
+                        this.assumptions!.push(
+                            this.toTerm(found.getHash(), new Version(pkg.version))
+                        )
+                    } else {
+                        // @todo
+                    }
+                })
+                get(this.lockContent.named, type, []).forEach(pkg => {
+                    const found: Package = this.registries.searchPackage(type, { name: pkg.name })
                     if (isDefined(found)) {
                         this.assumptions!.push(
                             this.toTerm(found.getHash(), new Version(pkg.version))
@@ -199,6 +221,15 @@ export class SATSolver {
             ).map(async pkg => {
                 await this.addPathEntry(pkg, hash, parent!)
             }),
+            ...flatten(
+                toPairs(definition.packages.named).map(p =>
+                    p[1]
+                        .filter(x => isNamedPathPackageEntry(x))
+                        .map((e): SATNamedEntry => ({ description: e, type: p[0] }))
+                )
+            ).map(async pkg => {
+                await this.addNamedEntry(pkg, hash, parent!)
+            }),
         ])
     }
 
@@ -222,6 +253,7 @@ export class SATSolver {
         const solution: SATSolution = {
             git: {},
             path: {},
+            named: {},
         }
         if (minimum) {
             // make settings stable
@@ -250,6 +282,19 @@ export class SATSolver {
                             root: pkg.package.getRootName(),
                             path: pkg.package.resolver.getPath(),
                             name: pkg.package.getHash(),
+                            settings: this.buildBranch(minimum!, term),
+                        })
+                    } else if (has(this.termMap.named, term)) {
+                        const pkg = this.termMap.named[term]
+                        if (!get(solution.named, pkg.package.manifest.type)) {
+                            set(solution.named, pkg.package.manifest.type, [])
+                        }
+
+                        solution.named[pkg.package.manifest.type].push({
+                            name: pkg.package.fullName,
+                            path: pkg.package.resolver.getPath(),
+                            version: pkg.version,
+                            hash: pkg.hash,
                             settings: this.buildBranch(minimum!, term),
                         })
                     }
@@ -383,7 +428,7 @@ export class SATSolver {
     }
 
     private getLockFilePath() {
-        return join(process.cwd(), '.package.lock')
+        return join(environment.directory.workingdir, '.package.lock')
     }
 
     private async addPathEntry(
@@ -438,7 +483,7 @@ export class SATSolver {
         hash: string,
         parent?: { package: Package; hash: string }
     ): Promise<void> {
-        const found = get(this.registries.manifests, [pkg.type, 'entries', pkg.description.name])
+        const found = this.registries.searchPackage(pkg.type, { name: pkg.description.name })
         if (found) {
             const versions = await this.addPackage(found)
             const fhash = found.getHash()
@@ -458,6 +503,45 @@ export class SATSolver {
                     if (!has(this.termMap.git, [this.toTerm(fhash, x.version), 'settings', hash])) {
                         set(
                             this.termMap.git,
+                            [this.toTerm(fhash, x.version), 'settings', hash],
+                            pkg.description.settings
+                        )
+                    }
+                })
+            }
+        } else {
+            throw new Error('not implemented')
+        }
+    }
+
+    private async addNamedEntry(
+        pkg: SATNamedEntry,
+        hash: string,
+        parent?: { package: Package; hash: string }
+    ): Promise<void> {
+        const found = this.registries.searchPackage(pkg.type, { name: pkg.description.name })
+        console.log(pkg, found, '@@@@@@@@@@@@@@@@@@@@@@@@@@@@')
+        if (found) {
+            const versions = await this.addPackage(found)
+            const fhash = found.getHash()
+            const range = new VersionRange(pkg.description.version)
+            versions.filter(v => range.satisfies(v.version))
+            this.addPackageRequirements({
+                hash,
+                required: [
+                    versions
+                        .filter(v => range.satisfies(v.version))
+                        .map(x => this.toTerm(fhash, x.version)),
+                ],
+            })
+
+            if (isDefined(parent)) {
+                versions.forEach(x => {
+                    if (
+                        !has(this.termMap.named, [this.toTerm(fhash, x.version), 'settings', hash])
+                    ) {
+                        set(
+                            this.termMap.named,
                             [this.toTerm(fhash, x.version), 'settings', hash],
                             pkg.description.settings
                         )

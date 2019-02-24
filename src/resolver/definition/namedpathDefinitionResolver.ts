@@ -1,14 +1,15 @@
 import { safeLoad } from 'js-yaml'
+import { join } from 'upath'
 import { catFile } from '~/common/git'
 import { logger } from '~/common/logger'
 import { isDefined } from '~/common/util'
 import { buildSchema, validateSchema } from '~/common/validation'
 import { packageV1 } from '~/schemas/schemas'
-import { PackageDefinition } from '~/types/package.v1'
+import { PackageDefinition, PackageNamedPathEntry } from '~/types/package.v1'
 import { DefinitionResolver } from './definitionResolver'
 import { fromPackageDefinition, PackageDefinitionSummary } from './packageDefinition'
 
-export class GitDefinitionResolver extends DefinitionResolver {
+export class NamedPathDefinitionResolver extends DefinitionResolver {
     private validator = buildSchema(packageV1)
     public async getPackageDefinition(hash?: string): Promise<PackageDefinitionSummary> {
         const directory = this.getDefinitionPath()
@@ -43,7 +44,10 @@ export class GitDefinitionResolver extends DefinitionResolver {
     }
 
     public getDefinitionPath() {
-        return this.source.getDefinitionPath()
+        return join(
+            this.source.getDefinitionPath(),
+            (this.source.package.entry as PackageNamedPathEntry).path
+        )
     }
 
     private async getContent(

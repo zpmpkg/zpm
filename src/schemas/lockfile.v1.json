@@ -27,12 +27,26 @@
         }
       },
       "additionalProperties": false
+    },
+    "named": {
+      "type": "object",
+      "patternProperties": {
+        "\\w+": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/NamedLock"
+          },
+          "additionalItems": false
+        }
+      },
+      "additionalProperties": false
     }
   },
   "additionalProperties": false,
   "required": [
     "git",
-    "path"
+    "path",
+    "named"
   ],
   "definitions": {
     "GitLock": {
@@ -61,6 +75,39 @@
         "name",
         "version",
         "hash",
+        "settings"
+      ]
+    },
+    "NamedLock": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "pattern": "^([a-zA-Z0-9_-]{2,50}(/[a-zA-Z0-9_-]{2,50})?)(:.*)?$"
+        },
+        "version": {
+          "type": "string"
+        },
+        "hash": {
+          "type": "string"
+        },
+        "path": {
+          "type": "string"
+        },
+        "settings": {
+          "type": "object",
+          "patternProperties": {
+            "\\w+": {}
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "version",
+        "hash",
+        "path",
         "settings"
       ]
     },
