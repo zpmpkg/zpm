@@ -36,13 +36,10 @@
       "type": "object",
       "oneOf": [
         {
-          "$ref": "#/definitions/PackageGitEntry"
-        },
-        {
           "$ref": "#/definitions/PackagePathEntry"
         },
         {
-          "$ref": "#/definitions/PackageNamedPathEntry"
+          "$ref": "#/definitions/PackageGitEntry"
         }
       ]
     },
@@ -51,7 +48,7 @@
       "properties": {
         "name": {
           "type": "string",
-          "pattern": "^([a-zA-Z0-9_-]{2,50}/[a-zA-Z0-9_-]{2,50})$"
+          "pattern": "^([a-zA-Z0-9_\\-]{2,50}/[a-zA-Z0-9_\\-]{2,50})$"
         },
         "version": {
           "type": "string"
@@ -74,42 +71,17 @@
         "version"
       ]
     },
-    "PackageNamedPathEntry": {
+    "PackagePathEntry": {
       "type": "object",
       "properties": {
         "name": {
           "type": "string",
-          "pattern": "^([a-zA-Z0-9_-]{2,50}((/[a-zA-Z0-9_-]{2,50}))?(:.*)?)?$"
+          "pattern": "^([a-zA-Z0-9_\\-]{2,50}((/[a-zA-Z0-9_\\-]{2,50}))?(:.*)?)?$"
         },
         "version": {
           "type": "string",
           "default": "*"
         },
-        "path": {
-          "type": "string"
-        },
-        "settings": {
-          "type": "object",
-          "patternProperties": {
-            "\\w+": {
-              "type": "array",
-              "items": {},
-              "additionalItems": false
-            }
-          },
-          "additionalProperties": false
-        }
-      },
-      "additionalProperties": false,
-      "required": [
-        "name",
-        "version",
-        "path"
-      ]
-    },
-    "PackagePathEntry": {
-      "type": "object",
-      "properties": {
         "path": {
           "type": "string"
         },

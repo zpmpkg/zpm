@@ -2,12 +2,12 @@ import ajv = require('ajv')
 import * as fs from 'fs-extra'
 import { has } from 'lodash'
 import { join } from 'upath'
-import { environment } from '~/common/environment'
-import { loadJsonOrYaml } from '~/common/io'
+import { loadJsonOrYamlSimple, transformPath } from '~/common/io'
 import { logger } from '~/common/logger'
+import { isDefined } from '~/common/util'
 import { buildSchema, validateSchema } from '~/common/validation'
 import { Package, PackageOptions } from '~/registry/package'
-import { isGitEntry, isPathEntry, isNamedPathPackageEntry } from '~/resolver/source/factory'
+import { isGitEntry, isPathEntry } from '~/resolver/source/factory'
 import { entriesV1 } from '~/schemas/schemas'
 import { ManifestOptions, RegistryEntry } from '~/types/definitions.v1'
 import { EntriesSchema } from '~/types/entries.v1'
@@ -34,7 +34,10 @@ export class Manifest {
 
         await Promise.all(
             this.registries.registries.map(async registry => {
-                const file = join(registry.directory, `${this.type}.json`)
+                let file = join(registry.directory, `${this.type}.json`)
+                if (!(await fs.pathExists(file))) {
+                    file = join(registry.directory, `${this.type}.yml`)
+                }
                 if (await fs.pathExists(file)) {
                     const contents: EntriesSchema = await this.loadFile(file)
                     try {
@@ -49,7 +52,7 @@ export class Manifest {
                                 if (isGitEntry(x)) {
                                     name = x.name
                                 } else if (isPathEntry(x)) {
-                                    name = registry.name ? `${registry.name}:x.path` : x.path
+                                    name = x.name || '$ROOT'
                                 } else {
                                     // this one should not validate
                                 }
@@ -64,21 +67,22 @@ export class Manifest {
                 }
             })
         )
-        await this.add({ name: 'ZPM', path: environment.directory.zpm }, { forceName: true }).load()
+        await this.add(
+            { name: 'ZPM', path: './' },
+            { forceName: true, absolutePath: '$ZPM' }
+        ).load()
     }
 
     public add(entry: RegistryEntry & { name?: string }, options?: PackageOptions): Package {
         let name: string
         if (isGitEntry(entry)) {
             name = entry.name
-        } else if (isNamedPathPackageEntry(entry)) {
-            name = `${entry.name}:${entry.path}`
         } else if (isPathEntry(entry)) {
-            if (!options || !options.forceName) {
-                entry.name =
-                    options && options.rootHash ? `${options!.rootHash}:${entry.path}` : entry.path
+            if (isDefined(options) && options.forceName) {
+                name = entry.name!
+            } else {
+                name = `${entry.name}:${entry.path}`
             }
-            name = entry.name!
         } else {
             throw new Error('Failed to determine package type')
         }
@@ -91,6 +95,6 @@ export class Manifest {
     }
 
     private async loadFile(file: string): Promise<EntriesSchema> {
-        return loadJsonOrYaml(file)
+        return loadJsonOrYamlSimple(transformPath(file))
     }
 }

@@ -1,15 +1,13 @@
 includes: []
 requires:
-  libraries:
-    []
-    # - name: Zefiros-Software/Boost
-    #   version: ^1.6.9 <1.69
-    # - name: Zefiros-Software/The-Forge
-    #   version: ^1.6.9
-    # - name: Zefiros-Software/GoogleTest
-    #   version: ^1.7.0
-    # - path: sandbox2
+  #libraries:
+  # - name: Zefiros-Software/Boost
+  #   version: ^1.6.9 <1.69
+  # - name: Zefiros-Software/The-Forge
+  #   version: ^1.6.9
+  # - name: Zefiros-Software/GoogleTest
+  #   version: ^1.7.0
+  #- path: sandbox2
   extractors:
     - name: ZPM
       path: extractors/default
-      version: "*"

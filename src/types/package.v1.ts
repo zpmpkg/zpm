@@ -4,7 +4,7 @@ export type PackageSchema =
           versions: string
           definition: PackageDefinition
       }
-export type PackageEntry = PackageGitEntry | PackagePathEntry | PackageNamedPathEntry
+export type PackageEntry = PackagePathEntry | PackageGitEntry
 
 export interface PackageDefinition {
     development?: PackageEntries
@@ -18,18 +18,9 @@ export interface PackageEntries {
      */
     [k: string]: PackageEntry[]
 }
-export interface PackageGitEntry {
-    name: string
-    version: string
-    settings?: {
-        /**
-         * This interface was referenced by `undefined`'s JSON-Schema definition
-         * via the `patternProperty` "\w+".
-         */
-        [k: string]: any[]
-    }
-}
 export interface PackagePathEntry {
+    name?: string
+    version?: string
     path: string
     settings?: {
         /**
@@ -39,10 +30,9 @@ export interface PackagePathEntry {
         [k: string]: any
     }
 }
-export interface PackageNamedPathEntry {
+export interface PackageGitEntry {
     name: string
     version: string
-    path: string
     settings?: {
         /**
          * This interface was referenced by `undefined`'s JSON-Schema definition

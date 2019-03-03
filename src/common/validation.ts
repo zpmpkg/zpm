@@ -3,7 +3,7 @@ import betterAjvErrors from 'better-ajv-errors'
 import { omit } from 'lodash'
 import { definitionsV1 } from '~/schemas/schemas'
 
-const ajv = new Ajv({ useDefaults: true, jsonPointers: true, allErrors: true })
+const ajv = new Ajv({ useDefaults: true, jsonPointers: true, allErrors: false })
 export function buildSchema(schema: any): ValidateFunction {
     return ajv.compile({
         ...schema,

@@ -28,9 +28,11 @@ export class ZPM {
         this.root = this.registries.addPackage(
             'libraries',
             {
-                path: environment.directory.workingdir,
+                name: '$ROOT',
+                path: './',
             },
             {
+                absolutePath: '$ROOT',
                 isRoot: true,
             }
         )
@@ -57,9 +59,7 @@ export class ZPM {
             spinners.stop()
         } catch (error) {
             spinners.stop()
-            logger.error(
-                `Failed to resolve the dependency graph:\n\n${error.message}\n${error.stack}`
-            )
+            logger.error(`Failed to resolve the dependency graph:\n\n${error.stack}`)
             return false
         }
 

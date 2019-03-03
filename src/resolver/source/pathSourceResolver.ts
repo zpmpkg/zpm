@@ -1,4 +1,6 @@
 import { join, normalizeSafe } from 'upath'
+import { isDefined } from '~/common/util'
+// import { isDefined } from '~/common/util'
 import { SourceResolver } from '~/resolver/source/sourceResolver'
 import { PathDefinitionResolver } from '../definition/pathDefinitionResolver'
 import { isPathEntry } from './factory'
@@ -9,6 +11,9 @@ export class PathSourceResolver extends SourceResolver {
         return true
     }
     public getName(): string {
+        // if (isDefined(this.package.entry.name) && this.package.entry.name !== '$ROOT') {
+        //     return this.package.entry.name
+        // }
         return 'PATH'
     }
 
@@ -17,15 +22,15 @@ export class PathSourceResolver extends SourceResolver {
     }
 
     public getDefinitionPath(): string {
-        if (this.package.options.root) {
-            return normalizeSafe(
-                join(
-                    this.package.options.root.resolver.getDefinitionPath(),
-                    this.definition || this.repository
-                )
-            )
+        let path = this.definition || this.repository
+
+        if (isDefined(this.package.options.absolutePath)) {
+            path = join(this.package.options.absolutePath, path)
         }
-        return this.definition || this.repository
+        if (this.package.options.root) {
+            return normalizeSafe(join(this.package.options.root.resolver.getDefinitionPath(), path))
+        }
+        return path
     }
 
     public getRepositoryPath(): string {
@@ -48,9 +53,11 @@ export class PathSourceResolver extends SourceResolver {
         if (isPathEntry(this.package.entry)) {
             if (this.package.options.root) {
                 // @todo, check whether escaping sandbox
-                return normalizeSafe(
-                    `${this.package.options.root.resolver.getPath()}/${this.package.entry.path}`
-                )
+                const parentPath = this.package.options.root.resolver.getPath()
+                if (parentPath !== '$ROOT') {
+                    return normalizeSafe(join(parentPath, this.package.entry.path))
+                }
+                return normalizeSafe(this.package.entry.path)
             }
             return this.package.entry.path
         } else {

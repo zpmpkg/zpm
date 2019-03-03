@@ -7,9 +7,14 @@
 
 /**
  * This interface was referenced by `DefinitionsSchema`'s JSON-Schema
+ * via the `definition` "RegistryDefinition".
+ */
+export type RegistryDefinition = RegistryGitLocationEntry | RegistryPathLocationEntry
+/**
+ * This interface was referenced by `DefinitionsSchema`'s JSON-Schema
  * via the `definition` "RegistryEntry".
  */
-export type RegistryEntry = RegistryGitEntry | RegistryPathEntry | RegistryNamedPathEntry
+export type RegistryEntry = RegistryGitEntry | RegistryPathEntry
 
 export interface DefinitionsSchema {
     [k: string]: any
@@ -24,11 +29,18 @@ export interface ManifestOptions {
 }
 /**
  * This interface was referenced by `DefinitionsSchema`'s JSON-Schema
- * via the `definition` "RegistryDefinition".
+ * via the `definition` "RegistryGitLocationEntry".
  */
-export interface RegistryDefinition {
+export interface RegistryGitLocationEntry {
     url: string
     branch?: string
+}
+/**
+ * This interface was referenced by `DefinitionsSchema`'s JSON-Schema
+ * via the `definition` "RegistryPathLocationEntry".
+ */
+export interface RegistryPathLocationEntry {
+    path: string
 }
 /**
  * This interface was referenced by `DefinitionsSchema`'s JSON-Schema
@@ -44,13 +56,6 @@ export interface RegistryGitEntry {
  * via the `definition` "RegistryPathEntry".
  */
 export interface RegistryPathEntry {
-    path: string
-}
-/**
- * This interface was referenced by `DefinitionsSchema`'s JSON-Schema
- * via the `definition` "RegistryNamedPathEntry".
- */
-export interface RegistryNamedPathEntry {
-    name: string
+    name?: string
     path: string
 }

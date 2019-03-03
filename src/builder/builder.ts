@@ -22,11 +22,7 @@ export class Builder {
         this.root = root
         this.lockFile = lockFile
 
-        this.types = uniq([
-            ...keys(get(this.lockFile, 'git')),
-            ...keys(get(this.lockFile, 'path')),
-            ...keys(get(this.lockFile, 'named')),
-        ])
+        this.types = uniq([...keys(get(this.lockFile, 'git')), ...keys(get(this.lockFile, 'path'))])
 
         logger.info(lockFile)
     }

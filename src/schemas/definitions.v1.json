@@ -9,6 +9,16 @@
     }
   },
   "RegistryDefinition": {
+    "oneOf": [
+      {
+        "$ref": "#/definitions/RegistryGitLocationEntry"
+      },
+      {
+        "$ref": "#/definitions/RegistryPathLocationEntry"
+      }
+    ]
+  },
+  "RegistryGitLocationEntry": {
     "type": "object",
     "properties": {
       "url": {
@@ -24,6 +34,18 @@
       "url"
     ]
   },
+  "RegistryPathLocationEntry": {
+    "type": "object",
+    "properties": {
+      "path": {
+        "type": "string"
+      }
+    },
+    "additionalProperties": false,
+    "required": [
+      "path"
+    ]
+  },
   "RegistryEntry": {
     "oneOf": [
       {
@@ -31,9 +53,6 @@
       },
       {
         "$ref": "#/definitions/RegistryPathEntry"
-      },
-      {
-        "$ref": "#/definitions/RegistryNamedPathEntry"
       }
     ]
   },
@@ -42,7 +61,7 @@
     "properties": {
       "name": {
         "type": "string",
-        "pattern": "^([a-zA-Z0-9_-]{2,50}/[a-zA-Z0-9_-]{2,50})$"
+        "pattern": "^([a-zA-Z0-9_\\-]{2,50}/[a-zA-Z0-9_\\-]{2,50})$"
       },
       "repository": {
         "type": "string",
@@ -59,26 +78,13 @@
       "repository"
     ]
   },
-  "RegistryNamedPathEntry": {
+  "RegistryPathEntry": {
     "type": "object",
     "properties": {
       "name": {
         "type": "string",
-        "pattern": "^([a-zA-Z0-9_-]{2,50}/[a-zA-Z0-9_-]{2,50})$"
+        "pattern": "^([a-zA-Z0-9_\\-]{2,50}/[a-zA-Z0-9_\\-]{2,50})$"
       },
-      "path": {
-        "type": "string"
-      }
-    },
-    "additionalProperties": false,
-    "required": [
-      "name",
-      "path"
-    ]
-  },
-  "RegistryPathEntry": {
-    "type": "object",
-    "properties": {
       "path": {
         "type": "string"
       }

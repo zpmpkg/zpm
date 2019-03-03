@@ -11,16 +11,16 @@ import { shortHash } from '~/common/util'
 import { RegistryDefinition } from '~/types/definitions.v1'
 
 export class Registry {
-    public url: string
+    public urlOrPath: string
     public branch?: string
     public valid: boolean = true
     public directory: string | undefined
     public isLocal: boolean = false
     public isUpdated: boolean = false
     public name?: string
-    constructor(url: string, options?: { branch?: string; name?: string }) {
+    constructor(urlOrPath: string, options?: { branch?: string; name?: string }) {
         const { branch, name } = options || { branch: undefined, name: undefined }
-        this.url = url
+        this.urlOrPath = urlOrPath
         this.branch = branch
         this.name = name
     }
@@ -29,23 +29,22 @@ export class Registry {
         if (this.isUpdated) {
             return undefined
         }
-
-        if (gitUrlParse(this.url).protocol === 'file') {
-            if (await fs.pathExists(this.url)) {
-                this.directory = this.url
+        if (gitUrlParse(this.urlOrPath).protocol === 'file') {
+            if (await fs.pathExists(this.urlOrPath)) {
+                this.directory = this.urlOrPath
             } else {
-                logger.error(`We do not support file protocol for registry: ${this.url}`)
+                logger.error(`We do not support file protocol for registry: ${this.urlOrPath}`)
                 this.valid = false
             }
         } else {
-            this.directory = join(environment.directory.registries, shortHash(this.url))
+            this.directory = join(environment.directory.registries, shortHash(this.urlOrPath))
             if (await this.mayPull()) {
-                const spin = spinners.create(`Pulling registry ${this.url}`)
-                const fetched = await cloneOrPull(this.directory, this.url, {
+                const spin = spinners.create(`Pulling registry ${this.urlOrPath}`)
+                const fetched = await cloneOrPull(this.directory, this.urlOrPath, {
                     branch: this.branch,
                     stream: spin.stream,
                 })
-                spin.succeed(`Pulled registry '${this.url}' ${this.getHitInfo(fetched)}`)
+                spin.succeed(`Pulled registry '${this.urlOrPath}' ${this.getHitInfo(fetched)}`)
             }
         }
         this.isUpdated = true
@@ -56,7 +55,7 @@ export class Registry {
     private async mayPull() {
         return (
             update() ||
-            (!(await fs.pathExists(this.directory!)) && (headless() || askRegistry(this.url)))
+            (!(await fs.pathExists(this.directory!)) && (headless() || askRegistry(this.urlOrPath)))
         )
     }
 

@@ -3,3 +3,6 @@
 - name: Zefiros-Software/FlatHashMap
   definition: "https://github.com/Zefiros-Software/FlatHashMap.git"
   repository: "https://github.com/skarupke/flat_hash_map.git"
+- name: Zefiros-Software/GoogleTest
+  repository: "https://github.com/google/googletest.git"
+  definition: "https://github.com/Zefiros-Software/GoogleTest.git"

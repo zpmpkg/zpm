@@ -1,6 +1,6 @@
 import AppDirectory from 'appdirectory'
 import * as fs from 'fs-extra'
-import { join } from 'upath'
+import { join, resolve } from 'upath'
 import { workingdir } from '~/cli/program'
 
 const dirs = new AppDirectory({ appName: 'zpm', appAuthor: 'Zefiros' })
@@ -30,7 +30,7 @@ export const environment = {
         packages: join(userCache(), 'packages'),
         extract: join(workingdir(), 'extern'),
         zpm: join(__dirname, '../../'),
-        workingdir: workingdir(),
+        workingdir: resolve(workingdir()),
     },
 }
 

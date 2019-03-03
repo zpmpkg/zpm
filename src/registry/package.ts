@@ -11,6 +11,7 @@ export interface PackageOptions {
     isRoot?: boolean
     rootHash?: string
     forceName?: boolean
+    absolutePath?: string
 }
 
 export class Package {
@@ -39,7 +40,7 @@ export class Package {
             this.vendor = split[0]
         } else if (isPathEntry(entry)) {
             this.fullName = this.getFullName()
-            this.name = path.basename(entry.path)
+            this.name = entry.name || path.basename(entry.path)
             this.vendor = 'Local'
         }
     }

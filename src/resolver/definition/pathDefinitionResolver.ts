@@ -1,6 +1,7 @@
 import * as fs from 'fs-extra'
 import { find, has, isArray } from 'lodash'
 import { join } from 'upath'
+import { transformPath } from '~/common/io'
 import { logger } from '~/common/logger'
 import { VersionRange } from '~/common/range'
 import { isDefined } from '~/common/util'
@@ -62,8 +63,8 @@ export class PathDefinitionResolver extends DefinitionResolver {
     ): Promise<{ content: PackageDefinition | undefined; path?: string }> {
         logger.logfile.info(`Trying to read '${this.source.package.fullName}' from '${directory}`)
         for (const prefix of ['.', '']) {
-            const json = join(directory, `${prefix}package.json`)
-            const yml = join(directory, `${prefix}package.yml`)
+            const json = transformPath(join(directory, `${prefix}package.json`))
+            const yml = transformPath(join(directory, `${prefix}package.yml`))
             let pth: string = directory
             let content: PackageDefinition | undefined
             if (await fs.pathExists(json)) {
@@ -76,7 +77,6 @@ export class PathDefinitionResolver extends DefinitionResolver {
                 )
                 pth = yml
             }
-
             return { content, path: pth }
         }
         return { content: undefined, path: directory }

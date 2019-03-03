@@ -1,14 +1,24 @@
 {
   "git": {},
   "path": {
+    "extractors": [
+      {
+        "name": "ZPM",
+        "path": "./",
+        "settings": {}
+      },
+      {
+        "name": "ZPM",
+        "path": "extractors/default",
+        "settings": {}
+      }
+    ],
     "libraries": [
       {
-        "root": "$ROOT",
-        "path": "sandbox/",
-        "name": "libraries:PATH:$ROOT",
+        "name": "$ROOT",
+        "path": "./",
         "settings": {}
       }
     ]
-  },
-  "named": {}
+  }
 }

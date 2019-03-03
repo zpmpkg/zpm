@@ -1,3 +1,8 @@
-import { RegistryDefinition } from './definitions.v1'
+import {
+    RegistryDefinition,
+    RegistryGitLocationEntry,
+    RegistryPathLocationEntry,
+} from './definitions.v1'
 
+export type RegistryDefinition = RegistryGitLocationEntry | RegistryPathLocationEntry
 export type RegistrySchema = RegistryDefinition[]

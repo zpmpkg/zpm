@@ -23,22 +23,12 @@ export interface SATGitPackage {
 }
 
 export interface SATPathPackage {
-    root: string
     path: string
     name: string
-    settings: any
-}
-
-export interface SATNamedPackage {
-    name: string
-    path: string
-    version: string
-    hash: string
     settings: any
 }
 
 export interface SATSolution {
     git: { [k: string]: SATGitPackage[] }
     path: { [k: string]: SATPathPackage[] }
-    named: { [k: string]: SATNamedPackage[] }
 }
