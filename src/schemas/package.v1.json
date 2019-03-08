@@ -53,6 +53,9 @@
         "version": {
           "type": "string"
         },
+        "optional": {
+          "type": "boolean"
+        },
         "settings": {
           "type": "object",
           "patternProperties": {
@@ -85,6 +88,9 @@
         "path": {
           "type": "string"
         },
+        "optional": {
+          "type": "boolean"
+        },
         "settings": {
           "type": "object",
           "patternProperties": {
@@ -102,14 +108,23 @@
       "type": "object",
       "patternProperties": {
         "\\w+": {
+          "$ref": "#/definitions/PackageSingularArrayEntry"
+        }
+      }
+    },
+    "PackageSingularArrayEntry": {
+      "oneOf": [
+        {
           "type": "array",
           "items": {
             "$ref": "#/definitions/PackageEntry"
           },
           "additionalItems": false
+        },
+        {
+          "$ref": "#/definitions/PackageEntry"
         }
-      },
-      "additionalProperties": false
+      ]
     }
   }
 }

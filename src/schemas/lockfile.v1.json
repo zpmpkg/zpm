@@ -38,6 +38,12 @@
     "GitLock": {
       "type": "object",
       "properties": {
+        "id": {
+          "type": "string"
+        },
+        "usage": {
+          "$ref": "#/definitions/UsageLock"
+        },
         "name": {
           "type": "string",
           "pattern": "^([a-zA-Z0-9_\\-]{2,50}/[a-zA-Z0-9_\\-]{2,50})$"
@@ -58,6 +64,7 @@
       },
       "additionalProperties": false,
       "required": [
+        "id",
         "name",
         "version",
         "hash",
@@ -67,6 +74,12 @@
     "PathLock": {
       "type": "object",
       "properties": {
+        "id": {
+          "type": "string"
+        },
+        "usage": {
+          "$ref": "#/definitions/UsageLock"
+        },
         "name": {
           "type": "string",
           "pattern": "^([a-zA-Z0-9_\\-\\$]{2,50}(/[a-zA-Z0-9_\\-]{2,50})?)$"
@@ -84,9 +97,48 @@
       },
       "additionalProperties": false,
       "required": [
+        "id",
         "path",
         "name",
         "settings"
+      ]
+    },
+    "UsageLock": {
+      "type": "object",
+      "properties": {
+        "required": {
+          "type": "object",
+          "patternProperties": {
+            "\\w+": {
+              "$ref": "#/definitions/UsageEntryLock"
+            }
+          },
+          "additionalProperties": false
+        },
+        "optional": {
+          "type": "object",
+          "patternProperties": {
+            "\\w+": {
+              "$ref": "#/definitions/UsageEntryLock"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "UsageEntryLock": {
+      "oneOf": [
+        {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "additionalItems": false
+        },
+        {
+          "type": "string"
+        }
       ]
     }
   }

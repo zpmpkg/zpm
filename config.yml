@@ -4,7 +4,18 @@ registries:
   - path: $ZPM/registry
 registry:
   - name: libraries
-  - name: extractors
+  - name: extractor
     options:
+      singular: true
       schema: $ZPM/extractors/extractor.v1.json
-  - name: builders
+      defaults:
+        libraries:
+          name: ZPM
+          path: extractors/default
+  - name: builder
+    options:
+      singular: true
+      defaults:
+        libraries:
+          name: ZPM
+          path: builder/default

@@ -25,6 +25,10 @@ export interface DefinitionsSchema {
  */
 export interface ManifestOptions {
     schema?: string
+    singular?: boolean
+    defaults?: {
+        [k: string]: any
+    }
     [k: string]: any
 }
 /**

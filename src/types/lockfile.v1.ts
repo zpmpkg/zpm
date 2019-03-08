@@ -1,3 +1,12 @@
+/**
+ * This interface was referenced by `undefined`'s JSON-Schema definition
+ * via the `patternProperty` "\w+".
+ *
+ * This interface was referenced by `undefined`'s JSON-Schema definition
+ * via the `patternProperty` "\w+".
+ */
+export type UsageEntryLock = string[] | string
+
 export interface LockfileSchema {
     git: {
         /**
@@ -15,6 +24,8 @@ export interface LockfileSchema {
     }
 }
 export interface GitLock {
+    id: string
+    usage?: UsageLock
     name: string
     version: string
     hash: string
@@ -26,7 +37,17 @@ export interface GitLock {
         [k: string]: any
     }
 }
+export interface UsageLock {
+    required?: {
+        [k: string]: UsageEntryLock
+    }
+    optional?: {
+        [k: string]: UsageEntryLock
+    }
+}
 export interface PathLock {
+    id: string
+    usage?: UsageLock
     name: string
     path: string
     settings: {

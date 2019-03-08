@@ -11,10 +11,7 @@ export class PathSourceResolver extends SourceResolver {
         return true
     }
     public getName(): string {
-        // if (isDefined(this.package.entry.name) && this.package.entry.name !== '$ROOT') {
-        //     return this.package.entry.name
-        // }
-        return 'PATH'
+        return `PATH:${this.package.entry.name}`
     }
 
     public async extract(hash?: string): Promise<void> {

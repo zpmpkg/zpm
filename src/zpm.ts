@@ -1,7 +1,7 @@
 import { Configuration } from '~/common/config'
 import { environment, loadEnvironment } from '~/common/environment'
 import { Registries } from '~/registry/registries'
-// import { Builder } from './builder/builder'
+import { Builder } from './builder/builder'
 import { spinners } from './cli/spinner'
 import { logger } from './common/logger'
 import { storage } from './common/storage'
@@ -66,10 +66,10 @@ export class ZPM {
         if (isDefined(lockFile)) {
             spinners.start()
 
-            // const builder = new Builder(this.registries, this.root, lockFile)
-            // await builder.load()
+            const builder = new Builder(this.registries, this.root, lockFile)
+            await builder.load()
 
-            // await builder.extract()
+            await builder.extract()
 
             await solver.save()
 

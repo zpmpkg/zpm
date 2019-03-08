@@ -5,6 +5,12 @@
     "properties": {
       "schema": {
         "type": "string"
+      },
+      "singular": {
+        "type": "boolean"
+      },
+      "defaults": {
+        "\\w+": {}
       }
     }
   },

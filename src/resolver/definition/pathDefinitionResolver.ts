@@ -44,7 +44,12 @@ export class PathDefinitionResolver extends DefinitionResolver {
         if (!isDefined(content.content)) {
             throw new Error(`Could not find a matching schema for version '${version}'`)
         }
-        return fromPackageDefinition(content.content, this.source.package.options)
+        return fromPackageDefinition(
+            content.content,
+            this.source.package.options,
+            this.source.package.manifest.registries,
+            this.source.package.manifest.type
+        )
     }
 
     public getDefinitionPath() {

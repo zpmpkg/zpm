@@ -26,7 +26,9 @@ export class Version {
                     this.isTag = true
                     this.cost = isDefined(coptions.cost) ? coptions.cost : 0
                 } else {
-                    throw new TypeError(`Could not convert '${version}' to a version`)
+                    throw new TypeError(
+                        `Could not convert '${JSON.stringify(version)}' to a version`
+                    )
                 }
             } else {
                 this.cost = Math.trunc(

@@ -38,8 +38,9 @@ export class Builder {
     }
 
     private async createBuilders(type: string) {
+        await Promise.all([this.builders.push()])
         await Promise.all(
-            this.lockFile.git[type].map(async pkg => {
+            (this.lockFile.git[type] || []).map(async pkg => {
                 const found: Package = this.registries.searchPackage(type, {
                     name: pkg.name,
                 })
@@ -51,12 +52,12 @@ export class Builder {
             })
         )
         await Promise.all(
-            this.lockFile.path[type].map(async pkg => {
-                if (pkg.root === '$ROOT') {
+            (this.lockFile.path[type] || []).map(async pkg => {
+                if (pkg.name === '$ROOT') {
                     this.builders.push(new RootBuilder())
                 } else {
                     const root: Package = this.registries.searchPackage(type, {
-                        name: pkg.root,
+                        name: pkg.name,
                     })
                     if (isDefined(root)) {
                         this.builders.push(new PathBuilder())

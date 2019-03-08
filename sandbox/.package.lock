@@ -1,13 +1,45 @@
 {
-  "git": {},
-  "path": {
-    "extractors": [
+  "git": {
+    "libraries": [
       {
+        "id": "libraries:GIT:Zefiros-Software/GoogleTest@1.8.1",
+        "name": "Zefiros-Software/GoogleTest",
+        "version": "1.8.1",
+        "hash": "2fe3bd994b3189899d93f1d5a881e725e046fdc2",
+        "settings": {},
+        "usage": {
+          "required": {
+            "extractor": "extractor:PATH:ZPM:extractors/default",
+            "builder": "builder:PATH:ZPM:builder/default"
+          }
+        }
+      }
+    ]
+  },
+  "path": {
+    "builder": [
+      {
+        "id": "builder:PATH:ZPM:./",
         "name": "ZPM",
         "path": "./",
         "settings": {}
       },
       {
+        "id": "builder:PATH:ZPM:builder/default",
+        "name": "ZPM",
+        "path": "builder/default",
+        "settings": {}
+      }
+    ],
+    "extractor": [
+      {
+        "id": "extractor:PATH:ZPM:./",
+        "name": "ZPM",
+        "path": "./",
+        "settings": {}
+      },
+      {
+        "id": "extractor:PATH:ZPM:extractors/default",
         "name": "ZPM",
         "path": "extractors/default",
         "settings": {}
@@ -15,9 +47,67 @@
     ],
     "libraries": [
       {
+        "id": "libraries:PATH:$ROOT:$ROOT",
         "name": "$ROOT",
         "path": "./",
-        "settings": {}
+        "settings": {},
+        "usage": {
+          "required": {
+            "builder": "builder:PATH:ZPM:builder/default",
+            "extractor": "extractor:PATH:ZPM:extractors/default",
+            "libraries": [
+              "libraries:PATH:$ROOT:$ROOT:sandbox2"
+            ]
+          }
+        }
+      },
+      {
+        "id": "libraries:PATH:$ROOT:$ROOT:sandbox2",
+        "name": "$ROOT",
+        "path": "sandbox2",
+        "settings": {},
+        "usage": {
+          "required": {
+            "extractor": "extractor:PATH:ZPM:extractors/default",
+            "builder": "builder:PATH:ZPM:builder/default",
+            "libraries": [
+              "libraries:PATH:$ROOT:$ROOT:sandbox2/sandbox3",
+              "libraries:GIT:Zefiros-Software/GoogleTest@1.8.1"
+            ]
+          }
+        }
+      },
+      {
+        "id": "libraries:PATH:$ROOT:$ROOT:sandbox2/sandbox3",
+        "name": "$ROOT",
+        "path": "sandbox2/sandbox3",
+        "settings": {
+          "wooo": "fooo"
+        },
+        "usage": {
+          "required": {
+            "extractor": "extractor:PATH:ZPM:extractors/default",
+            "builder": "builder:PATH:ZPM:builder/default",
+            "libraries": [
+              "libraries:PATH:$ROOT:$ROOT:sandbox2/sandbox4",
+              "libraries:GIT:Zefiros-Software/GoogleTest@1.8.1"
+            ]
+          }
+        }
+      },
+      {
+        "id": "libraries:PATH:$ROOT:$ROOT:sandbox2/sandbox4",
+        "name": "$ROOT",
+        "path": "sandbox2/sandbox4",
+        "settings": {
+          "wooo": "fooodd"
+        },
+        "usage": {
+          "required": {
+            "extractor": "extractor:PATH:ZPM:extractors/default",
+            "builder": "builder:PATH:ZPM:builder/default"
+          }
+        }
       }
     ]
   }

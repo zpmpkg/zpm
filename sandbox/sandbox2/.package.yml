@@ -7,8 +7,8 @@ requires:
     #   version: ^1.8.0
     # prevent this
     ##- path: ../
-    #- name: Zefiros-Software/GoogleTest
-    #  version: ^1.7.0
+    - name: Zefiros-Software/GoogleTest
+      version: ^1.7.0
     - path: sandbox3
       settings:
         wooo: fooo

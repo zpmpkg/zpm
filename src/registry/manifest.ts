@@ -24,7 +24,10 @@ export class Manifest {
     constructor(registries: Registries, type: string, options: ManifestOptions = {}) {
         this.registries = registries
         this.type = type
-        this.options = options
+        this.options = {
+            singular: false,
+            ...options,
+        }
     }
 
     public async load() {

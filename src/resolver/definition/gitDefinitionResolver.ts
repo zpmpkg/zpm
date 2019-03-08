@@ -39,7 +39,12 @@ export class GitDefinitionResolver extends DefinitionResolver {
             throw new Error(`Could not find a matching schema for version '${hash}'`)
         }
 
-        return fromPackageDefinition(content.content, this.source.package.options)
+        return fromPackageDefinition(
+            content.content,
+            this.source.package.options,
+            this.source.package.manifest.registries,
+            this.source.package.manifest.type
+        )
     }
 
     public getDefinitionPath() {

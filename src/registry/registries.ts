@@ -37,6 +37,10 @@ export class Registries {
         await this.loadManifests()
     }
 
+    public getManifest(type: string) {
+        return this.manifests[type]
+    }
+
     public searchPackage(type: string, search: { name: string }) {
         return get(this.manifests, [type, 'entries', search.name])
     }
