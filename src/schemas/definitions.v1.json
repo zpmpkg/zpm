@@ -6,7 +6,7 @@
       "schema": {
         "type": "string"
       },
-      "singular": {
+      "isBuildDefinition": {
         "type": "boolean"
       },
       "defaults": {

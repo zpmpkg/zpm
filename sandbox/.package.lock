@@ -71,8 +71,7 @@
             "extractor": "extractor:PATH:ZPM:extractors/default",
             "builder": "builder:PATH:ZPM:builder/default",
             "libraries": [
-              "libraries:PATH:$ROOT:$ROOT:sandbox2/sandbox3",
-              "libraries:GIT:Zefiros-Software/GoogleTest@1.8.1"
+              "libraries:PATH:$ROOT:$ROOT:sandbox2/sandbox3"
             ]
           }
         }
@@ -89,8 +88,7 @@
             "extractor": "extractor:PATH:ZPM:extractors/default",
             "builder": "builder:PATH:ZPM:builder/default",
             "libraries": [
-              "libraries:PATH:$ROOT:$ROOT:sandbox2/sandbox4",
-              "libraries:GIT:Zefiros-Software/GoogleTest@1.8.1"
+              "libraries:PATH:$ROOT:$ROOT:sandbox2/sandbox4"
             ]
           }
         }

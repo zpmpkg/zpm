@@ -25,7 +25,7 @@ export interface DefinitionsSchema {
  */
 export interface ManifestOptions {
     schema?: string
-    singular?: boolean
+    isBuildDefinition?: boolean
     defaults?: {
         [k: string]: any
     }

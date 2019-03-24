@@ -12,6 +12,7 @@ import { entriesV1 } from '~/schemas/schemas'
 import { ManifestOptions, RegistryEntry } from '~/types/definitions.v1'
 import { EntriesSchema } from '~/types/entries.v1'
 import { Registries } from './registries'
+import { settledPromiseAll } from '~/common/async'
 
 export class Manifest {
     public type: string
@@ -25,7 +26,7 @@ export class Manifest {
         this.registries = registries
         this.type = type
         this.options = {
-            singular: false,
+            isBuildDefinition: false,
             ...options,
         }
     }
@@ -35,7 +36,7 @@ export class Manifest {
             this.packageValidator = buildSchema(await this.loadFile(this.options.schema))
         }
 
-        await Promise.all(
+        await settledPromiseAll(
             this.registries.registries.map(async registry => {
                 let file = join(registry.directory, `${this.type}.json`)
                 if (!(await fs.pathExists(file))) {
@@ -48,7 +49,7 @@ export class Manifest {
                             origin: `${file}`,
                             validator: this.validator,
                         })
-                        await Promise.all(
+                        await settledPromiseAll(
                             contents.map(async (x: RegistryEntry) => {
                                 // do not allow overriding of packages
                                 let name!: string

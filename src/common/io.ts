@@ -4,6 +4,7 @@ import { safeLoad, safeLoadAll } from 'js-yaml'
 import { filter } from 'lodash'
 import path from 'path'
 import { join, relative } from 'upath'
+import { settledPromiseAll } from './async'
 import { environment } from './environment'
 
 export async function loadJson(file: string) {
@@ -40,7 +41,7 @@ export async function copy(source: string | string[], root: string, destination:
         })).map(f => f.toString()),
         f => isSubDirectory(f, root)
     )
-    await Promise.all(
+    await settledPromiseAll(
         files.map(async file => {
             await fs.copy(file, join(destination, relative(root, file)), {
                 preserveTimestamps: true,

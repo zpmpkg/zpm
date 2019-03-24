@@ -3,10 +3,9 @@ registries:
   #   branch: 'master'
   - path: $ZPM/registry
 registry:
-  - name: libraries
   - name: extractor
     options:
-      singular: true
+      isBuildDefinition: true
       schema: $ZPM/extractors/extractor.v1.json
       defaults:
         libraries:
@@ -14,8 +13,9 @@ registry:
           path: extractors/default
   - name: builder
     options:
-      singular: true
+      isBuildDefinition: true
       defaults:
         libraries:
           name: ZPM
           path: builder/default
+  - name: libraries

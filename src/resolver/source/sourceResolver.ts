@@ -1,7 +1,3 @@
-import * as fs from 'fs-extra'
-import { join } from 'upath'
-import { force } from '~/cli/program'
-import { environment } from '~/common/environment'
 import { Version } from '~/common/version'
 import { Package } from '~/registry/package'
 import { DefinitionResolver } from '../definition/definitionResolver'
@@ -26,7 +22,6 @@ export abstract class SourceResolver {
     }
 
     public abstract async load(): Promise<boolean>
-    public abstract async extract(hash?: string): Promise<void>
 
     public abstract getDefinitionPath(): string
 
@@ -41,37 +36,4 @@ export abstract class SourceResolver {
     public abstract getPath(): string
 
     public abstract getName(): string
-
-    public getExtractionPath(): string {
-        return join(
-            environment.directory.extract,
-            this.package.manifest.type,
-            this.package.vendor,
-            this.package.name
-        )
-    }
-
-    public async needsExtraction(hash?: string) {
-        const file = this.getExtractionHashPath()
-        if (!force() && (await fs.pathExists(file)) && hash) {
-            return (await fs.readFile(file)).toString() !== hash
-        }
-        return true
-    }
-
-    public async writeExtractionHash(hash?: string) {
-        if (hash) {
-            await fs.writeFile(this.getExtractionHashPath(), hash)
-        }
-    }
-
-    public getExtractionHashPath(): string {
-        return join(
-            environment.directory.extract,
-            this.package.manifest.type,
-            this.package.vendor,
-            this.package.name,
-            '.EXTRACTION_HASH'
-        )
-    }
 }

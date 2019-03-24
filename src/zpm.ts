@@ -69,7 +69,7 @@ export class ZPM {
             const builder = new Builder(this.registries, this.root, lockFile)
             await builder.load()
 
-            await builder.extract()
+            await builder.build()
 
             await solver.save()
 

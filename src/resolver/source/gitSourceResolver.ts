@@ -3,19 +3,16 @@ import { join } from 'upath'
 import { askPull } from '~/cli/inquiries'
 import { headless, update } from '~/cli/program'
 import { spinners } from '~/cli/spinner'
+import { settledPromiseAll } from '~/common/async'
 import { environment } from '~/common/environment'
 import {
-    checkout,
     cloneOrFetch,
     CloneOrFetchResult,
     cloneOrPull,
     CloneOrPullResult,
-    hasHash,
     showRef,
 } from '~/common/git'
-import { copy } from '~/common/io'
 // import { copy } from '~/common/io'
-import { logger } from '~/common/logger'
 import { isDefined } from '~/common/util'
 import { Version } from '~/common/version'
 import { SourceResolver } from '~/resolver/source/sourceResolver'
@@ -35,7 +32,7 @@ export class GitSourceResolver extends SourceResolver {
             ? new PathDefinitionResolver(this)
             : new GitDefinitionResolver(this)
         if (await this.mayPull()) {
-            await Promise.all([
+            await settledPromiseAll([
                 (async () => {
                     const spin = spinners.create(`Pulling repository '${this.package.fullName}':`)
                     const result = await cloneOrFetch(this.getRepositoryPath(), this.repository, {
@@ -140,55 +137,6 @@ export class GitSourceResolver extends SourceResolver {
             this.package.vendor,
             this.package.name
         )
-    }
-
-    public async extract(hash?: string): Promise<void> {
-        if (hash && (await this.needsExtraction(hash))) {
-            const spin = spinners.create(`Extracting '${this.package.fullName}@${hash}':`)
-            try {
-                await fs.remove(this.getExtractionPath())
-                await fs.ensureDir(this.getExtractionPath())
-
-                if (await this.ensureSourceHash(hash)) {
-                    await checkout(this.getRepositoryPath(), hash, { spinner: spin })
-                    await copy(
-                        //     (await this.definitionResolver.getPackageDefinition(hash)).includes,
-                        [
-                            '**/*.h',
-                            '**/*.cpp',
-                            '**/*.cc',
-                            '**/*.cxx',
-                            '**/*.c',
-                            '**/*.s',
-                            '**/*.m',
-                            '**/*.mm',
-                        ],
-                        this.getRepositoryPath(),
-                        this.getExtractionPath()
-                    )
-                } else {
-                    logger.error(
-                        `Failed to find hash '${hash}' on package '${this.package.fullName}'`
-                    )
-                }
-
-                // console.log(await this.definitionResolver.getPackageDefinition(hash))
-
-                await this.writeExtractionHash(hash)
-            } catch (err) {
-                logger.error(err)
-            }
-            spin.succeed(`Extracted '${this.package.fullName}'`)
-        }
-    }
-
-    public async ensureSourceHash(hash: string) {
-        if (await hasHash(this.getRepositoryPath(), hash)) {
-            return true
-        } else {
-            throw new Error(`Repository '${this.package.fullName}' does not contain hash '${hash}'`)
-        }
-        return false
     }
 
     public async mayPull() {

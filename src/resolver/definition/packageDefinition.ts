@@ -6,10 +6,10 @@ import { PackageDefinition, PackageGitEntry, PackagePathEntry } from '~/types/pa
 import { PackageOptions } from '../../registry/package'
 
 interface PackagePathDefinitionEntry extends PackagePathEntry {
-    singular: boolean
+    isBuildDefinition: boolean
 }
 interface PackageGitDefinitionEntry extends PackageGitEntry {
-    singular: boolean
+    isBuildDefinition: boolean
 }
 
 export interface PackageDefinitionSummary {
@@ -31,13 +31,7 @@ export function fromPackageDefinition(
     registries: Registries,
     pkgType: string
 ): PackageDefinitionSummary {
-    // @todo just loop all available
-    const types: string[] = uniq([
-        ...keys(get(pkg, 'requires')),
-        ...keys(get(pkg, 'development')),
-        'extractor',
-        'builder',
-    ])
+    const types = registries.getTypes()
     const definition: PackageDefinitionSummary = {
         packages: {
             path: {},
@@ -53,7 +47,7 @@ export function fromPackageDefinition(
         const manifest = registries.getManifest(type)
         let values = get(pkg, ['requires', type], [])
         if (!isArray(values)) {
-            if (manifest.options.singular) {
+            if (manifest.options.isBuildDefinition) {
                 values = [values]
             } else {
                 // todo throw
@@ -77,7 +71,7 @@ export function fromPackageDefinition(
                     path: entry.path,
                     version: entry.version,
                     settings: entry.settings || {},
-                    singular: manifest.options.singular!,
+                    isBuildDefinition: manifest.options.isBuildDefinition!,
                 })
             } else if (isGitPackageEntry(entry)) {
                 if (!isDefined(definition.packages.git[type])) {
@@ -88,7 +82,7 @@ export function fromPackageDefinition(
                     name: entry.name,
                     version: entry.version,
                     settings: entry.settings || {},
-                    singular: manifest.options.singular!,
+                    isBuildDefinition: manifest.options.isBuildDefinition!,
                 })
             }
         })

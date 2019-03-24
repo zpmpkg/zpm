@@ -1,4 +1,5 @@
 import { filter, flatten, get, has } from 'lodash'
+import { settledPromiseAll } from '~/common/async'
 import { environment } from '~/common/environment'
 import { transformPath } from '~/common/io'
 import { isDefined } from '~/common/util'
@@ -37,6 +38,14 @@ export class Registries {
         await this.loadManifests()
     }
 
+    public getTypes() {
+        return this.zpm.config.values.registry.map(r => r.name)
+    }
+
+    public getRegistries() {
+        return this.zpm.config.values.registry
+    }
+
     public getManifest(type: string) {
         return this.manifests[type]
     }
@@ -50,7 +59,7 @@ export class Registries {
     }
 
     private async loadManifests() {
-        await Promise.all(
+        await settledPromiseAll(
             this.zpm.config.values.registry.map(async r => {
                 this.manifests[r.name] = new Manifest(this, r.name, r.options)
 
@@ -74,7 +83,7 @@ export class Registries {
         ]
         const newRegistries: RegistryDefinition[] = flatten(
             filter(
-                await Promise.all(registries.map(async registry => registry.update())),
+                await settledPromiseAll(registries.map(async registry => registry.update())),
                 isDefined
             )
         )
@@ -82,7 +91,7 @@ export class Registries {
         newRegistries.filter(isGitRegistry).forEach(r => {
             registries.push(new Registry(r.url, { branch: r.branch }))
         })
-        await Promise.all(
+        await settledPromiseAll(
             registries.map(async registry => {
                 await registry.update()
             })

@@ -18,7 +18,7 @@ export class Package {
     public name!: string
     public vendor!: string
     public fullName!: string
-    public resolver: SourceResolver
+    public source: SourceResolver
     public manifest: Manifest
     public options: PackageOptions
     public entry: RegistryEntry
@@ -26,7 +26,7 @@ export class Package {
 
     constructor(manifest: Manifest, entry: RegistryEntry, options?: PackageOptions) {
         this.manifest = manifest
-        this.resolver = createSourceResolver(entry, this)
+        this.source = createSourceResolver(entry, this)
         this.entry = entry
         this.options = {
             isRoot: false,
@@ -46,27 +46,23 @@ export class Package {
     }
 
     public getHash() {
-        return `${this.manifest.type}:${this.resolver.getName()}:${this.fullName}`
+        return `${this.manifest.type}:${this.source.getName()}:${this.fullName}`
     }
 
     public async load(): Promise<boolean> {
         if (!this.loaded) {
-            this.loaded = await this.resolver.load()
+            this.loaded = await this.source.load()
         }
         return this.loaded
-    }
-
-    public async extract(hash: string) {
-        await this.resolver.extract(hash)
     }
 
     public getFullName(): string {
         if (this.options.isRoot) {
             return '$ROOT'
         } else if (this.options.rootHash) {
-            return `${this.getRootName()}:${normalize(this.resolver.getPath())}`
+            return `${this.getRootName()}:${normalize(this.source.getPath())}`
         }
-        return this.resolver.getPath()
+        return this.source.getPath()
     }
 
     public getRootName(): string {

@@ -30,10 +30,14 @@
     "sourceMap": true
   },
   "include": [
-    "src/**/*"
+    "src/**/*",
+    "extractors/**/*"
   ],
   "exclude": [
     "node_modules",
     "**/*.spec.ts"
+  ],
+  "files": [
+    "./typings/api.d.ts"
   ]
 }

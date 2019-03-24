@@ -2,6 +2,7 @@ import AppDirectory from 'appdirectory'
 import * as fs from 'fs-extra'
 import { join, resolve } from 'upath'
 import { workingdir } from '~/cli/program'
+import { settledPromiseAll } from './async'
 
 const dirs = new AppDirectory({ appName: 'zpm', appAuthor: 'Zefiros' })
 
@@ -36,7 +37,7 @@ export const environment = {
 
 export async function loadEnvironment() {
     const directories = [userData(), userConfig(), userCache(), userLogs()]
-    await Promise.all(
+    await settledPromiseAll(
         directories.map(async d => {
             if (!(await fs.pathExists(d))) {
                 await fs.ensureDir(d)

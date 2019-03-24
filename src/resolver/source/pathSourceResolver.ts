@@ -14,10 +14,6 @@ export class PathSourceResolver extends SourceResolver {
         return `PATH:${this.package.entry.name}`
     }
 
-    public async extract(hash?: string): Promise<void> {
-        //
-    }
-
     public getDefinitionPath(): string {
         let path = this.definition || this.repository
 
@@ -25,7 +21,7 @@ export class PathSourceResolver extends SourceResolver {
             path = join(this.package.options.absolutePath, path)
         }
         if (this.package.options.root) {
-            return normalizeSafe(join(this.package.options.root.resolver.getDefinitionPath(), path))
+            return normalizeSafe(join(this.package.options.root.source.getDefinitionPath(), path))
         }
         return path
     }
@@ -50,7 +46,7 @@ export class PathSourceResolver extends SourceResolver {
         if (isPathEntry(this.package.entry)) {
             if (this.package.options.root) {
                 // @todo, check whether escaping sandbox
-                const parentPath = this.package.options.root.resolver.getPath()
+                const parentPath = this.package.options.root.source.getPath()
                 if (parentPath !== '$ROOT') {
                     return normalizeSafe(join(parentPath, this.package.entry.path))
                 }

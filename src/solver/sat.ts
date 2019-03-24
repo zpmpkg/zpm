@@ -20,6 +20,7 @@ import {
 import * as Logic from 'logic-solver'
 import { join, normalize } from 'upath'
 import { update } from '~/cli/program'
+import { settledPromiseAll } from '~/common/async'
 import { environment } from '~/common/environment'
 import { loadJson, writeJson } from '~/common/io'
 import { logger } from '~/common/logger'
@@ -68,8 +69,8 @@ export interface SATPathEntry {
 }
 
 export interface SATUsage {
-    required: { [k: string]: string[] }
-    optional: { [k: string]: string[] }
+    required: { [k: string]: string[][] }
+    optional: { [k: string]: string[][] }
 }
 
 export class SATSolver {
@@ -122,10 +123,7 @@ export class SATSolver {
         this.lockContent = await this.getLockFile()
 
         if (isDefined(this.lockContent)) {
-            const types: string[] = uniq([
-                ...keys(get(this.lockContent, 'git')),
-                ...keys(get(this.lockContent, 'path')),
-            ])
+            const types: string[] = this.registries.getTypes()
             this.assumptions = []
             for (const type of types) {
                 get(this.lockContent.git, type, []).forEach(pkg => {
@@ -156,12 +154,12 @@ export class SATSolver {
     public async addPackage(pkg: Package): Promise<SourceVersions[]> {
         const hash = pkg.getHash()
         if (this.tryInsertPackage(hash)) {
-            const versions = await pkg.resolver.getVersions()
+            const versions = await pkg.source.getVersions()
 
             if (versions.length > 0) {
                 await this.addPackageVersions(hash, versions, pkg)
             } else {
-                const definition = await pkg.resolver.definitionResolver.getPackageDefinition()
+                const definition = await pkg.source.definitionResolver.getPackageDefinition()
                 let hasLock = false
                 if (!has(this.termMap.path, [hash, 'package'])) {
                     this.termMap.path[hash] = {
@@ -186,7 +184,7 @@ export class SATSolver {
             // await this.addDefinition(hash, pkg.resolver.definitionResolver.getPackageDefinition())
             return versions
         }
-        return pkg.resolver.getVersions()
+        return pkg.source.getVersions()
     }
 
     public async addDefinition(
@@ -195,7 +193,7 @@ export class SATSolver {
         parent?: { package: Package; hash: string }
     ): Promise<SATUsage> {
         const usage: SATUsage = { required: {}, optional: {} }
-        await Promise.all([
+        await settledPromiseAll([
             ...flatten(
                 toPairs(definition.packages.git).map(p =>
                     p[1]
@@ -214,7 +212,7 @@ export class SATSolver {
                 if (!isDefined(usage[key][pkg.type])) {
                     usage[key][pkg.type] = []
                 }
-                usage[key][pkg.type].push(...found.terms)
+                usage[key][pkg.type].push(found.terms)
             }),
             ...flatten(
                 toPairs(definition.packages.path).map(p =>
@@ -239,7 +237,7 @@ export class SATSolver {
                 if (!isDefined(usage[key][pkg.type])) {
                     usage[key][pkg.type] = []
                 }
-                usage[key][pkg.type].push(term)
+                usage[key][pkg.type].push([term])
             }),
         ])
         return usage
@@ -269,7 +267,7 @@ export class SATSolver {
         if (minimum) {
             // make settings stable
             minimum.sort()
-            await Promise.all(
+            await settledPromiseAll(
                 minimum.map(async (term: string) => {
                     if (has(this.termMap.git, term)) {
                         const pkg = this.termMap.git[term]
@@ -293,7 +291,7 @@ export class SATSolver {
                         solution.path[pkg.package.manifest.type].push({
                             id: term,
                             name: pkg.package.name,
-                            path: pkg.package.resolver.getPath(),
+                            path: pkg.package.source.getPath(),
                             settings: this.buildBranch(minimum!, term),
                             usage: this.filterUsage(pkg.usage, minimum),
                         })
@@ -313,24 +311,31 @@ export class SATSolver {
     public filterUsage(usage: SATUsage, minimum: string[]): UsageLock | undefined {
         const fUsage = {}
         map(usage, (o, type) => {
-            map(o, (usages, packageType) => {
-                const isSingular =
-                    this.registries.getManifest(packageType).options.singular === true
-                let filteredUsages: string[] | string | undefined = intersection(usages, minimum)
+            map(o, (usagesList, packageType) => {
+                const isBuildDefinition =
+                    this.registries.getManifest(packageType).options.isBuildDefinition === true
+                usagesList.forEach(usages => {
+                    let filteredUsages: string[] | string | undefined = intersection(
+                        usages,
+                        minimum
+                    )
 
-                //console.log(filteredUsages)
-                if (isSingular) {
-                    if (filteredUsages.length > 1) {
-                        throw new Error(`Singular package type ${packageType} has multiple values`)
+                    // console.log(filteredUsages)
+                    if (isBuildDefinition) {
+                        if (filteredUsages.length > 1) {
+                            throw new Error(
+                                `Singular package type ${packageType} has multiple values`
+                            )
+                        }
+                        filteredUsages = first(filteredUsages)
                     }
-                    filteredUsages = first(filteredUsages)
-                }
 
-                if (filteredUsages) {
-                    if (!has(fUsage, [type, packageType])) {
-                        set(fUsage, [type, packageType], filteredUsages)
+                    if (filteredUsages) {
+                        if (!has(fUsage, [type, packageType])) {
+                            set(fUsage, [type, packageType], filteredUsages)
+                        }
                     }
-                }
+                })
             })
         })
         return isEmpty(fUsage) ? undefined : fUsage
@@ -413,9 +418,9 @@ export class SATSolver {
         }))
         const newTerms = unzip(
             reverse(
-                await Promise.all(
+                await settledPromiseAll(
                     newVersions.map(async v => {
-                        const definition = await pkg.resolver.definitionResolver.getPackageDefinition(
+                        const definition = await pkg.source.definitionResolver.getPackageDefinition(
                             v.version.hash
                         )
                         if (!has(this.termMap.git, [v.term, 'package'])) {
@@ -438,12 +443,12 @@ export class SATSolver {
             )
         )
 
-        await Promise.all(
+        await settledPromiseAll(
             newVersions.map(async v => {
                 if (v.added) {
                     const usage = await this.addDefinition(
                         v.term,
-                        await pkg.resolver.definitionResolver.getPackageDefinition(v.version.hash)
+                        await pkg.source.definitionResolver.getPackageDefinition(v.version.hash)
                     )
                     this.termMap.git[v.term].usage = usage
                 }
@@ -520,11 +525,10 @@ export class SATSolver {
                 }`
             )
         }
-        // console.log(added)
-        //console.log('pre', added.fullName)
+
         await this.addPackage(added)
         const fname = added.getHash()
-        //console.log('settings', fname)
+
         if (!has(this.termMap.path, [fname, 'settings', hash])) {
             set(this.termMap.path, [fname, 'settings', hash], pkg.description.settings)
         }
