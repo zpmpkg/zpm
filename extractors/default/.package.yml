@@ -1,3 +1,22 @@
 extractor:
-  checkout: extract.ts
-  extract: index.ts
+  includes:
+    - "**/src/**/*.h"
+    - "**/src/**/*.cpp"
+    - "**/src/**/*.cc"
+    - "**/src/**/*.cxx"
+    - "**/src/**/*.c"
+    - "**/src/**/*.s"
+    - "**/src/**/*.m"
+    - "**/src/**/*.mm"
+
+    - "**/include/**/*.h"
+    - "**/include/**/*.cpp"
+    - "**/include/**/*.cc"
+    - "**/include/**/*.cxx"
+    - "**/include/**/*.c"
+    - "**/include/**/*.s"
+    - "**/include/**/*.m"
+    - "**/include/**/*.mm"
+
+  excludes:
+    - "**/test/**"

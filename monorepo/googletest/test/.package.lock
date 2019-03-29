@@ -1,11 +1,11 @@
 {
-  "git": {
+  "named": {
     "libraries": [
       {
-        "id": "libraries:GIT:Zefiros-Software/GoogleTest@1.8.1",
+        "id": "libraries:GIT:Zefiros-Software/GoogleTest@master",
         "name": "Zefiros-Software/GoogleTest",
-        "version": "1.8.1",
-        "hash": "2fe3bd994b3189899d93f1d5a881e725e046fdc2",
+        "version": "master",
+        "hash": "3bedb5a9fc36769691c057b9e9414472035463b4",
         "description": {
           "description": "his repository is a merger of the formerly separate GoogleTest and GoogleMock projects.",
           "keywords": [
@@ -91,83 +91,15 @@
         "id": "libraries:PATH:$ROOT:$ROOT",
         "name": "$ROOT",
         "path": "./",
-        "description": {
-          "includes": []
-        },
-        "settings": {},
-        "usage": {
-          "required": {
-            "builder": "builder:PATH:ZPM:builder/default",
-            "extractor": "extractor:PATH:ZPM:extractors/default",
-            "libraries": [
-              "libraries:PATH:$ROOT:$ROOT:sandbox2"
-            ]
-          }
-        }
-      },
-      {
-        "id": "libraries:PATH:$ROOT:$ROOT:sandbox2",
-        "name": "$ROOT",
-        "path": "sandbox2",
-        "description": {
-          "includes": []
-        },
-        "root": "libraries:PATH:$ROOT:$ROOT",
-        "settings": {},
-        "usage": {
-          "required": {
-            "extractor": "extractor:PATH:ZPM:extractors/default",
-            "builder": "builder:PATH:ZPM:builder/default",
-            "libraries": [
-              "libraries:PATH:$ROOT:$ROOT:sandbox2/sandbox3"
-            ]
-          }
-        }
-      },
-      {
-        "id": "libraries:PATH:$ROOT:$ROOT:sandbox2/sandbox3",
-        "name": "$ROOT",
-        "path": "sandbox2/sandbox3",
-        "description": {
-          "includes": []
-        },
-        "root": "libraries:PATH:$ROOT:$ROOT",
-        "settings": {
-          "wooo": "fooo"
-        },
-        "usage": {
-          "settings": {
-            "libraries:PATH:$ROOT:$ROOT:sandbox2": {
-              "wooo": "fooo"
-            }
-          },
-          "required": {
-            "extractor": "extractor:PATH:ZPM:extractors/default",
-            "builder": "builder:PATH:ZPM:builder/default",
-            "libraries": [
-              "libraries:PATH:$ROOT:$ROOT:sandbox2/sandbox4"
-            ]
-          }
-        }
-      },
-      {
-        "id": "libraries:PATH:$ROOT:$ROOT:sandbox2/sandbox4",
-        "name": "$ROOT",
-        "path": "sandbox2/sandbox4",
         "description": {},
-        "root": "libraries:PATH:$ROOT:$ROOT",
-        "settings": {
-          "wooo": "fooodd"
-        },
+        "settings": {},
         "usage": {
-          "settings": {
-            "libraries:PATH:$ROOT:$ROOT:sandbox2/sandbox3": {
-              "wooo": "fooodd"
-            }
-          },
           "required": {
+            "builder": "builder:PATH:ZPM:builder/default",
             "extractor": "extractor:PATH:ZPM:extractors/default",
-            "builder": "builder:PATH:ZPM:builder/default"
+            "libraries": [
+              "libraries:GIT:Zefiros-Software/GoogleTest@master"
+            ]
           }
         }
       }

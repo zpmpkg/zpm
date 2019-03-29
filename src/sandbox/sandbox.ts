@@ -16,7 +16,6 @@ export async function executeSandboxTypescript(file: string, sandbox: any) {
                     module: ts.ModuleKind.CommonJS,
                 },
             })
-            console.log(result.outputText)
             return result.outputText
         },
     })

@@ -39,11 +39,11 @@
           "$ref": "#/definitions/PackagePathEntry"
         },
         {
-          "$ref": "#/definitions/PackageGitEntry"
+          "$ref": "#/definitions/PackageNamedEntry"
         }
       ]
     },
-    "PackageGitEntry": {
+    "PackageNamedEntry": {
       "type": "object",
       "properties": {
         "name": {
@@ -51,6 +51,9 @@
           "pattern": "^([a-zA-Z0-9_\\-]{2,50}/[a-zA-Z0-9_\\-]{2,50})$"
         },
         "version": {
+          "type": "string"
+        },
+        "definition": {
           "type": "string"
         },
         "optional": {

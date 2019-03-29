@@ -18,7 +18,7 @@ import { Version } from '~/common/version'
 import { SourceResolver } from '~/resolver/source/sourceResolver'
 import { GitDefinitionResolver } from '../definition/gitDefinitionResolver'
 import { PathDefinitionResolver } from '../definition/pathDefinitionResolver'
-import { isGitEntry } from './factory'
+import { isNamedEntry } from './factory'
 
 export class GitSourceResolver extends SourceResolver {
     public loaded = false
@@ -77,7 +77,8 @@ export class GitSourceResolver extends SourceResolver {
             return []
         }
 
-        const output = await showRef(this.getRepositoryPath(), ['--tags'])
+        const output = await showRef(this.getRepositoryPath(), ['--tags', '--heads'])
+        console.log(output, this.getRepositoryPath(), '@@@')
         return output
             .split('\n')
             .map(s => s.split(' '))
@@ -85,10 +86,18 @@ export class GitSourceResolver extends SourceResolver {
             .map(s => {
                 let result
                 try {
-                    result = {
-                        version: new Version(s[1].replace('refs/tags/', '')),
-                        hash: s[0],
-                        name: s[1].replace('refs/tags/', ''),
+                    if (s[1].includes('/tags/')) {
+                        result = {
+                            version: new Version(s[1].replace('refs/tags/', '')),
+                            hash: s[0],
+                            name: s[1].replace('refs/tags/', ''),
+                        }
+                    } else if (s[1].includes('/heads/')) {
+                        result = {
+                            version: new Version(s[1].replace('refs/heads/', '')),
+                            hash: s[0],
+                            name: s[1].replace('refs/heads/', ''),
+                        }
                     }
                 } catch (error) {
                     result = undefined
@@ -96,7 +105,7 @@ export class GitSourceResolver extends SourceResolver {
                 return result
             })
             .filter(isDefined)
-            .sort(x => x.version.cost)
+            .sort((a, b) => b.version.cost - a.version.cost)
             .reverse()
     }
 
@@ -123,7 +132,7 @@ export class GitSourceResolver extends SourceResolver {
     }
 
     public getPath(): string {
-        if (isGitEntry(this.package.entry)) {
+        if (isNamedEntry(this.package.entry)) {
             return this.package.entry.name
         } else {
             throw new Error('not implemented')

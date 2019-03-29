@@ -2,17 +2,17 @@ import ajv = require('ajv')
 import * as fs from 'fs-extra'
 import { has } from 'lodash'
 import { join } from 'upath'
+import { settledPromiseAll } from '~/common/async'
 import { loadJsonOrYamlSimple, transformPath } from '~/common/io'
 import { logger } from '~/common/logger'
 import { isDefined } from '~/common/util'
 import { buildSchema, validateSchema } from '~/common/validation'
-import { Package, PackageOptions } from '~/registry/package'
-import { isGitEntry, isPathEntry } from '~/resolver/source/factory'
+import { Package, PackageOptions, PackageType } from '~/registry/package'
+import { isNamedEntry, isPathEntry } from '~/resolver/source/factory'
 import { entriesV1 } from '~/schemas/schemas'
 import { ManifestOptions, RegistryEntry } from '~/types/definitions.v1'
 import { EntriesSchema } from '~/types/entries.v1'
 import { Registries } from './registries'
-import { settledPromiseAll } from '~/common/async'
 
 export class Manifest {
     public type: string
@@ -53,7 +53,7 @@ export class Manifest {
                             contents.map(async (x: RegistryEntry) => {
                                 // do not allow overriding of packages
                                 let name!: string
-                                if (isGitEntry(x)) {
+                                if (isNamedEntry(x)) {
                                     name = x.name
                                 } else if (isPathEntry(x)) {
                                     name = x.name || '$ROOT'
@@ -61,7 +61,9 @@ export class Manifest {
                                     // this one should not validate
                                 }
                                 if (!has(this.entries, name)) {
-                                    this.entries[name] = new Package(this, x)
+                                    this.entries[name] = new Package(this, x, {
+                                        type: PackageType.Named,
+                                    })
                                 }
                             })
                         )
@@ -73,13 +75,13 @@ export class Manifest {
         )
         await this.add(
             { name: 'ZPM', path: './' },
-            { forceName: true, absolutePath: '$ZPM' }
+            { forceName: true, absolutePath: '$ZPM', type: PackageType.Path }
         ).load()
     }
 
     public add(entry: RegistryEntry & { name?: string }, options?: PackageOptions): Package {
         let name: string
-        if (isGitEntry(entry)) {
+        if (isNamedEntry(entry)) {
             name = entry.name
         } else if (isPathEntry(entry)) {
             if (isDefined(options) && options.forceName) {

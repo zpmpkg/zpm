@@ -2,14 +2,15 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "type": "object",
   "properties": {
-    "extractor": {
+    "extract": {
       "type": "object",
       "properties": {
-        "checkout": {
-          "type": "string"
-        },
-        "extract": {
-          "type": "string"
+        "includes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "additionalItems": false
         }
       }
     }

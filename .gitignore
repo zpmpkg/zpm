@@ -81,3 +81,5 @@ package-lock.json
 /dist/
 /.package.lock
 /sandbox/extern/
+
+**/extern/*

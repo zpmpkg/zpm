@@ -2,13 +2,13 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "type": "object",
   "properties": {
-    "git": {
+    "named": {
       "type": "object",
       "patternProperties": {
         "\\w+": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/GitLock"
+            "$ref": "#/definitions/NamedLock"
           },
           "additionalItems": false
         }
@@ -31,11 +31,11 @@
   },
   "additionalProperties": false,
   "required": [
-    "git",
+    "named",
     "path"
   ],
   "definitions": {
-    "GitLock": {
+    "NamedLock": {
       "type": "object",
       "properties": {
         "id": {
@@ -60,6 +60,13 @@
             "\\w+": {}
           },
           "additionalProperties": false
+        },
+        "description": {
+          "type": "object",
+          "patternProperties": {
+            "\\w+": {}
+          },
+          "additionalProperties": false
         }
       },
       "additionalProperties": false,
@@ -68,7 +75,8 @@
         "name",
         "version",
         "hash",
-        "settings"
+        "settings",
+        "description"
       ]
     },
     "PathLock": {
@@ -87,7 +95,17 @@
         "path": {
           "type": "string"
         },
+        "root": {
+          "type": "string"
+        },
         "settings": {
+          "type": "object",
+          "patternProperties": {
+            "\\w+": {}
+          },
+          "additionalProperties": false
+        },
+        "description": {
           "type": "object",
           "patternProperties": {
             "\\w+": {}
@@ -100,7 +118,8 @@
         "id",
         "path",
         "name",
-        "settings"
+        "settings",
+        "description"
       ]
     },
     "UsageLock": {
@@ -120,6 +139,19 @@
           "patternProperties": {
             "\\w+": {
               "$ref": "#/definitions/UsageEntryLock"
+            }
+          },
+          "additionalProperties": false
+        },
+        "settings": {
+          "type": "object",
+          "patternProperties": {
+            "\\w+": {
+              "type": "object",
+              "patternProperties": {
+                "\\w+": {}
+              },
+              "additionalProperties": false
             }
           },
           "additionalProperties": false

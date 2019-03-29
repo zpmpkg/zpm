@@ -23,6 +23,7 @@ export interface SATGitPackage {
     version: string
     hash: string
     settings: any
+    description: { [k: string]: any }
     usage?: UsageLock
 }
 
@@ -31,10 +32,12 @@ export interface SATPathPackage {
     path: string
     name: string
     settings: any
+    root?: string
+    description: { [k: string]: any }
     usage?: UsageLock
 }
 
 export interface SATSolution {
-    git: { [k: string]: SATGitPackage[] }
+    named: { [k: string]: SATGitPackage[] }
     path: { [k: string]: SATPathPackage[] }
 }

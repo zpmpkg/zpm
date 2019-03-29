@@ -6,7 +6,7 @@ import { spinners } from './cli/spinner'
 import { logger } from './common/logger'
 import { storage } from './common/storage'
 import { isDefined } from './common/util'
-import { Package } from './registry/package'
+import { Package, PackageType } from './registry/package'
 import { SATSolver } from './solver/sat'
 import { SATSolution } from './solver/solution'
 
@@ -34,6 +34,7 @@ export class ZPM {
             {
                 absolutePath: '$ROOT',
                 isRoot: true,
+                type: PackageType.Path,
             }
         )
         try {
@@ -68,8 +69,10 @@ export class ZPM {
 
             const builder = new Builder(this.registries, this.root, lockFile)
             await builder.load()
+            spinners.stop()
 
             await builder.build()
+            spinners.stop()
 
             await solver.save()
 

@@ -5,6 +5,7 @@ class PromiseAllError extends Error {
     constructor(errors: Error[]) {
         super()
         this.errors = errors
+        this.message = errors.map(x => x.message).join('\n')
     }
 }
 
@@ -26,3 +27,5 @@ export function settledPromiseAll(promisesArray: Array<Promise<any>>) {
         return resolvedPromises
     })
 }
+
+;(Symbol as any).asyncIterator = Symbol.asyncIterator || Symbol.for('Symbol.asyncIterator')

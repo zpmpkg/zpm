@@ -1,0 +1,5 @@
+source: https://github.com/google/googletest.git
+extractor:
+  includes:
+    - "googletest/include/**/*.h"
+    - "googletest/src/**.cc"

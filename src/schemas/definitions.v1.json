@@ -9,6 +9,9 @@
       "isBuildDefinition": {
         "type": "boolean"
       },
+      "settingsPath": {
+        "type": "string"
+      },
       "defaults": {
         "\\w+": {}
       }
@@ -17,14 +20,14 @@
   "RegistryDefinition": {
     "oneOf": [
       {
-        "$ref": "#/definitions/RegistryGitLocationEntry"
+        "$ref": "#/definitions/RegistryNamedLocationEntry"
       },
       {
         "$ref": "#/definitions/RegistryPathLocationEntry"
       }
     ]
   },
-  "RegistryGitLocationEntry": {
+  "RegistryNamedLocationEntry": {
     "type": "object",
     "properties": {
       "url": {
@@ -55,14 +58,14 @@
   "RegistryEntry": {
     "oneOf": [
       {
-        "$ref": "#/definitions/RegistryGitEntry"
+        "$ref": "#/definitions/RegistryNamedEntry"
       },
       {
         "$ref": "#/definitions/RegistryPathEntry"
       }
     ]
   },
-  "RegistryGitEntry": {
+  "RegistryNamedEntry": {
     "type": "object",
     "properties": {
       "name": {

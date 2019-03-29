@@ -1,11 +1,17 @@
 import path from 'path'
 import { normalize } from 'upath'
-import { createSourceResolver, isGitEntry, isPathEntry } from '~/resolver/source/factory'
+import { createSourceResolver, isNamedEntry, isPathEntry } from '~/resolver/source/factory'
 import { SourceResolver } from '~/resolver/source/sourceResolver'
 import { RegistryEntry } from '~/types/definitions.v1'
 import { Manifest } from './manifest'
 
+export const enum PackageType {
+    Path,
+    Named,
+}
+
 export interface PackageOptions {
+    type: PackageType
     parent?: Package
     root?: Package
     isRoot?: boolean
@@ -29,11 +35,12 @@ export class Package {
         this.source = createSourceResolver(entry, this)
         this.entry = entry
         this.options = {
+            type: PackageType.Named,
             isRoot: false,
             ...options,
         }
 
-        if (isGitEntry(entry)) {
+        if (isNamedEntry(entry)) {
             this.fullName = entry.name
             const split = entry.name.split('/')
             this.name = split[1]
@@ -43,6 +50,12 @@ export class Package {
             this.name = entry.name || path.basename(entry.path)
             this.vendor = 'Local'
         }
+    }
+
+    public async overrideEntry(entry: RegistryEntry) {
+        this.entry = entry
+        this.source = createSourceResolver(entry, this)
+        await this.source.load()
     }
 
     public getHash() {

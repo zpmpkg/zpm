@@ -1,6 +1,8 @@
 export async function extract() {
-    await fs.copy(pkg.settings.includes, {
-        excludes: pkg.settings.excludes,
+    const includes = pkg.usage.includes || pkg.globals.extractor.includes
+    const excludes = pkg.usage.excludes || pkg.globals.extractor.excludes
+    await fs.copy(includes, {
+        excludes,
     })
 }
 

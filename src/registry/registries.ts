@@ -8,17 +8,17 @@ import { ConfigurationSchema } from '~/types/configuration.v1'
 import {
     RegistryDefinition,
     RegistryEntry,
-    RegistryGitLocationEntry,
+    RegistryNamedLocationEntry,
     RegistryPathLocationEntry,
 } from '~/types/definitions.v1'
 import { ZPM } from '../zpm'
-import { PackageOptions } from './package'
+import { PackageOptions, Package } from './package'
 import { Registry } from './registry'
 
 export function isPathRegistry(entry: RegistryDefinition): entry is RegistryPathLocationEntry {
     return has(entry, 'path')
 }
-export function isGitRegistry(entry: RegistryDefinition): entry is RegistryGitLocationEntry {
+export function isNamedRegistry(entry: RegistryDefinition): entry is RegistryNamedLocationEntry {
     return has(entry, 'url')
 }
 
@@ -50,8 +50,12 @@ export class Registries {
         return this.manifests[type]
     }
 
-    public searchPackage(type: string, search: { name: string }) {
-        return get(this.manifests, [type, 'entries', search.name])
+    public searchPackage(
+        type: string,
+        search: { name: string; path?: string }
+    ): Package | undefined {
+        const sname = search.path ? `${search.name}:${search.path}` : search.name
+        return get(this.manifests, [type, 'entries', sname])
     }
 
     public addPackage(type: string, entry: RegistryEntry, options?: PackageOptions) {
@@ -71,7 +75,7 @@ export class Registries {
     private async findRegistries() {
         const registries: Registry[] = [
             ...this.zpm.config.values.registries
-                .filter(isGitRegistry)
+                .filter(isNamedRegistry)
                 .map(registry => new Registry(registry.url, { branch: registry.branch })),
             ...this.zpm.config.values.registries
                 .filter(isPathRegistry)
@@ -88,7 +92,7 @@ export class Registries {
             )
         )
         // go one deeper in the registry chain (each registry may also host a registry list)
-        newRegistries.filter(isGitRegistry).forEach(r => {
+        newRegistries.filter(isNamedRegistry).forEach(r => {
             registries.push(new Registry(r.url, { branch: r.branch }))
         })
         await settledPromiseAll(

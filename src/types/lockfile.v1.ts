@@ -8,12 +8,12 @@
 export type UsageEntryLock = string[] | string
 
 export interface LockfileSchema {
-    git: {
+    named: {
         /**
          * This interface was referenced by `undefined`'s JSON-Schema definition
          * via the `patternProperty` "\w+".
          */
-        [k: string]: GitLock[]
+        [k: string]: NamedLock[]
     }
     path: {
         /**
@@ -23,13 +23,20 @@ export interface LockfileSchema {
         [k: string]: PathLock[]
     }
 }
-export interface GitLock {
+export interface NamedLock {
     id: string
     usage?: UsageLock
     name: string
     version: string
     hash: string
     settings: {
+        /**
+         * This interface was referenced by `undefined`'s JSON-Schema definition
+         * via the `patternProperty` "\w+".
+         */
+        [k: string]: any
+    }
+    description: {
         /**
          * This interface was referenced by `undefined`'s JSON-Schema definition
          * via the `patternProperty` "\w+".
@@ -44,13 +51,34 @@ export interface UsageLock {
     optional?: {
         [k: string]: UsageEntryLock
     }
+    settings?: {
+        /**
+         * This interface was referenced by `undefined`'s JSON-Schema definition
+         * via the `patternProperty` "\w+".
+         */
+        [k: string]: {
+            /**
+             * This interface was referenced by `undefined`'s JSON-Schema definition
+             * via the `patternProperty` "\w+".
+             */
+            [k: string]: any
+        }
+    }
 }
 export interface PathLock {
     id: string
     usage?: UsageLock
     name: string
     path: string
+    root?: string
     settings: {
+        /**
+         * This interface was referenced by `undefined`'s JSON-Schema definition
+         * via the `patternProperty` "\w+".
+         */
+        [k: string]: any
+    }
+    description: {
         /**
          * This interface was referenced by `undefined`'s JSON-Schema definition
          * via the `patternProperty` "\w+".

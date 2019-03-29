@@ -4,6 +4,7 @@ import { safeLoad, safeLoadAll } from 'js-yaml'
 import { filter } from 'lodash'
 import path from 'path'
 import { join, relative } from 'upath'
+import { Spinner } from '~/cli/spinner'
 import { settledPromiseAll } from './async'
 import { environment } from './environment'
 
@@ -33,11 +34,18 @@ export async function writeJson(file: string, object: any) {
     return true
 }
 
-export async function copy(source: string | string[], root: string, destination: string) {
+export async function copy(
+    source: string | string[],
+    root: string,
+    destination: string,
+    excludes: string[] = [],
+    options?: { spinner?: Spinner }
+) {
     const files = filter(
         (await fg.async(source, {
             cwd: root,
             absolute: true,
+            ignore: excludes,
         })).map(f => f.toString()),
         f => isSubDirectory(f, root)
     )
@@ -46,6 +54,7 @@ export async function copy(source: string | string[], root: string, destination:
             await fs.copy(file, join(destination, relative(root, file)), {
                 preserveTimestamps: true,
             })
+            console.log(file, join(destination, relative(root, file)))
         })
     )
 }

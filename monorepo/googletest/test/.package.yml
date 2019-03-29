@@ -1,0 +1,5 @@
+requires:
+  libraries:
+    - name: Zefiros-Software/GoogleTest
+      version: master
+      definition: ../

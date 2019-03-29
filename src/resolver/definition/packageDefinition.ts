@@ -1,4 +1,4 @@
-import { forEach, get, isArray, isEmpty, keys, uniq } from 'lodash'
+import { cloneDeep, forEach, get, isArray, isEmpty, omit } from 'lodash'
 import { isDefined } from '~/common/util'
 import { Registries } from '~/registry/registries'
 import { isGitPackageEntry, isPathPackageEntry } from '~/solver/package'
@@ -15,14 +15,13 @@ interface PackageGitDefinitionEntry extends PackageGitEntry {
 export interface PackageDefinitionSummary {
     packages: {
         path: { [k: string]: PackagePathDefinitionEntry[] }
-        git: { [k: string]: PackageGitDefinitionEntry[] }
+        named: { [k: string]: PackageGitDefinitionEntry[] }
     }
     description: PackageDescription
 }
 
 export interface PackageDescription {
-    extraction: {}
-    build: {}
+    [k: string]: any
 }
 
 export function fromPackageDefinition(
@@ -35,12 +34,9 @@ export function fromPackageDefinition(
     const definition: PackageDefinitionSummary = {
         packages: {
             path: {},
-            git: {},
+            named: {},
         },
-        description: {
-            extraction: {},
-            build: {},
-        },
+        description: omit(pkg, ['requires', 'development']),
     }
 
     forEach(types, type => {
@@ -58,7 +54,15 @@ export function fromPackageDefinition(
             values.push(...(!isArray(development) ? [development] : development))
         }
         if (isEmpty(values) && isDefined((manifest.options.defaults || {})[pkgType])) {
-            values.push(manifest.options.defaults![pkgType])
+            const defaultUsage = cloneDeep(manifest.options.defaults![pkgType])
+            if (manifest.options.settingsPath && pkg[manifest.options.settingsPath]) {
+                // @todo correct merging of settings
+                defaultUsage.settings = {
+                    ...defaultUsage.settings,
+                    ...pkg[manifest.options.settingsPath],
+                }
+            }
+            values.push(defaultUsage)
         }
         forEach(values, entry => {
             if (isPathPackageEntry(entry)) {
@@ -74,13 +78,14 @@ export function fromPackageDefinition(
                     isBuildDefinition: manifest.options.isBuildDefinition!,
                 })
             } else if (isGitPackageEntry(entry)) {
-                if (!isDefined(definition.packages.git[type])) {
-                    definition.packages.git[type] = []
+                if (!isDefined(definition.packages.named[type])) {
+                    definition.packages.named[type] = []
                 }
-
-                definition.packages.git[type].push({
+                console.log(entry, '$$$$$$$$$$$$$$$')
+                definition.packages.named[type].push({
                     name: entry.name,
                     version: entry.version,
+                    definition: entry.definition,
                     settings: entry.settings || {},
                     isBuildDefinition: manifest.options.isBuildDefinition!,
                 })
