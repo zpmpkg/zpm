@@ -7,18 +7,22 @@
         "version": "master",
         "hash": "3bedb5a9fc36769691c057b9e9414472035463b4",
         "description": {
-          "description": "his repository is a merger of the formerly separate GoogleTest and GoogleMock projects.",
-          "keywords": [
-            "Google Test",
-            "Google Mock"
-          ],
-          "website": "https://github.com/google/googletest",
-          "license": "BSD 3-clauses"
+          "source": "https://github.com/google/googletest.git",
+          "extract": {
+            "includes": [
+              "googletest/include/**/*.h",
+              "googletest/src/**.cc",
+              "googletest/src/**.h",
+              "googlemock/include/**/*.h",
+              "googlemock/src/**.cc",
+              "googlemock/src/**.h"
+            ]
+          }
         },
         "settings": {},
         "usage": {
           "required": {
-            "extractor": "extractor:PATH:ZPM:extractors/default",
+            "extractor": "extractor:PATH:ZPM:extractor/default",
             "builder": "builder:PATH:ZPM:builder/default"
           }
         }
@@ -54,9 +58,9 @@
         "usage": {}
       },
       {
-        "id": "extractor:PATH:ZPM:extractors/default",
+        "id": "extractor:PATH:ZPM:extractor/default",
         "name": "ZPM",
-        "path": "extractors/default",
+        "path": "extractor/default",
         "description": {
           "extractor": {
             "includes": [
@@ -83,7 +87,20 @@
           }
         },
         "settings": {},
-        "usage": {}
+        "usage": {
+          "settings": {
+            "libraries:GIT:Zefiros-Software/GoogleTest@master": {
+              "includes": [
+                "googletest/include/**/*.h",
+                "googletest/src/**.cc",
+                "googletest/src/**.h",
+                "googlemock/include/**/*.h",
+                "googlemock/src/**.cc",
+                "googlemock/src/**.h"
+              ]
+            }
+          }
+        }
       }
     ],
     "libraries": [
@@ -96,7 +113,7 @@
         "usage": {
           "required": {
             "builder": "builder:PATH:ZPM:builder/default",
-            "extractor": "extractor:PATH:ZPM:extractors/default",
+            "extractor": "extractor:PATH:ZPM:extractor/default",
             "libraries": [
               "libraries:GIT:Zefiros-Software/GoogleTest@master"
             ]

@@ -1,5 +1,9 @@
 source: https://github.com/google/googletest.git
-extractor:
+extract:
   includes:
     - "googletest/include/**/*.h"
     - "googletest/src/**.cc"
+    - "googletest/src/**.h"
+    - "googlemock/include/**/*.h"
+    - "googlemock/src/**.cc"
+    - "googlemock/src/**.h"

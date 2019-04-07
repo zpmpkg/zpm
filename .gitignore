@@ -83,3 +83,4 @@ package-lock.json
 /sandbox/extern/
 
 **/extern/*
+/monorepo/googletest/test/.vscode/*

@@ -6,12 +6,12 @@ registry:
   - name: extractor
     options:
       isBuildDefinition: true
-      schema: $ZPM/extractors/extractor.v1.json
+      schema: $ZPM/extractor/extractor.v1.json
       settingsPath: extract
       defaults:
         libraries:
           name: ZPM
-          path: extractors/default
+          path: extractor/default
   - name: builder
     options:
       isBuildDefinition: true

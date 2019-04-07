@@ -1,9 +1,9 @@
 import { join } from 'upath'
 import { environment } from '~/common/environment'
 import { Package } from '~/registry/package'
-import { GitLock, PathLock } from '~/types/lockfile.v1'
+import { NamedLock, PathLock } from '~/types/lockfile.v1'
 import { Builder } from './builder'
-import { isGitLock } from './lock'
+import { isNamedLock } from './lock'
 
 export const enum PackageType {
     NAMED,
@@ -17,7 +17,7 @@ export interface BuilderOptions {
 }
 
 export class BasePackageBuilder {
-    public lock: GitLock | PathLock
+    public lock: NamedLock | PathLock
     public package: Package
     public options: BuilderOptions
     public builder: Builder
@@ -25,7 +25,7 @@ export class BasePackageBuilder {
     public constructor(
         builder: Builder,
         pkg: Package,
-        lock: GitLock | PathLock,
+        lock: NamedLock | PathLock,
         options: Partial<BuilderOptions> = {}
     ) {
         this.builder = builder
@@ -57,7 +57,7 @@ export class BasePackageBuilder {
     }
 
     public getHash() {
-        return isGitLock(this.lock) ? this.lock.hash : undefined
+        return isNamedLock(this.lock) ? this.lock.hash : undefined
     }
 }
 

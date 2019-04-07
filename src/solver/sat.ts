@@ -17,7 +17,7 @@ import {
     unzip,
 } from 'lodash'
 import * as Logic from 'logic-solver'
-import { join, normalize } from 'upath'
+import { join, normalize, dirname } from 'upath'
 import { update } from '~/cli/program'
 import { settledPromiseAll } from '~/common/async'
 import { environment } from '~/common/environment'
@@ -58,11 +58,13 @@ export interface SATRequirements {
 
 export interface SATGitEntry {
     description: PackageGitEntry
+    definitionPath: string
     type: string
     optional: boolean
 }
 export interface SATPathEntry {
     description: PackagePathEntry
+    definitionPath: string
     type: string
     optional: boolean
 }
@@ -201,6 +203,7 @@ export class SATSolver {
                         .map(
                             (e): SATGitEntry => ({
                                 description: e,
+                                definitionPath: definition.definitionPath,
                                 type: p[0],
                                 optional: e.optional === true,
                             })
@@ -226,6 +229,7 @@ export class SATSolver {
                                     path: e.path,
                                     settings: e.settings,
                                 },
+                                definitionPath: definition.definitionPath,
                                 type: p[0],
                                 optional: e.optional === true,
                             })
@@ -328,7 +332,6 @@ export class SATSolver {
                         minimum
                     )
 
-                    // console.log(filteredUsages)
                     if (isBuildDefinition) {
                         if (filteredUsages.length > 1) {
                             throw new Error(
@@ -347,7 +350,7 @@ export class SATSolver {
             })
         })
         map(this.termMap[pathOrNamed][id].settings, (value, user) => {
-            if (!isEmpty(value)) {
+            if (!isEmpty(value) && minimum.includes(user)) {
                 fUsage.settings![user] = value
             }
         })
@@ -574,6 +577,7 @@ export class SATSolver {
                     name,
                     version: pkg.description.version || '*',
                 },
+                definitionPath: pkg.definitionPath,
                 optional: false,
             },
             hash
@@ -627,7 +631,7 @@ export class SATSolver {
                     repository: found.source.repository,
                     definition: pkg.description.definition || found.source.definition,
                 }
-                console.log(entry, pkg)
+                found.options.absolutePath = dirname(pkg.definitionPath)
                 await found.overrideEntry(entry)
             }
 

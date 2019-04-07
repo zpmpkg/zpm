@@ -1,6 +1,6 @@
 import { has } from 'lodash'
 import { Package } from '~/registry/package'
-import { RegistryEntry, RegistryNamedEntry } from '~/types/definitions.v1'
+import { RegistryEntry, RegistryNamedEntry, RegistryPathEntry } from '~/types/definitions.v1'
 import { GitSourceResolver } from './gitSourceResolver'
 import { PathSourceResolver } from './pathSourceResolver'
 import { SourceResolver } from './sourceResolver'
@@ -8,7 +8,7 @@ import { SourceResolver } from './sourceResolver'
 export function isNamedEntry(entry: RegistryEntry): entry is RegistryNamedEntry {
     return has(entry, 'repository') && !has(entry, 'path')
 }
-export function isPathEntry(entry: RegistryEntry): entry is RegistryNamedEntry {
+export function isPathEntry(entry: RegistryEntry): entry is RegistryPathEntry {
     return has(entry, 'name') || has(entry, 'path')
 }
 

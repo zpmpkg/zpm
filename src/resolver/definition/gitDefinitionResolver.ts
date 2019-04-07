@@ -41,6 +41,7 @@ export class GitDefinitionResolver extends DefinitionResolver {
 
         return fromPackageDefinition(
             content.content,
+            content.path!,
             this.source.package.options,
             this.source.package.manifest.registries,
             this.source.package.manifest.type

@@ -1,5 +1,6 @@
 import * as fs from 'fs-extra'
-import { join } from 'upath'
+import isGitUrl from 'is-git-url'
+import { join, normalizeSafe } from 'upath'
 import { askPull } from '~/cli/inquiries'
 import { headless, update } from '~/cli/program'
 import { spinners } from '~/cli/spinner'
@@ -22,15 +23,20 @@ import { isNamedEntry } from './factory'
 
 export class GitSourceResolver extends SourceResolver {
     public loaded = false
+    public gitDefinition = true
     public async load(): Promise<boolean> {
         if (this.loaded) {
             return true
         }
         this.loaded = true
 
-        this.definitionResolver = this.isDefinitionSeparate()
-            ? new PathDefinitionResolver(this)
-            : new GitDefinitionResolver(this)
+        if (this.isDefinitionSeparate()) {
+            this.definitionResolver = new PathDefinitionResolver(this)
+            this.gitDefinition = isGitUrl(this.definition!)
+        } else {
+            this.definitionResolver = new GitDefinitionResolver(this)
+        }
+
         if (await this.mayPull()) {
             await settledPromiseAll([
                 (async () => {
@@ -43,13 +49,23 @@ export class GitSourceResolver extends SourceResolver {
                     )
                 })(),
                 (async () => {
-                    const spin = spinners.create(`Pulling definition '${this.package.fullName}'`)
-                    const result = await cloneOrPull(this.getDefinitionPath(), this.definition!, {
-                        stream: spin.stream,
-                    })
-                    spin.succeed(
-                        `Pulled definition '${this.package.fullName}' ${this.getPullInfo(result)}`
-                    )
+                    if (this.gitDefinition) {
+                        const spin = spinners.create(
+                            `Pulling definition '${this.package.fullName}'`
+                        )
+                        const result = await cloneOrPull(
+                            this.getDefinitionPath(),
+                            this.definition!,
+                            {
+                                stream: spin.stream,
+                            }
+                        )
+                        spin.succeed(
+                            `Pulled definition '${this.package.fullName}' ${this.getPullInfo(
+                                result
+                            )}`
+                        )
+                    }
                 })(),
             ])
         }
@@ -60,7 +76,18 @@ export class GitSourceResolver extends SourceResolver {
     }
 
     public getDefinitionPath(): string {
-        return join(this.getCachePath(), 'definition')
+        if (this.gitDefinition) {
+            return join(this.getCachePath(), 'definition')
+        }
+        let path = this.definition!
+
+        if (isDefined(this.package.options.absolutePath)) {
+            path = join(this.package.options.absolutePath, path)
+        }
+        if (this.package.options.root) {
+            return normalizeSafe(join(this.package.options.root.source.getDefinitionPath(), path))
+        }
+        return path
     }
 
     public getRepositoryPath(): string {
@@ -78,7 +105,6 @@ export class GitSourceResolver extends SourceResolver {
         }
 
         const output = await showRef(this.getRepositoryPath(), ['--tags', '--heads'])
-        console.log(output, this.getRepositoryPath(), '@@@')
         return output
             .split('\n')
             .map(s => s.split(' '))

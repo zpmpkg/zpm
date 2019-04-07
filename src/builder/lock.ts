@@ -1,9 +1,9 @@
 import { has } from 'lodash'
-import { GitLock, PathLock } from '~/types/lockfile.v1'
+import { NamedLock, PathLock } from '~/types/lockfile.v1'
 
 export function isPathLock(entry: any): entry is PathLock {
     return !has(entry, 'hash')
 }
-export function isGitLock(entry: any): entry is GitLock {
+export function isNamedLock(entry: any): entry is NamedLock {
     return has(entry, 'hash')
 }

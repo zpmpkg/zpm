@@ -10,8 +10,8 @@ import { environment } from '~/common/environment'
 import { hasHash } from '~/common/git'
 import { logger } from '~/common/logger'
 import { executeSandboxTypescript } from '~/sandbox/sandbox'
-import { isGitLock } from './lock'
-import { BasePackageBuilder, PackageBuilder, PackageType } from './packageBuilder'
+import { isNamedLock } from '../lock'
+import { BasePackageBuilder, PackageBuilder, PackageType } from '../packageBuilder'
 
 interface ExtractionApi {
     pkg: PackageApi
@@ -19,7 +19,7 @@ interface ExtractionApi {
     fs: FsApi
 }
 
-export class Extractor extends PackageBuilder {
+export class TargetExtractor extends PackageBuilder {
     public async run(target: BasePackageBuilder): Promise<boolean> {
         const hash = target.getHash()
         if (await this.needsExtraction(target)) {
@@ -42,14 +42,14 @@ export class Extractor extends PackageBuilder {
                             spin
                         ),
                     }
-                    if (isGitLock(target.lock)) {
+                    if (isNamedLock(target.lock)) {
                         extraction.pkg.hash = target.lock.hash
                     }
                     const filepath = join(this.package.source.getRepositoryPath(), 'extract.ts')
                     const script = await executeSandboxTypescript(filepath, extraction)
                     if (script) {
                         if (
-                            isGitLock(target.lock) &&
+                            isNamedLock(target.lock) &&
                             isFunction(script.checkout) &&
                             target.options.type === PackageType.NAMED
                         ) {
@@ -91,13 +91,7 @@ export class Extractor extends PackageBuilder {
     }
 
     public getExtractionHashPath(target: BasePackageBuilder): string {
-        return join(
-            environment.directory.extract,
-            target.package.manifest.type,
-            target.package.vendor,
-            target.package.name,
-            '.EXTRACTION_HASH'
-        )
+        return join(target.getTargetPath(), '.EXTRACTION_HASH')
     }
 
     public async ensureSourceHash(target: BasePackageBuilder) {

@@ -18,6 +18,7 @@ export interface PackageDefinitionSummary {
         named: { [k: string]: PackageGitDefinitionEntry[] }
     }
     description: PackageDescription
+    definitionPath: string
 }
 
 export interface PackageDescription {
@@ -26,6 +27,7 @@ export interface PackageDescription {
 
 export function fromPackageDefinition(
     pkg: PackageDefinition,
+    definitionPath: string,
     options: PackageOptions,
     registries: Registries,
     pkgType: string
@@ -37,6 +39,7 @@ export function fromPackageDefinition(
             named: {},
         },
         description: omit(pkg, ['requires', 'development']),
+        definitionPath,
     }
 
     forEach(types, type => {
@@ -81,7 +84,7 @@ export function fromPackageDefinition(
                 if (!isDefined(definition.packages.named[type])) {
                     definition.packages.named[type] = []
                 }
-                console.log(entry, '$$$$$$$$$$$$$$$')
+
                 definition.packages.named[type].push({
                     name: entry.name,
                     version: entry.version,

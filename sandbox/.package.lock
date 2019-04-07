@@ -1,5 +1,5 @@
 {
-  "git": {
+  "named": {
     "libraries": [
       {
         "id": "libraries:GIT:Zefiros-Software/GoogleTest@1.8.1",

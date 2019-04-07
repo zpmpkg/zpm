@@ -69,4 +69,5 @@ export function transformPath(p: string) {
     return p
         .replace(/\$ROOT/g, environment.directory.workingdir)
         .replace(/\$ZPM/g, environment.directory.zpm)
+        .replace(/\/\//g, '/')
 }

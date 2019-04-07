@@ -3,9 +3,10 @@ import { settledPromiseAll } from '~/common/async'
 import { isDefined } from '~/common/util'
 import { Package } from '~/registry/package'
 import { Registries } from '~/registry/registries'
-import { GitLock, LockfileSchema, PathLock } from '~/types/lockfile.v1'
-import { Extractor } from './extractor'
+import { LockfileSchema, NamedLock, PathLock } from '~/types/lockfile.v1'
 import { BuilderOptions, PackageBuilder, PackageType } from './packageBuilder'
+import { TargetBuilder } from './target/builder'
+import { TargetExtractor } from './target/extractor'
 
 export class Builder {
     public registries: Registries
@@ -59,7 +60,7 @@ export class Builder {
     private async createBuilders(type: string, isPackage: boolean) {
         await settledPromiseAll(
             (this.lockFile.named[type] || []).map(async pkg => {
-                const found: Package = this.registries.searchPackage(type, {
+                const found = this.registries.searchPackage(type, {
                     name: pkg.name,
                 })
                 if (isDefined(found)) {
@@ -81,7 +82,7 @@ export class Builder {
                 if (pkg.name === '$ROOT') {
                     // this.builders.push(new RootBuilder())
                 } else {
-                    const found: Package = this.registries.searchPackage(type, {
+                    const found = this.registries.searchPackage(type, {
                         name: pkg.name,
                         path: pkg.path,
                     })
@@ -142,11 +143,13 @@ export function builderFactory(
     type: string,
     builder: Builder,
     pkg: Package,
-    lock: GitLock | PathLock,
+    lock: NamedLock | PathLock,
     options: Partial<BuilderOptions> = {}
 ) {
     if (type === 'extractor') {
-        return new Extractor(builder, pkg, lock, options)
+        return new TargetExtractor(builder, pkg, lock, options)
+    } else if (type === 'builder') {
+        return new TargetBuilder(builder, pkg, lock, options)
     }
 
     return new PackageBuilder(builder, pkg, lock, options)

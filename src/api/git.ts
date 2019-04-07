@@ -8,7 +8,7 @@ export class GitApi {
         this.spinner = spinner
     }
     public async checkout(hash: string): Promise<void> {
-        console.log(this.source, hash)
+        //console.log(this.source, hash)
         // return checkout(this.source, hash, { spinner: this.spinner })
     }
 }
