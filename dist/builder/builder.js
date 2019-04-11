@@ -6,10 +6,13 @@ var __asyncValues = (this && this.__asyncValues) || function (o) {
     function verb(n) { i[n] = o[n] && function (v) { return new Promise(function (resolve, reject) { v = o[n](v), settle(resolve, reject, v.done, v.value); }); }; }
     function settle(resolve, reject, d, v) { Promise.resolve(v).then(function(v) { resolve({ value: v, done: d }); }, reject); }
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
+const fs_extra_1 = __importDefault(require("fs-extra"));
 const lodash_1 = require("lodash");
 const lodash_2 = require("lodash");
-const mz_1 = require("mz");
 const upath_1 = require("upath");
 const async_1 = require("../common/async");
 const environment_1 = require("../common/environment");
@@ -60,14 +63,14 @@ class Builder {
             finally { if (e_1) throw e_1.error; }
         }
         // only wrap up when we actually extracted packages
-        if (await mz_1.fs.exists(environment_1.environment.directory.extract)) {
+        if (await fs_extra_1.default.exists(environment_1.environment.directory.extract)) {
             await async_1.settledPromiseAll(lodash_2.map(this.builders, async (builder) => {
                 if (builder.used) {
                     await builder.finish();
                 }
             }));
             // automatically exlude from git to keep everyone happy :)
-            await mz_1.fs.writeFile(upath_1.join(environment_1.environment.directory.extract, '.gitignore'), '*');
+            await fs_extra_1.default.writeFile(upath_1.join(environment_1.environment.directory.extract, '.gitignore'), '*');
         }
     }
     async createBuilders(type, isPackage) {
