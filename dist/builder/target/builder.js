@@ -86,6 +86,9 @@ ${this.libraryPaths
                 features: settings.features,
             };
         }
+        if (settings.custom) {
+            result.custom = settings.custom;
+        }
         return result;
     }
 }

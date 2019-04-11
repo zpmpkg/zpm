@@ -26,6 +26,7 @@ interface TemplateView {
     compile?: {
         features: string[]
     }
+    custom?: string[]
 }
 
 export class TargetBuilder extends PackageBuilder {
@@ -120,6 +121,9 @@ ${this.libraryPaths
             result.compile = {
                 features: settings.features,
             }
+        }
+        if (settings.custom) {
+            result.custom = settings.custom
         }
         return result
     }

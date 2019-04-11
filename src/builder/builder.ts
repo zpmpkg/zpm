@@ -60,7 +60,7 @@ export class Builder {
             )
         }
         // only wrap up when we actually extracted packages
-        if (await fs.exists(environment.directory.extract)) {
+        if (await fs.pathExists(environment.directory.extract)) {
             await settledPromiseAll(
                 map(this.builders, async builder => {
                     if (builder.used) {

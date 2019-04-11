@@ -63,7 +63,7 @@ class Builder {
             finally { if (e_1) throw e_1.error; }
         }
         // only wrap up when we actually extracted packages
-        if (await fs_extra_1.default.exists(environment_1.environment.directory.extract)) {
+        if (await fs_extra_1.default.pathExists(environment_1.environment.directory.extract)) {
             await async_1.settledPromiseAll(lodash_2.map(this.builders, async (builder) => {
                 if (builder.used) {
                     await builder.finish();

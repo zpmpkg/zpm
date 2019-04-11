@@ -38,4 +38,8 @@ target_compile_features("${PROJECT_NAME}" INTERFACE
 )
 {{/compile}}
 
+{{#custom}}
+{{.}}
+{{/custom}}
+
 zpm_default_target("${PROJECT_NAME}")
