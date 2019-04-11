@@ -1,6 +1,6 @@
+import fs from 'fs-extra'
 import { flatten, get } from 'lodash'
 import { map } from 'lodash'
-import { fs } from 'mz'
 import { join } from 'upath'
 import { settledPromiseAll } from '~/common/async'
 import { environment } from '~/common/environment'
