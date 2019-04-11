@@ -1,0 +1,36 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "properties": {
+        "registries": {
+            "type": "array",
+            "items": {
+                "$ref": "#/definitions/RegistryDefinition"
+            },
+            "additionalItems": false
+        },
+        "registry": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "type": "string"
+                    },
+                    "options": {
+                        "$ref": "#/definitions/ManifestOptions"
+                    }
+                },
+                "additionalProperties": false,
+                "required": [
+                    "name"
+                ]
+            },
+            "additionalItems": false
+        }
+    },
+    "required": [
+        "registries",
+        "registry"
+    ]
+}

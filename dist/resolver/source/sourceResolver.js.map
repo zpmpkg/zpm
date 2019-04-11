@@ -1,0 +1,1 @@
+{"version":3,"file":"sourceResolver.js","sourceRoot":"","sources":["../../../src/resolver/source/sourceResolver.ts"],"names":[],"mappings":";;AAUA,MAAsB,cAAc;IAOhC,YAAY,UAAkB,EAAE,UAA8B,EAAE,GAAY;QACxE,IAAI,CAAC,UAAU,GAAG,UAAU,CAAA;QAC5B,IAAI,CAAC,UAAU,GAAG,UAAU,CAAA;QAC5B,IAAI,CAAC,OAAO,GAAG,GAAG,CAAA;IACtB,CAAC;CAiBJ;AA5BD,wCA4BC"}

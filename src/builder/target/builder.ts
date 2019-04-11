@@ -35,7 +35,7 @@ export class TargetBuilder extends PackageBuilder {
         //     target.getTargetPath(),
         //     target.package.source.definitionResolver.getDefinitionPath()
         const settings = this.getTargetSettings(target)
-        console.log(settings)
+        //console.log(settings)
         if (settings.template) {
             const templateFile = join(
                 transformPath(this.package.source.definitionResolver.getDefinitionPath()),

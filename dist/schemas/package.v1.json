@@ -1,0 +1,136 @@
+{
+    "type": "object",
+    "oneOf": [
+        {
+            "$ref": "#/definitions/PackageDefinition"
+        },
+        {
+            "properties": {
+                "versions": {
+                    "type": "string"
+                },
+                "definition": {
+                    "$ref": "#/definitions/PackageDefinition"
+                }
+            },
+            "additionalProperties": false,
+            "required": [
+                "versions",
+                "definition"
+            ]
+        }
+    ],
+    "definitions": {
+        "PackageDefinition": {
+            "type": "object",
+            "properties": {
+                "development": {
+                    "$ref": "#/definitions/PackageEntries"
+                },
+                "requires": {
+                    "$ref": "#/definitions/PackageEntries"
+                }
+            }
+        },
+        "PackageEntry": {
+            "type": "object",
+            "oneOf": [
+                {
+                    "$ref": "#/definitions/PackagePathEntry"
+                },
+                {
+                    "$ref": "#/definitions/PackageGitEntry"
+                }
+            ]
+        },
+        "PackageGitEntry": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "pattern": "^([a-zA-Z0-9_\\-]{2,50}/[a-zA-Z0-9_\\-]{2,50})$"
+                },
+                "version": {
+                    "type": "string"
+                },
+                "repository": {
+                    "type": "string"
+                },
+                "definition": {
+                    "type": "string"
+                },
+                "optional": {
+                    "type": "boolean"
+                },
+                "settings": {
+                    "type": "object",
+                    "patternProperties": {
+                        "\\w+": {
+                            "type": "array",
+                            "items": {},
+                            "additionalItems": false
+                        }
+                    },
+                    "additionalProperties": false
+                }
+            },
+            "additionalProperties": false,
+            "required": [
+                "name",
+                "version"
+            ]
+        },
+        "PackagePathEntry": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "pattern": "^([a-zA-Z0-9_\\-]{2,50}((/[a-zA-Z0-9_\\-]{2,50}))?(:.*)?)?$"
+                },
+                "version": {
+                    "type": "string",
+                    "default": "*"
+                },
+                "path": {
+                    "type": "string"
+                },
+                "optional": {
+                    "type": "boolean"
+                },
+                "settings": {
+                    "type": "object",
+                    "patternProperties": {
+                        "\\w+": {}
+                    },
+                    "additionalProperties": false
+                }
+            },
+            "additionalProperties": false,
+            "required": [
+                "path"
+            ]
+        },
+        "PackageEntries": {
+            "type": "object",
+            "patternProperties": {
+                "\\w+": {
+                    "$ref": "#/definitions/PackageSingularArrayEntry"
+                }
+            }
+        },
+        "PackageSingularArrayEntry": {
+            "oneOf": [
+                {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/PackageEntry"
+                    },
+                    "additionalItems": false
+                },
+                {
+                    "$ref": "#/definitions/PackageEntry"
+                }
+            ]
+        }
+    }
+}

@@ -1,0 +1,106 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "ManifestOptions": {
+        "type": "object",
+        "properties": {
+            "schema": {
+                "type": "string"
+            },
+            "isBuildDefinition": {
+                "type": "boolean"
+            },
+            "settingsPath": {
+                "type": "string"
+            },
+            "defaults": {
+                "\\w+": {}
+            }
+        }
+    },
+    "RegistryDefinition": {
+        "oneOf": [
+            {
+                "$ref": "#/definitions/RegistryNamedLocationEntry"
+            },
+            {
+                "$ref": "#/definitions/RegistryPathLocationEntry"
+            }
+        ]
+    },
+    "RegistryNamedLocationEntry": {
+        "type": "object",
+        "properties": {
+            "url": {
+                "type": "string",
+                "pattern": "^(https://.*\\.git)$"
+            },
+            "branch": {
+                "type": "string"
+            }
+        },
+        "additionalProperties": false,
+        "required": [
+            "url"
+        ]
+    },
+    "RegistryPathLocationEntry": {
+        "type": "object",
+        "properties": {
+            "path": {
+                "type": "string"
+            }
+        },
+        "additionalProperties": false,
+        "required": [
+            "path"
+        ]
+    },
+    "RegistryEntry": {
+        "oneOf": [
+            {
+                "$ref": "#/definitions/RegistryNamedEntry"
+            },
+            {
+                "$ref": "#/definitions/RegistryPathEntry"
+            }
+        ]
+    },
+    "RegistryNamedEntry": {
+        "type": "object",
+        "properties": {
+            "name": {
+                "type": "string",
+                "pattern": "^([a-zA-Z0-9_\\-]{2,50}/[a-zA-Z0-9_\\-]{2,50})$"
+            },
+            "repository": {
+                "type": "string",
+                "pattern": "^(https://.*\\.git)$"
+            },
+            "definition": {
+                "type": "string",
+                "pattern": "^(https://.*\\.git)$"
+            }
+        },
+        "additionalProperties": false,
+        "required": [
+            "name",
+            "repository"
+        ]
+    },
+    "RegistryPathEntry": {
+        "type": "object",
+        "properties": {
+            "name": {
+                "type": "string",
+                "pattern": "^([a-zA-Z0-9_\\-]{2,50}/[a-zA-Z0-9_\\-]{2,50})$"
+            },
+            "path": {
+                "type": "string"
+            }
+        },
+        "additionalProperties": false,
+        "required": [
+            "path"
+        ]
+    }
+}

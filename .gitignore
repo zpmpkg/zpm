@@ -78,7 +78,7 @@ TEST-results.xml
 package-lock.json
 /extern/
 /.cache-loader/
-/dist/
+#/dist/
 /.package.lock
 /sandbox/extern/
 
