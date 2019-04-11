@@ -1,5 +1,6 @@
 import { Mutex } from 'async-mutex'
 import { sha256 } from 'js-sha256'
+import stringify from 'json-stable-stringify'
 import path from 'path'
 import { normalize } from 'upath'
 import { createSourceResolver, isNamedEntry, isPathEntry } from '~/resolver/source/factory'
@@ -98,7 +99,7 @@ export class Package {
 
     private calculateEntryHash() {
         const oldValue = this.loadedEntryHash
-        this.loadedEntryHash = sha256(JSON.stringify(this.entry))
+        this.loadedEntryHash = sha256(stringify(this.entry))
         return oldValue !== this.loadedEntryHash
     }
 }

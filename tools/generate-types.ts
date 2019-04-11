@@ -1,7 +1,9 @@
 import { readFileSync, writeFileSync } from 'fs'
 import { compile } from 'json-schema-to-typescript'
 import { keys, orderBy } from 'lodash'
-const prettier = JSON.parse(readFileSync('.prettierrc').toString())
+
+// tslint:disable-next-line:no-var-requires
+const prettier = require('@zefiros/npm-defaults/prettier.config')
 
 // tslint:disable-next-line:no-var-requires
 const definitions = JSON.parse(readFileSync('src/schemas/definitions.v1.json').toString())

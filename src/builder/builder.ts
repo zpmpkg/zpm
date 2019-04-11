@@ -1,5 +1,9 @@
 import { flatten, get } from 'lodash'
+import { map } from 'lodash'
+import { fs } from 'mz'
+import { join } from 'upath'
 import { settledPromiseAll } from '~/common/async'
+import { environment } from '~/common/environment'
 import { isDefined } from '~/common/util'
 import { Package } from '~/registry/package'
 import { Registries } from '~/registry/registries'
@@ -55,12 +59,25 @@ export class Builder {
                 )
             )
         }
+        // only wrap up when we actually extracted packages
+        if (await fs.exists(environment.directory.extract)) {
+            await settledPromiseAll(
+                map(this.builders, async builder => {
+                    if (builder.used) {
+                        await builder.finish()
+                    }
+                })
+            )
+
+            // automatically exlude from git to keep everyone happy :)
+            await fs.writeFile(join(environment.directory.extract, '.gitignore'), '*')
+        }
     }
 
     private async createBuilders(type: string, isPackage: boolean) {
         await settledPromiseAll(
             (this.lockFile.named[type] || []).map(async pkg => {
-                const found = this.registries.searchPackage(type, {
+                const found = await this.registries.searchPackage(type, {
                     name: pkg.name,
                 })
                 if (isDefined(found)) {
@@ -82,7 +99,7 @@ export class Builder {
                 if (pkg.name === '$ROOT') {
                     // this.builders.push(new RootBuilder())
                 } else {
-                    const found = this.registries.searchPackage(type, {
+                    const found = await this.registries.searchPackage(type, {
                         name: pkg.name,
                         path: pkg.path,
                     })
@@ -102,41 +119,6 @@ export class Builder {
             })
         )
     }
-
-    // private async createPackage(type: string) {
-    //     // // await Promise.all([this.builders.push()])
-    //     await settledPromiseAll(
-    //         (this.lockFile.git[type] || []).map(async pkg => {
-    //             const found: Package = this.registries.searchPackage(type, {
-    //                 name: pkg.name,
-    //             })
-    //             if (isDefined(found)) {
-    //                 const builder = builderFactory(type, this, found, pkg, {
-    //                     type: PackageType.GIT,
-    //                 })
-    //                 this.packages.push(builder)
-    //             } else {
-    //                 // @todo not implemented
-    //             }
-    //         })
-    //     )
-    //     // await settledPromiseAll(
-    //     //     (this.lockFile.path[type] || []).map(async pkg => {
-    //     //         if (pkg.name === '$ROOT') {
-    //     //             // this.builders.push(new RootBuilder())
-    //     //         } else {
-    //     //             const root: Package = this.registries.searchPackage(type, {
-    //     //                 name: pkg.name,
-    //     //             })
-    //     //             if (isDefined(root)) {
-    //     //                 // this.builders.push(new PathBuilder())
-    //     //             } else {
-    //     //                 // @todo not implemented
-    //     //             }
-    //     //         }
-    //     //     })
-    //     // )
-    // }
 }
 
 export function builderFactory(

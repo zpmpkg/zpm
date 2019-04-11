@@ -1,43 +1,21 @@
 {
+  "extends": "@zefiros/npm-defaults/tsconfig.base.json",
   "compilerOptions": {
-    "allowJs": true,
-    "target": "es6",
-    "moduleResolution": "node",
-    "module": "commonjs",
-    "alwaysStrict": true,
-    "esModuleInterop": true,
-    "lib": [
-      "esnext.asynciterable",
-      "esnext",
-      "dom"
-    ],
-    "baseUrl": "./",
+    "baseUrl": ".",
     "paths": {
-      "~/*": ["./src/*"],      
-      "*": [
-        "./typings/*"
-      ]
+      "~/*": ["src/*"],
+      "*": ["./typings/*"]
     },
-    "emitDecoratorMetadata": true,
-    "experimentalDecorators": true,
-		"outDir": "dist",
-    "forceConsistentCasingInFileNames": true,
-    "noImplicitReturns": true,
-    "noImplicitAny": true,
-    "strict": true,
-    "noUnusedLocals": true,  
-    "strictNullChecks": true,
-    "sourceMap": true
+    "outDir": "./dist",
+    "rootDir": ".",
+    "resolveJsonModule": true,
+    "plugins": [
+      {
+        "transform": "@zerollup/ts-transform-paths",
+        "exclude": ["*"]
+      }
+    ]
   },
-  "include": [
-    "src/**/*",
-    "extractors/**/*"
-  ],
-  "exclude": [
-    "node_modules",
-    "**/*.spec.ts"
-  ],
-  "files": [
-    "./typings/api.d.ts"
-  ]
+  "include": ["src/**/*.ts", "src/**/*.js", "src/**/*.json", "test/**/*.ts", "./*.js"],
+  "exclude": [".vscode", "node_modules"]
 }

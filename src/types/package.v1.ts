@@ -35,6 +35,7 @@ export interface PackagePathEntry {
 export interface PackageGitEntry {
     name: string
     version: string
+    repository?: string
     definition?: string
     optional?: boolean
     settings?: {

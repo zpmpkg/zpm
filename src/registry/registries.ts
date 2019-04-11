@@ -1,4 +1,6 @@
-import { filter, flatten, get, has } from 'lodash'
+import { get } from '@zefiros/axioms'
+import { Mutex } from 'async-mutex'
+import { filter, flatten, has } from 'lodash'
 import { settledPromiseAll } from '~/common/async'
 import { environment } from '~/common/environment'
 import { transformPath } from '~/common/io'
@@ -12,7 +14,7 @@ import {
     RegistryPathLocationEntry,
 } from '~/types/definitions.v1'
 import { ZPM } from '../zpm'
-import { PackageOptions, Package } from './package'
+import { Package, PackageOptions, PackageType } from './package'
 import { Registry } from './registry'
 
 export function isPathRegistry(entry: RegistryDefinition): entry is RegistryPathLocationEntry {
@@ -28,6 +30,7 @@ export class Registries {
 
     public config!: ConfigurationSchema
     private manifests: { [k: string]: Manifest } = {}
+    private addMutex: Mutex = new Mutex()
 
     constructor(zpm: ZPM) {
         this.zpm = zpm
@@ -50,12 +53,26 @@ export class Registries {
         return this.manifests[type]
     }
 
-    public searchPackage(
+    public async searchPackage(
         type: string,
-        search: { name: string; path?: string }
-    ): Package | undefined {
+        search: { name: string } & { path?: string } & { definition?: string; repository?: string }
+    ): Promise<Package | undefined> {
         const sname = search.path ? `${search.name}:${search.path}` : search.name
-        return get(this.manifests, [type, 'entries', sname])
+        const found = get(this.manifests, [type, 'entries', sname])
+
+        return this.addMutex.runExclusive(async () => {
+            // allow inline repositories
+            // @todo: only allow on root path
+            if (!found && search.name && search.definition && search.repository) {
+                const pkg = this.addPackage(type, {
+                    name: search.name,
+                    definition: search.definition,
+                    repository: search.repository,
+                })
+                return pkg
+            }
+            return found
+        })
     }
 
     public addPackage(type: string, entry: RegistryEntry, options?: PackageOptions) {

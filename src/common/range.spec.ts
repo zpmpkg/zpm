@@ -1,9 +1,9 @@
-import { Range } from './range'
+import { VersionRange } from './range'
 
 describe('range', () => {
-    describe('Range', () => {
+    describe('VersionRange', () => {
         test('simple', () => {
-            const r1 = new Range('>1.0.0')
+            const r1 = new VersionRange('>1.0.0')
             expect(r1.semverMatcher).toEqual('>1.0.0')
             expect(r1.tags).toEqual([])
             expect(r1.satisfies('1.2.0')).toBeTruthy()
@@ -13,7 +13,7 @@ describe('range', () => {
             expect(r1.satisfies('dev')).toBeFalsy()
         })
         test('multiple', () => {
-            const r2 = new Range('>1.0.0 || <2.0.0')
+            const r2 = new VersionRange('>1.0.0 || <2.0.0')
             expect(r2.semverMatcher).toEqual('>1.0.0 || <2.0.0')
             expect(r2.tags).toEqual([])
             expect(r2.satisfies('1.2.0')).toBeTruthy()
@@ -23,7 +23,7 @@ describe('range', () => {
             expect(r2.satisfies('dev')).toBeFalsy()
         })
         test('multiple 2', () => {
-            const r2 = new Range('>1.0.0 <2.0.0')
+            const r2 = new VersionRange('>1.0.0 <2.0.0')
             expect(r2.semverMatcher).toEqual('>1.0.0 <2.0.0')
             expect(r2.tags).toEqual([])
             expect(r2.satisfies('1.2.0')).toBeTruthy()
@@ -33,7 +33,7 @@ describe('range', () => {
             expect(r2.satisfies('dev')).toBeFalsy()
         })
         test('tags', () => {
-            const r3 = new Range('>1.0.0 || >2.0.0 || master')
+            const r3 = new VersionRange('>1.0.0 || >2.0.0 || master')
             expect(r3.semverMatcher).toEqual('>1.0.0 || >2.0.0')
             expect(r3.tags).toEqual(['master'])
             expect(r3.satisfies('1.2.0')).toBeTruthy()
@@ -43,7 +43,7 @@ describe('range', () => {
             expect(r3.satisfies('dev')).toBeFalsy()
         })
         test('tags multiple', () => {
-            const r4 = new Range('>1.0.0 || >2.0.0 || master || dev')
+            const r4 = new VersionRange('>1.0.0 || >2.0.0 || master || dev')
             expect(r4.semverMatcher).toEqual('>1.0.0 || >2.0.0')
             expect(r4.tags).toEqual(['master', 'dev'])
             expect(r4.satisfies('1.2.0')).toBeTruthy()
@@ -53,7 +53,7 @@ describe('range', () => {
             expect(r4.satisfies('dev')).toBeTruthy()
         })
         test('tags shuffle', () => {
-            const r5 = new Range('>1.0.0 || master || dev || >2.0.0')
+            const r5 = new VersionRange('>1.0.0 || master || dev || >2.0.0')
             expect(r5.semverMatcher).toEqual('>1.0.0 || >2.0.0')
             expect(r5.tags).toEqual(['master', 'dev'])
             expect(r5.satisfies('1.2.0')).toBeTruthy()
@@ -63,7 +63,7 @@ describe('range', () => {
             expect(r5.satisfies('dev')).toBeTruthy()
         })
         test('tags alphaext only', () => {
-            const r6 = new Range('>1.0.0 || master/wef  || dev || >2.0.0')
+            const r6 = new VersionRange('>1.0.0 || master/wef  || dev || >2.0.0')
             expect(r6.semverMatcher).toEqual('>1.0.0 || >2.0.0')
             expect(r6.tags).toEqual(['master/wef', 'dev'])
             expect(r6.satisfies('1.2.0')).toBeTruthy()
@@ -74,7 +74,7 @@ describe('range', () => {
             expect(r6.satisfies('master/wef')).toBeTruthy()
         })
         test('tag only', () => {
-            const r7 = new Range('master/wef')
+            const r7 = new VersionRange('master/wef')
             expect(r7.semverMatcher).toEqual(undefined)
             expect(r7.tags).toEqual(['master/wef'])
             expect(r7.satisfies('1.2.0')).toBeFalsy()
@@ -85,7 +85,7 @@ describe('range', () => {
             expect(r7.satisfies('master/wef')).toBeTruthy()
         })
         test('tag characters', () => {
-            const r7 = new Range('master/-_wef')
+            const r7 = new VersionRange('master/-_wef')
             expect(r7.semverMatcher).toEqual(undefined)
             expect(r7.tags).toEqual(['master/-_wef'])
             expect(r7.satisfies('1.2.0')).toBeFalsy()
@@ -96,12 +96,12 @@ describe('range', () => {
             expect(r7.satisfies('master/-_wef')).toBeTruthy()
         })
         test('tag and', () => {
-            const r8 = new Range('master/wef dev')
+            const r8 = new VersionRange('master/wef dev')
             expect(r8.semverMatcher).toEqual(undefined)
             expect(r8.tags).toEqual([])
         })
         test('invalid', () => {
-            const r8 = new Range('master/wef dev')
+            const r8 = new VersionRange('master/wef dev')
             expect(r8.semverMatcher).toEqual(undefined)
             expect(r8.tags).toEqual([])
             expect(() => r8.satisfies('@fwef341')).toThrow()

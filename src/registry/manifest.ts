@@ -1,4 +1,5 @@
 import ajv = require('ajv')
+import { Mutex } from 'async-mutex'
 import * as fs from 'fs-extra'
 import { has } from 'lodash'
 import { join } from 'upath'
@@ -92,7 +93,6 @@ export class Manifest {
         } else {
             throw new Error('Failed to determine package type')
         }
-
         if (!has(this.entries, name)) {
             this.entries[name] = new Package(this, entry, options)
         }

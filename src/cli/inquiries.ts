@@ -1,5 +1,5 @@
+import { Omit } from '@zefiros/axioms/omit'
 import inquirer from 'inquirer'
-import { Omit } from 'lodash'
 import AwaitLock from '~/common/lock'
 import { isDefined } from '~/common/util'
 

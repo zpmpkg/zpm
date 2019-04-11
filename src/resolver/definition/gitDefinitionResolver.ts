@@ -19,7 +19,7 @@ export class GitDefinitionResolver extends DefinitionResolver {
         try {
             content = await this.getContent(directory, hash!)
         } catch (e) {
-            logger.info(e)
+            //logger.info(e)
             // @todo
         }
 

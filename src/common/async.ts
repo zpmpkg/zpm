@@ -27,5 +27,3 @@ export function settledPromiseAll(promisesArray: Array<Promise<any>>) {
         return resolvedPromises
     })
 }
-
-;(Symbol as any).asyncIterator = Symbol.asyncIterator || Symbol.for('Symbol.asyncIterator')

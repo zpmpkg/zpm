@@ -1,8 +1,14 @@
-import { cloneDeep, forEach, get, isArray, isEmpty, omit } from 'lodash'
+import { get, omit } from '@zefiros/axioms'
+import { cloneDeep, findIndex, forEach, isArray, isEmpty } from 'lodash'
 import { isDefined } from '~/common/util'
 import { Registries } from '~/registry/registries'
 import { isGitPackageEntry, isPathPackageEntry } from '~/solver/package'
-import { PackageDefinition, PackageGitEntry, PackagePathEntry } from '~/types/package.v1'
+import {
+    PackageDefinition,
+    PackageEntry,
+    PackageGitEntry,
+    PackagePathEntry,
+} from '~/types/package.v1'
 import { PackageOptions } from '../../registry/package'
 
 interface PackagePathDefinitionEntry extends PackagePathEntry {
@@ -38,23 +44,35 @@ export function fromPackageDefinition(
             path: {},
             named: {},
         },
-        description: omit(pkg, ['requires', 'development']),
+        description: omit(pkg, 'requires', 'development'),
         definitionPath,
     }
 
     forEach(types, type => {
         const manifest = registries.getManifest(type)
-        let values = get(pkg, ['requires', type], [])
+        const requiredValues = get(pkg, ['requires', type], [] as PackageEntry[])
+        let values: PackageEntry[] = []
         if (!isArray(values)) {
             if (manifest.options.isBuildDefinition) {
                 values = [values]
             } else {
                 // todo throw
             }
+        } else {
+            values = requiredValues as PackageEntry[]
         }
-        if (options.isRoot) {
-            const development = get(pkg, ['development', type], [])
-            values.push(...(!isArray(development) ? [development] : development))
+
+        if (options.isRoot || (options.root && options.root.options.isRoot)) {
+            const development = get(pkg, ['development', type], [] as PackageEntry[])
+            const developmentArray = !isArray(development) ? [development] : development
+            for (const entry of developmentArray) {
+                const match = findIndex(values, o => isDefined(o.name) && o.name === entry.name)
+                if (match >= 0) {
+                    values[match] = entry
+                } else {
+                    values.push(entry)
+                }
+            }
         }
         if (isEmpty(values) && isDefined((manifest.options.defaults || {})[pkgType])) {
             const defaultUsage = cloneDeep(manifest.options.defaults![pkgType])
@@ -89,6 +107,7 @@ export function fromPackageDefinition(
                     name: entry.name,
                     version: entry.version,
                     definition: entry.definition,
+                    repository: entry.repository,
                     settings: entry.settings || {},
                     isBuildDefinition: manifest.options.isBuildDefinition!,
                 })

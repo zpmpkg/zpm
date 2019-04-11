@@ -1,4 +1,5 @@
 import Consola from 'consola'
+import stringify from 'json-stable-stringify'
 import { isObjectLike } from 'lodash'
 import winston from 'winston'
 import DailyRotateFile from 'winston-daily-rotate-file'
@@ -74,7 +75,7 @@ class Logger {
         if (value instanceof Error) {
             return value
         }
-        return JSON.stringify(value, undefined, 2)
+        return stringify(value, { space: '  ' })
     }
 }
 

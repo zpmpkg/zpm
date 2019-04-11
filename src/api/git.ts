@@ -1,4 +1,5 @@
 import { Spinner } from '~/cli/spinner'
+import { checkout } from '~/common/git'
 
 export class GitApi {
     public source: string
@@ -8,7 +9,6 @@ export class GitApi {
         this.spinner = spinner
     }
     public async checkout(hash: string): Promise<void> {
-        //console.log(this.source, hash)
-        // return checkout(this.source, hash, { spinner: this.spinner })
+        return checkout(this.source, hash, { spinner: this.spinner })
     }
 }

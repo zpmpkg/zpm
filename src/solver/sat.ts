@@ -1,9 +1,9 @@
+import { get } from '@zefiros/axioms'
 import { pathExists } from 'fs-extra'
 import {
     concat,
     first,
     flatten,
-    get,
     has,
     intersection,
     isEmpty,
@@ -17,7 +17,7 @@ import {
     unzip,
 } from 'lodash'
 import * as Logic from 'logic-solver'
-import { join, normalize, dirname } from 'upath'
+import { dirname, join, normalize } from 'upath'
 import { update } from '~/cli/program'
 import { settledPromiseAll } from '~/common/async'
 import { environment } from '~/common/environment'
@@ -128,8 +128,8 @@ export class SATSolver {
             const types: string[] = this.registries.getTypes()
             this.assumptions = []
             for (const type of types) {
-                get(this.lockContent.named, type, []).forEach(pkg => {
-                    const found = this.registries.searchPackage(type, { name: pkg.name })
+                for await (const pkg of get(this.lockContent.named, [type], [])) {
+                    const found = await this.registries.searchPackage(type, { name: pkg.name })
                     if (isDefined(found)) {
                         this.assumptions!.push(
                             this.toTerm(found.getHash(), new Version(pkg.version))
@@ -137,7 +137,7 @@ export class SATSolver {
                     } else {
                         // @todo
                     }
-                })
+                }
             }
         }
         return true
@@ -275,7 +275,7 @@ export class SATSolver {
                 minimum.map(async (term: string) => {
                     if (has(this.termMap.named, term)) {
                         const pkg = this.termMap.named[term]
-                        if (!get(solution.named, pkg.package.manifest.type)) {
+                        if (!get(solution.named, [pkg.package.manifest.type])) {
                             set(solution.named, pkg.package.manifest.type, [])
                         }
 
@@ -290,7 +290,7 @@ export class SATSolver {
                         })
                     } else if (has(this.termMap.path, term)) {
                         const pkg = this.termMap.path[term]
-                        if (!get(solution.path, pkg.package.manifest.type)) {
+                        if (!get(solution.path, [pkg.package.manifest.type])) {
                             set(solution.path, pkg.package.manifest.type, [])
                         }
                         solution.path[pkg.package.manifest.type].push({
@@ -365,7 +365,7 @@ export class SATSolver {
         if (
             this.registries
                 .getRegistries()
-                .filter(x => get(x.options, 'isBuildDefinition'))
+                .filter(x => get(x.options, ['isBuildDefinition']))
                 .map(x => x.name)
                 .includes(type)
         ) {
@@ -619,19 +619,24 @@ export class SATSolver {
         hash: string,
         parent?: { package: Package; hash: string }
     ): Promise<{ found: Package; terms: string[] }> {
-        const found = this.registries.searchPackage(pkg.type, { name: pkg.description.name })
+        const found = await this.registries.searchPackage(pkg.type, {
+            name: pkg.description.name,
+            definition: pkg.description.definition,
+            repository: pkg.description.repository,
+        })
         if (found) {
             if (
                 parent &&
                 ((parent.package.options.root && parent.package.options.root.options.isRoot) ||
                     parent.package.options.isRoot)
             ) {
+                // make sure root packages use the right directory
+                found.options.absolutePath = dirname(pkg.definitionPath)
                 const entry: RegistryNamedEntry = {
                     name: pkg.description.name,
                     repository: found.source.repository,
                     definition: pkg.description.definition || found.source.definition,
                 }
-                found.options.absolutePath = dirname(pkg.definitionPath)
                 await found.overrideEntry(entry)
             }
 
@@ -675,7 +680,7 @@ export class SATSolver {
     }
 
     private tryInsertPackage(hash: string): boolean {
-        if (!get(this.loadedCache, hash)) {
+        if (!get(this.loadedCache, [hash])) {
             set(this.loadedCache, hash, true)
             return true
         }

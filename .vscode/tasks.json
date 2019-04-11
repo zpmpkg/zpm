@@ -1,0 +1,33 @@
+{
+    // See https://go.microsoft.com/fwlink/?LinkId=733558 
+    // for the documentation about the tasks.json format
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "ttsc: watch",
+            "type": "shell",
+            "problemMatcher": [
+                "$tsc-watch"
+            ],
+            "windows": {
+                "command": ".\\node_modules\\.bin\\ttsc.cmd",
+                "args": [
+                    "--watch", "-p", "tsconfig.watch.json"
+                ],
+            },
+        },
+        {
+            "label": "ttsc: build",
+            "type": "shell",
+            "windows": {
+                "command": ".\\node_modules\\.bin\\ttsc.cmd",
+                "args": [
+                    "-p", "tsconfig.dist.json"
+                ],
+            },
+            "problemMatcher": [
+                "$tsc"
+            ]
+        }
+    ]
+}

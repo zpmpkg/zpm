@@ -1,22 +1,3 @@
 {
-  "extends": [
-    "tslint:latest",
-    "tslint-plugin-prettier",
-    "tslint-eslint-rules",
-    "tslint-config-prettier"
-  ],
-  "rules": {
-    "prettier": true,
-    "max-classes-per-file": false,
-    "object-literal-sort-keys": false,
-    "interface-name": false,
-    "prefer-conditional-expression": false,
-    "no-floating-promises": true,
-    "no-implicit-dependencies": [false, "dev"],
-    "no-submodule-imports": false,
-    "no-unused-variable": [true, { "ignore-pattern": "[iI]gnored" }],
-    "no-namespace": {
-      "options": [true, "allow-declarations"]
-    }
-  }
+  "extends": ["@zefiros/npm-defaults/tslint.json"]
 }

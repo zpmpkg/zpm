@@ -1,7 +1,6 @@
 import * as fs from 'fs-extra'
 import isGitUrl from 'is-git-url'
 import { join, normalizeSafe } from 'upath'
-import { askPull } from '~/cli/inquiries'
 import { headless, update } from '~/cli/program'
 import { spinners } from '~/cli/spinner'
 import { settledPromiseAll } from '~/common/async'
@@ -104,8 +103,8 @@ export class GitSourceResolver extends SourceResolver {
             return []
         }
 
-        const output = await showRef(this.getRepositoryPath(), ['--tags', '--heads'])
-        return output
+        const output = await showRef(this.getRepositoryPath())
+        const versions = output
             .split('\n')
             .map(s => s.split(' '))
             .filter(s => s.length === 2)
@@ -118,11 +117,11 @@ export class GitSourceResolver extends SourceResolver {
                             hash: s[0],
                             name: s[1].replace('refs/tags/', ''),
                         }
-                    } else if (s[1].includes('/heads/')) {
+                    } else if (s[1].includes('/remotes/')) {
                         result = {
-                            version: new Version(s[1].replace('refs/heads/', '')),
+                            version: new Version(s[1].replace('refs/remotes/origin/', '')),
                             hash: s[0],
-                            name: s[1].replace('refs/heads/', ''),
+                            name: s[1].replace('refs/remotes/origin/', ''),
                         }
                     }
                 } catch (error) {
@@ -133,10 +132,11 @@ export class GitSourceResolver extends SourceResolver {
             .filter(isDefined)
             .sort((a, b) => b.version.cost - a.version.cost)
             .reverse()
+        return versions
     }
 
     public async getTags() {
-        const output = await showRef(this.getRepositoryPath(), ['--heads'])
+        const output = await showRef(this.getRepositoryPath())
         return output
             .split('\n')
             .map(s => s.split(' '))
@@ -145,9 +145,9 @@ export class GitSourceResolver extends SourceResolver {
                 let result
                 try {
                     result = {
-                        version: new Version(s[1].replace('refs/heads/', '')),
+                        version: new Version(s[1].replace('refs/remotes/origin/', '')),
                         hash: s[0],
-                        name: s[1].replace('refs/heads/', ''),
+                        name: s[1].replace('refs/remotes/origin/', ''),
                     }
                 } catch (error) {
                     result = undefined
@@ -175,11 +175,7 @@ export class GitSourceResolver extends SourceResolver {
     }
 
     public async mayPull() {
-        return (
-            update() ||
-            (!(await fs.pathExists(this.getCachePath()!)) &&
-                (headless() || askPull(this.package.name)))
-        )
+        return update() || headless() || !(await fs.pathExists(this.getCachePath()))
     }
 
     private getPullInfo(fetched: CloneOrPullResult): string {

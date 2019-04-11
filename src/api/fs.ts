@@ -13,7 +13,6 @@ export class FsApi {
     }
     public async copy(sources: string[], options?: { excludes?: string[] }): Promise<void> {
         if (!isEmpty(sources)) {
-            console.log(sources, options)
             await copy(sources, this.source, this.target)
         }
     }

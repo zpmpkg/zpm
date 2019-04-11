@@ -1,6 +1,6 @@
+import { omit } from '@zefiros/axioms'
 import Ajv, { ValidateFunction } from 'ajv'
 import betterAjvErrors from 'better-ajv-errors'
-import { omit } from 'lodash'
 import { definitionsV1 } from '~/schemas/schemas'
 
 const ajv = new Ajv({ useDefaults: true, jsonPointers: true, allErrors: false })

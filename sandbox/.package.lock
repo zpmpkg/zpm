@@ -18,7 +18,7 @@
         "settings": {},
         "usage": {
           "required": {
-            "extractor": "extractor:PATH:ZPM:extractors/default",
+            "extractor": "extractor:PATH:ZPM:extractor/default",
             "builder": "builder:PATH:ZPM:builder/default"
           }
         }
@@ -54,9 +54,9 @@
         "usage": {}
       },
       {
-        "id": "extractor:PATH:ZPM:extractors/default",
+        "id": "extractor:PATH:ZPM:extractor/default",
         "name": "ZPM",
-        "path": "extractors/default",
+        "path": "extractor/default",
         "description": {
           "extractor": {
             "includes": [
@@ -98,7 +98,7 @@
         "usage": {
           "required": {
             "builder": "builder:PATH:ZPM:builder/default",
-            "extractor": "extractor:PATH:ZPM:extractors/default",
+            "extractor": "extractor:PATH:ZPM:extractor/default",
             "libraries": [
               "libraries:PATH:$ROOT:$ROOT:sandbox2"
             ]
@@ -116,7 +116,7 @@
         "settings": {},
         "usage": {
           "required": {
-            "extractor": "extractor:PATH:ZPM:extractors/default",
+            "extractor": "extractor:PATH:ZPM:extractor/default",
             "builder": "builder:PATH:ZPM:builder/default",
             "libraries": [
               "libraries:PATH:$ROOT:$ROOT:sandbox2/sandbox3"
@@ -142,7 +142,7 @@
             }
           },
           "required": {
-            "extractor": "extractor:PATH:ZPM:extractors/default",
+            "extractor": "extractor:PATH:ZPM:extractor/default",
             "builder": "builder:PATH:ZPM:builder/default",
             "libraries": [
               "libraries:PATH:$ROOT:$ROOT:sandbox2/sandbox4"
@@ -166,7 +166,7 @@
             }
           },
           "required": {
-            "extractor": "extractor:PATH:ZPM:extractors/default",
+            "extractor": "extractor:PATH:ZPM:extractor/default",
             "builder": "builder:PATH:ZPM:builder/default"
           }
         }

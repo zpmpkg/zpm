@@ -1,13 +1,14 @@
+import { get } from '@zefiros/axioms'
 import * as fs from 'fs-extra'
-import { get, isFunction } from 'lodash'
+import { isFunction } from 'lodash'
 import { join } from 'upath'
 import { FsApi } from '~/api/fs'
 import { GitApi } from '~/api/git'
 import { PackageApi } from '~/api/package'
 import { force } from '~/cli/program'
 import { spinners } from '~/cli/spinner'
-import { environment } from '~/common/environment'
 import { hasHash } from '~/common/git'
+import { transformPath } from '~/common/io'
 import { logger } from '~/common/logger'
 import { executeSandboxTypescript } from '~/sandbox/sandbox'
 import { isNamedLock } from '../lock'
@@ -42,10 +43,14 @@ export class TargetExtractor extends PackageBuilder {
                             spin
                         ),
                     }
+
                     if (isNamedLock(target.lock)) {
                         extraction.pkg.hash = target.lock.hash
                     }
-                    const filepath = join(this.package.source.getRepositoryPath(), 'extract.ts')
+                    const filepath = join(
+                        transformPath(this.package.source.getDefinitionPath()),
+                        'extract.ts'
+                    )
                     const script = await executeSandboxTypescript(filepath, extraction)
                     if (script) {
                         if (

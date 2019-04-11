@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 import { loadCLI } from './cli/program'
 // first thing
 loadCLI()
