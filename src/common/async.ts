@@ -1,5 +1,9 @@
 import { isEmpty } from 'lodash'
 
+if (!Symbol.asyncIterator) {
+    ;(Symbol as any).asyncIterator = Symbol.asyncIterator || Symbol.for('Symbol.asyncIterator')
+}
+
 class PromiseAllError extends Error {
     public errors: Error[]
     constructor(errors: Error[]) {

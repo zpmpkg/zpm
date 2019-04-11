@@ -1,6 +1,10 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const lodash_1 = require("lodash");
+if (!Symbol.asyncIterator) {
+    ;
+    Symbol.asyncIterator = Symbol.asyncIterator || Symbol.for('Symbol.asyncIterator');
+}
 class PromiseAllError extends Error {
     constructor(errors) {
         super();
