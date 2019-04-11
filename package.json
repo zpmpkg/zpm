@@ -1,6 +1,7 @@
 {
   "license": "MIT",
   "name": "@zpmpk/zpm",
+  "version": "0.1.0",
   "main": "./dist/main.js",
   "bin": {
     "zpm": "./dist/main.js"
