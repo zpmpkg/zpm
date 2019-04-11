@@ -9,6 +9,7 @@ const log_symbols_1 = __importDefault(require("log-symbols"));
 const log_update_1 = __importDefault(require("log-update"));
 const stream_buffers_1 = require("stream-buffers");
 const logger_1 = require("../common/logger");
+const program_1 = require("./program");
 class Spinner {
     constructor(text = '') {
         this.stream = new stream_buffers_1.WritableStreamBuffer();
@@ -78,6 +79,9 @@ class Spinners {
     constructor() {
         this.interval = 80;
         this.spinners = [];
+        if (program_1.ci()) {
+            this.interval = 2000;
+        }
     }
     create(text) {
         const added = new Spinner(text);

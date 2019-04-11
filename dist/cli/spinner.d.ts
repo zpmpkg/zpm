@@ -25,6 +25,7 @@ export declare class Spinners {
     interval: number;
     spinners: Spinner[];
     id: any;
+    constructor();
     create(text?: string): Spinner;
     start(): this;
     render(): void;

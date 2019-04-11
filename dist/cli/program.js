@@ -30,4 +30,8 @@ function workingdir() {
     return commander_1.default.path;
 }
 exports.workingdir = workingdir;
+function ci() {
+    return process.env.CI;
+}
+exports.ci = ci;
 //# sourceMappingURL=program.js.map

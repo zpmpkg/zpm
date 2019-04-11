@@ -4,6 +4,7 @@ import symbols from 'log-symbols'
 import logUpdate from 'log-update'
 import { WritableStreamBuffer } from 'stream-buffers'
 import { logger } from '~/common/logger'
+import { ci } from './program'
 
 export class Spinner {
     public stream: WritableStreamBuffer = new WritableStreamBuffer()
@@ -90,6 +91,12 @@ export class Spinners {
     public interval: number = 80
     public spinners: Spinner[] = []
     public id: any
+
+    constructor() {
+        if (ci()) {
+            this.interval = 2000
+        }
+    }
 
     public create(text?: string) {
         const added = new Spinner(text)

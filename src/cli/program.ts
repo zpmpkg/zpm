@@ -30,3 +30,7 @@ export function headless() {
 export function workingdir() {
     return commander.path
 }
+
+export function ci() {
+    return process.env.CI
+}
