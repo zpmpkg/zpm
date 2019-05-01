@@ -1,0 +1,14 @@
+includes: []
+requires:
+  libraries:
+    #- name: Zefiros-Software/Boost
+    #  version: ^1.6.9
+    # - name: Zefiros-Software/The-Forge
+    #   version: ^1.8.0
+    # prevent this
+    ##- path: ../
+    - name: Zefiros-Software/GoogleTest
+      version: ^1.7.0
+    - path: ../sandbox4
+      settings:
+        wooo: fooodd

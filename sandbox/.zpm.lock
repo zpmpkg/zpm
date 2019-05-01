@@ -1,0 +1,176 @@
+{
+  "named": {
+    "libraries": [
+      {
+        "id": "libraries:GIT:Zefiros-Software/GoogleTest@1.8.1",
+        "name": "Zefiros-Software/GoogleTest",
+        "version": "1.8.1",
+        "hash": "2fe3bd994b3189899d93f1d5a881e725e046fdc2",
+        "description": {
+          "description": "his repository is a merger of the formerly separate GoogleTest and GoogleMock projects.",
+          "keywords": [
+            "Google Test",
+            "Google Mock"
+          ],
+          "website": "https://github.com/google/googletest",
+          "license": "BSD 3-clauses"
+        },
+        "settings": {},
+        "usage": {
+          "required": {
+            "extractor": "extractor:PATH:ZPM:extractor/default",
+            "builder": "builder:PATH:ZPM:builder/default"
+          }
+        }
+      }
+    ]
+  },
+  "path": {
+    "builder": [
+      {
+        "id": "builder:PATH:ZPM:./",
+        "name": "ZPM",
+        "path": "./",
+        "description": {},
+        "settings": {},
+        "usage": {}
+      },
+      {
+        "id": "builder:PATH:ZPM:builder/default",
+        "name": "ZPM",
+        "path": "builder/default",
+        "description": {},
+        "settings": {},
+        "usage": {}
+      }
+    ],
+    "extractor": [
+      {
+        "id": "extractor:PATH:ZPM:./",
+        "name": "ZPM",
+        "path": "./",
+        "description": {},
+        "settings": {},
+        "usage": {}
+      },
+      {
+        "id": "extractor:PATH:ZPM:extractor/default",
+        "name": "ZPM",
+        "path": "extractor/default",
+        "description": {
+          "extractor": {
+            "includes": [
+              "**/src/**/*.h",
+              "**/src/**/*.cpp",
+              "**/src/**/*.cc",
+              "**/src/**/*.cxx",
+              "**/src/**/*.c",
+              "**/src/**/*.s",
+              "**/src/**/*.m",
+              "**/src/**/*.mm",
+              "**/include/**/*.h",
+              "**/include/**/*.cpp",
+              "**/include/**/*.cc",
+              "**/include/**/*.cxx",
+              "**/include/**/*.c",
+              "**/include/**/*.s",
+              "**/include/**/*.m",
+              "**/include/**/*.mm"
+            ],
+            "excludes": [
+              "**/test/**"
+            ]
+          }
+        },
+        "settings": {},
+        "usage": {}
+      }
+    ],
+    "libraries": [
+      {
+        "id": "libraries:PATH:$ROOT:$ROOT",
+        "name": "$ROOT",
+        "path": "./",
+        "description": {
+          "includes": []
+        },
+        "settings": {},
+        "usage": {
+          "required": {
+            "builder": "builder:PATH:ZPM:builder/default",
+            "extractor": "extractor:PATH:ZPM:extractor/default",
+            "libraries": [
+              "libraries:PATH:$ROOT:$ROOT:sandbox2"
+            ]
+          }
+        }
+      },
+      {
+        "id": "libraries:PATH:$ROOT:$ROOT:sandbox2",
+        "name": "$ROOT",
+        "path": "sandbox2",
+        "description": {
+          "includes": []
+        },
+        "root": "libraries:PATH:$ROOT:$ROOT",
+        "settings": {},
+        "usage": {
+          "required": {
+            "extractor": "extractor:PATH:ZPM:extractor/default",
+            "builder": "builder:PATH:ZPM:builder/default",
+            "libraries": [
+              "libraries:PATH:$ROOT:$ROOT:sandbox2/sandbox3"
+            ]
+          }
+        }
+      },
+      {
+        "id": "libraries:PATH:$ROOT:$ROOT:sandbox2/sandbox3",
+        "name": "$ROOT",
+        "path": "sandbox2/sandbox3",
+        "description": {
+          "includes": []
+        },
+        "root": "libraries:PATH:$ROOT:$ROOT",
+        "settings": {
+          "wooo": "fooo"
+        },
+        "usage": {
+          "settings": {
+            "libraries:PATH:$ROOT:$ROOT:sandbox2": {
+              "wooo": "fooo"
+            }
+          },
+          "required": {
+            "extractor": "extractor:PATH:ZPM:extractor/default",
+            "builder": "builder:PATH:ZPM:builder/default",
+            "libraries": [
+              "libraries:PATH:$ROOT:$ROOT:sandbox2/sandbox4"
+            ]
+          }
+        }
+      },
+      {
+        "id": "libraries:PATH:$ROOT:$ROOT:sandbox2/sandbox4",
+        "name": "$ROOT",
+        "path": "sandbox2/sandbox4",
+        "description": {},
+        "root": "libraries:PATH:$ROOT:$ROOT",
+        "settings": {
+          "wooo": "fooodd"
+        },
+        "usage": {
+          "settings": {
+            "libraries:PATH:$ROOT:$ROOT:sandbox2/sandbox3": {
+              "wooo": "fooodd"
+            }
+          },
+          "required": {
+            "extractor": "extractor:PATH:ZPM:extractor/default",
+            "builder": "builder:PATH:ZPM:builder/default"
+          }
+        }
+      }
+    ]
+  }
+}
