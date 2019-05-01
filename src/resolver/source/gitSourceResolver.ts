@@ -19,6 +19,8 @@ import { SourceResolver } from '~/resolver/source/sourceResolver'
 import { GitDefinitionResolver } from '../definition/gitDefinitionResolver'
 import { PathDefinitionResolver } from '../definition/pathDefinitionResolver'
 import { isNamedEntry } from './factory'
+import { reject } from 'lodash'
+import { logger } from '~/common/logger'
 
 export class GitSourceResolver extends SourceResolver {
     public loaded = false
@@ -39,7 +41,9 @@ export class GitSourceResolver extends SourceResolver {
         if (await this.mayPull()) {
             await settledPromiseAll([
                 (async () => {
-                    const spin = spinners.create(`Pulling repository '${this.package.fullName}':`)
+                    const spin = spinners.create({
+                        text: `Pulling repository '${this.package.fullName}':`,
+                    })
                     const result = await cloneOrFetch(this.getRepositoryPath(), this.repository, {
                         stream: spin.stream,
                     })
@@ -49,9 +53,9 @@ export class GitSourceResolver extends SourceResolver {
                 })(),
                 (async () => {
                     if (this.gitDefinition) {
-                        const spin = spinners.create(
-                            `Pulling definition '${this.package.fullName}'`
-                        )
+                        const spin = spinners.create({
+                            text: `Pulling definition '${this.package.fullName}'`,
+                        })
                         const result = await cloneOrPull(
                             this.getDefinitionPath(),
                             this.definition!,
@@ -132,29 +136,12 @@ export class GitSourceResolver extends SourceResolver {
             .filter(isDefined)
             .sort((a, b) => b.version.cost - a.version.cost)
             .reverse()
-        return versions
-    }
 
-    public async getTags() {
-        const output = await showRef(this.getRepositoryPath())
-        return output
-            .split('\n')
-            .map(s => s.split(' '))
-            .filter(s => s.length === 2)
-            .map(s => {
-                let result
-                try {
-                    result = {
-                        version: new Version(s[1].replace('refs/remotes/origin/', '')),
-                        hash: s[0],
-                        name: s[1].replace('refs/remotes/origin/', ''),
-                    }
-                } catch (error) {
-                    result = undefined
-                }
-                return result
-            })
-            .filter(isDefined)
+        const fversions = reject(versions, (object, i) => {
+            return i > 0 && versions[i - 1].version.toString() === object.version.toString()
+        })
+
+        return fversions
     }
 
     public getPath(): string {

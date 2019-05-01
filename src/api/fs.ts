@@ -1,6 +1,8 @@
 import { isEmpty } from 'lodash'
 import { Spinner } from '~/cli/spinner'
 import { copy } from '~/common/io'
+import fs from 'fs-extra'
+import { join } from 'upath'
 
 export class FsApi {
     public source: string
@@ -15,5 +17,9 @@ export class FsApi {
         if (!isEmpty(sources)) {
             await copy(sources, this.source, this.target)
         }
+    }
+
+    public exists(file: string, where: 'source' | 'target') {
+        return fs.pathExistsSync(join(where === 'source' ? this.source : this.target, file))
     }
 }

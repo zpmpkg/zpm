@@ -85,7 +85,7 @@ class SATSolver {
     async addPackage(pkg, extra = {}) {
         const hash = pkg.getHash();
         const versions = await pkg.source.getVersions();
-        if (this.tryInsertPackage(hash)) {
+        if (await this.tryInsertPackage(hash)) {
             if (versions.length > 0) {
                 await this.addPackageVersions(hash, versions, pkg);
             }
@@ -103,9 +103,11 @@ class SATSolver {
                 if (hasLock) {
                     this.termMap.path[hash].usage = usage;
                 }
+                //console.log(hash, '@')
                 this.solver.require(Logic.exactlyOne(hash));
             }
             // await this.addDefinition(hash, pkg.resolver.definitionResolver.getPackageDefinition())
+            this.unlockPackage(hash);
         }
         return versions;
     }
@@ -157,6 +159,9 @@ class SATSolver {
         }
         if (!util_1.isDefined(this.solution)) {
             this.solution = this.solver.solve();
+        }
+        if (!util_1.isDefined(this.solution)) {
+            throw new Error('NO solution was found');
         }
         this.solution.ignoreUnknownVariables();
         const minimum = this.minimize
@@ -312,7 +317,6 @@ class SATSolver {
                 });
             }
         }
-        // onsole.log(this.solver.solve().getMap())
     }
     async addPackageVersions(hash, versions, pkg) {
         const newVersions = versions.map(v => ({
@@ -340,7 +344,7 @@ class SATSolver {
         }))));
         await async_1.settledPromiseAll(newVersions.map(async (v) => {
             if (v.added) {
-                const usage = await this.addDefinition(v.term, await pkg.source.definitionResolver.getPackageDefinition(v.version.hash));
+                const usage = await this.addDefinition(v.term, await pkg.source.definitionResolver.getPackageDefinition(v.version.hash), { package: pkg, hash: hash });
                 this.termMap.named[v.term].usage = usage;
             }
         }));
@@ -370,7 +374,7 @@ class SATSolver {
         return content;
     }
     getLockFilePath() {
-        return upath_1.join(environment_1.environment.directory.workingdir, '.package.lock');
+        return upath_1.join(environment_1.environment.directory.workingdir, '.zpm.lock');
     }
     async addPathEntry(pkg, hash, parent) {
         const name = pkg.description.name;
@@ -485,12 +489,21 @@ class SATSolver {
             throw new Error(`not implemented ${JSON.stringify(pkg)}`);
         }
     }
-    tryInsertPackage(hash) {
-        if (!axioms_1.get(this.loadedCache, [hash])) {
-            lodash_1.set(this.loadedCache, hash, true);
+    async tryInsertPackage(hash) {
+        if (!this.loadedCache[hash]) {
+            this.loadedCache[hash] = false;
             return true;
         }
+        // else {
+        //     while (!this.loadedCache[hash]) {
+        //         // wait until this path has been resolved
+        //         await sleep(1)
+        //     }
+        // }
         return false;
+    }
+    unlockPackage(hash) {
+        this.loadedCache[hash] = true;
     }
     toTerm(hash, version) {
         return `${hash}@${version.toString()}`;

@@ -69,8 +69,8 @@ export class PathDefinitionResolver extends DefinitionResolver {
     ): Promise<{ content: PackageDefinition | undefined; path?: string }> {
         logger.logfile.info(`Trying to read '${this.source.package.fullName}' from '${directory}`)
         for (const prefix of ['.', '']) {
-            const json = transformPath(join(directory, `${prefix}package.json`))
-            const yml = transformPath(join(directory, `${prefix}package.yml`))
+            const json = transformPath(join(directory, `${prefix}zpm.json`))
+            const yml = transformPath(join(directory, `${prefix}zpm.yml`))
             let pth: string = directory
             let content: PackageDefinition | undefined
             if (await fs.pathExists(json)) {

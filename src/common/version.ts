@@ -18,7 +18,7 @@ export class Version {
         this.raw = version
         if (isDefined(version)) {
             const found = first(findVersions(version, { loose: true }))
-            this.semver = found ? new SemVer(found) : undefined
+            this.semver = found ? new SemVer(found, { includePrerelease: true }) : undefined
             if (!isDefined(this.semver)) {
                 version = version.trim()
                 if (areAllowedTagCharacters(version)) {
@@ -40,7 +40,10 @@ export class Version {
     }
 
     public toString(): string {
-        return this.isTag ? this.tag! : this.semver!.toString()
+        if (this.isTag) {
+            return this.tag!
+        }
+        return this.semver!.toString()
     }
 }
 

@@ -31,8 +31,6 @@ export abstract class SourceResolver {
 
     public abstract async getVersions(): Promise<SourceVersions[]>
 
-    public abstract async getTags(): Promise<SourceVersions[]>
-
     public abstract getPath(): string
 
     public abstract getName(): string

@@ -46,7 +46,7 @@ class GitDefinitionResolver extends definitionResolver_1.DefinitionResolver {
     }
     async getContent(directory, hash) {
         for (const prefix of ['.', '']) {
-            for (const file of [`${prefix}package.json`, `${prefix}package.yml`]) {
+            for (const file of [`${prefix}zpm.json`, `${prefix}zpm.yml`]) {
                 const fileContents = await git_1.catFile(directory, ['-p', `${hash}:${file}`]);
                 if (util_1.isDefined(fileContents)) {
                     const content = js_yaml_1.safeLoad(fileContents);

@@ -25,6 +25,7 @@ const sourceResolver_1 = require("./sourceResolver");
 const gitDefinitionResolver_1 = require("../definition/gitDefinitionResolver");
 const pathDefinitionResolver_1 = require("../definition/pathDefinitionResolver");
 const factory_1 = require("./factory");
+const lodash_1 = require("lodash");
 class GitSourceResolver extends sourceResolver_1.SourceResolver {
     constructor() {
         super(...arguments);
@@ -46,7 +47,9 @@ class GitSourceResolver extends sourceResolver_1.SourceResolver {
         if (await this.mayPull()) {
             await async_1.settledPromiseAll([
                 (async () => {
-                    const spin = spinner_1.spinners.create(`Pulling repository '${this.package.fullName}':`);
+                    const spin = spinner_1.spinners.create({
+                        text: `Pulling repository '${this.package.fullName}':`,
+                    });
                     const result = await git_1.cloneOrFetch(this.getRepositoryPath(), this.repository, {
                         stream: spin.stream,
                     });
@@ -54,7 +57,9 @@ class GitSourceResolver extends sourceResolver_1.SourceResolver {
                 })(),
                 (async () => {
                     if (this.gitDefinition) {
-                        const spin = spinner_1.spinners.create(`Pulling definition '${this.package.fullName}'`);
+                        const spin = spinner_1.spinners.create({
+                            text: `Pulling definition '${this.package.fullName}'`,
+                        });
                         const result = await git_1.cloneOrPull(this.getDefinitionPath(), this.definition, {
                             stream: spin.stream,
                         });
@@ -123,29 +128,10 @@ class GitSourceResolver extends sourceResolver_1.SourceResolver {
             .filter(util_1.isDefined)
             .sort((a, b) => b.version.cost - a.version.cost)
             .reverse();
-        return versions;
-    }
-    async getTags() {
-        const output = await git_1.showRef(this.getRepositoryPath());
-        return output
-            .split('\n')
-            .map(s => s.split(' '))
-            .filter(s => s.length === 2)
-            .map(s => {
-            let result;
-            try {
-                result = {
-                    version: new version_1.Version(s[1].replace('refs/remotes/origin/', '')),
-                    hash: s[0],
-                    name: s[1].replace('refs/remotes/origin/', ''),
-                };
-            }
-            catch (error) {
-                result = undefined;
-            }
-            return result;
-        })
-            .filter(util_1.isDefined);
+        const fversions = lodash_1.reject(versions, (object, i) => {
+            return i > 0 && versions[i - 1].version.toString() === object.version.toString();
+        });
+        return fversions;
     }
     getPath() {
         if (factory_1.isNamedEntry(this.package.entry)) {

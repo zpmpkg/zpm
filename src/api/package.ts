@@ -4,4 +4,6 @@ export interface PackageApi {
     description: { [k: string]: any }
     usage: { [k: string]: any }
     globals: { [k: string]: any }
+    target: string
+    source: string
 }

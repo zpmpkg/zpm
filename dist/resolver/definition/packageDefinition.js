@@ -18,9 +18,14 @@ function fromPackageDefinition(pkg, definitionPath, options, registries, pkgType
         const manifest = registries.getManifest(type);
         const requiredValues = axioms_1.get(pkg, ['requires', type], []);
         let values = [];
-        if (!lodash_1.isArray(values)) {
+        if (!lodash_1.isArray(requiredValues)) {
             if (manifest.options.isBuildDefinition) {
-                values = [values];
+                const defaultUsage = lodash_1.cloneDeep(manifest.options.defaults[pkgType]);
+                if (manifest.options.settingsPath && pkg[manifest.options.settingsPath]) {
+                    // @todo correct merging of settings
+                    requiredValues.settings = Object.assign({}, defaultUsage.settings, pkg[manifest.options.settingsPath]);
+                }
+                values = [requiredValues];
             }
             else {
                 // todo throw

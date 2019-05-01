@@ -24,7 +24,7 @@ import { environment } from '~/common/environment'
 import { loadJson, writeJson } from '~/common/io'
 import { logger } from '~/common/logger'
 import { VersionRange } from '~/common/range'
-import { isDefined } from '~/common/util'
+import { isDefined, sleep } from '~/common/util'
 import { buildSchema, validateSchema } from '~/common/validation'
 import { Version } from '~/common/version'
 import { Package, PackageType } from '~/registry/package'
@@ -156,7 +156,7 @@ export class SATSolver {
     public async addPackage(pkg: Package, extra: any = {}): Promise<SourceVersions[]> {
         const hash = pkg.getHash()
         const versions = await pkg.source.getVersions()
-        if (this.tryInsertPackage(hash)) {
+        if (await this.tryInsertPackage(hash)) {
             if (versions.length > 0) {
                 await this.addPackageVersions(hash, versions, pkg)
             } else {
@@ -181,10 +181,11 @@ export class SATSolver {
                 if (hasLock) {
                     this.termMap.path[hash].usage = usage
                 }
-
+                //console.log(hash, '@')
                 this.solver.require(Logic.exactlyOne(hash))
             }
             // await this.addDefinition(hash, pkg.resolver.definitionResolver.getPackageDefinition())
+            this.unlockPackage(hash)
         }
         return versions
     }
@@ -255,6 +256,10 @@ export class SATSolver {
 
         if (!isDefined(this.solution)) {
             this.solution = this.solver.solve()
+        }
+
+        if (!isDefined(this.solution)) {
+            throw new Error('NO solution was found')
         }
 
         this.solution.ignoreUnknownVariables()
@@ -432,8 +437,6 @@ export class SATSolver {
                 })
             }
         }
-
-        // onsole.log(this.solver.solve().getMap())
     }
 
     public async addPackageVersions(
@@ -478,7 +481,8 @@ export class SATSolver {
                 if (v.added) {
                     const usage = await this.addDefinition(
                         v.term,
-                        await pkg.source.definitionResolver.getPackageDefinition(v.version.hash)
+                        await pkg.source.definitionResolver.getPackageDefinition(v.version.hash),
+                        { package: pkg, hash: hash }
                     )
                     this.termMap.named[v.term].usage = usage
                 }
@@ -511,7 +515,7 @@ export class SATSolver {
     }
 
     private getLockFilePath() {
-        return join(environment.directory.workingdir, '.package.lock')
+        return join(environment.directory.workingdir, '.zpm.lock')
     }
 
     private async addPathEntry(
@@ -679,12 +683,22 @@ export class SATSolver {
         }
     }
 
-    private tryInsertPackage(hash: string): boolean {
-        if (!get(this.loadedCache, [hash])) {
-            set(this.loadedCache, hash, true)
+    private async tryInsertPackage(hash: string): Promise<boolean> {
+        if (!this.loadedCache[hash]) {
+            this.loadedCache[hash] = false
             return true
         }
+        // else {
+        //     while (!this.loadedCache[hash]) {
+        //         // wait until this path has been resolved
+        //         await sleep(1)
+        //     }
+        // }
         return false
+    }
+
+    private unlockPackage(hash: string) {
+        this.loadedCache[hash] = true
     }
 
     private toTerm(hash: string, version: Version) {

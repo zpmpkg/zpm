@@ -8,12 +8,14 @@
             "name": "Main TS File",
             "type": "node",
             "request": "launch",
-            "args": ["./src/main.ts",  "-p",  "sandbox",  "--update",  "--force"],
+            "args": ["./dist/main.js",  "-p",  "C:\\Users\\Paul\\Nextcloud\\Documents\\Repositories\\definitions", "--force"],
             "runtimeArgs": [
                 "--nolazy", "-r", "ts-node/register", "-r", "tsconfig-paths/register"],
             "sourceMaps": true,
             "cwd": "${workspaceRoot}",
             "protocol": "inspector",
+            "smartStep": true,
+            "skipFiles": ["<node_internals>/**"]
         }
     ]
 }

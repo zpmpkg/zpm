@@ -21,11 +21,14 @@ const logger_1 = require("../../common/logger");
 const sandbox_1 = require("../../sandbox/sandbox");
 const lock_1 = require("../lock");
 const packageBuilder_1 = require("../packageBuilder");
+const shell_1 = require("../../api/shell");
 class TargetExtractor extends packageBuilder_1.PackageBuilder {
     async run(target) {
         const hash = target.getHash();
         if (await this.needsExtraction(target)) {
-            const spin = spinner_1.spinners.create(`Extracting '${target.package.fullName}@${hash}':`);
+            const spin = spinner_1.spinners.create({
+                text: `Extracting '${target.package.fullName}@${hash}':`,
+            });
             try {
                 await fs.remove(target.getTargetPath());
                 await fs.ensureDir(target.getTargetPath());
@@ -36,9 +39,12 @@ class TargetExtractor extends packageBuilder_1.PackageBuilder {
                             description: target.lock.description,
                             usage: axioms_1.get(this.lock.usage, ['settings', target.lock.id]) || {},
                             globals: this.lock.description,
+                            source: target.package.source.getRepositoryPath(),
+                            target: target.getTargetPath(),
                         },
                         git: new git_1.GitApi(target.package.source.getRepositoryPath(), spin),
                         fs: new fs_1.FsApi(target.package.source.getRepositoryPath(), target.getTargetPath(), spin),
+                        shell: new shell_1.ShellApi(target.package.source.getRepositoryPath(), target.getTargetPath(), spin),
                     };
                     if (lock_1.isNamedLock(target.lock)) {
                         extraction.pkg.hash = target.lock.hash;

@@ -13,4 +13,8 @@ function isDefined(value) {
     return value !== undefined && value !== null;
 }
 exports.isDefined = isDefined;
+function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+exports.sleep = sleep;
 //# sourceMappingURL=util.js.map

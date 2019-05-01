@@ -17,7 +17,6 @@ export declare abstract class SourceResolver {
     abstract getRepositoryPath(): string;
     abstract isDefinitionSeparate(): boolean;
     abstract getVersions(): Promise<SourceVersions[]>;
-    abstract getTags(): Promise<SourceVersions[]>;
     abstract getPath(): string;
     abstract getName(): string;
 }

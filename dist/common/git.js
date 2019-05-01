@@ -135,14 +135,7 @@ async function _getBranchSHA1(destination, branch) {
 }
 exports._getBranchSHA1 = _getBranchSHA1;
 async function _hasSubmodules(destination) {
-    const output = await exports.git(destination).raw([
-        'config',
-        '--file',
-        '.gitmodules',
-        '--name-only',
-        '--get-regexp',
-        'path',
-    ]);
+    const output = await exports.git(destination).raw(['submodule--helper', 'list']);
     return util_1.isDefined(output) && output.length > 0;
 }
 exports._hasSubmodules = _hasSubmodules;

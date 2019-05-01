@@ -13,18 +13,22 @@ import { logger } from '~/common/logger'
 import { executeSandboxTypescript } from '~/sandbox/sandbox'
 import { isNamedLock } from '../lock'
 import { BasePackageBuilder, PackageBuilder, PackageType } from '../packageBuilder'
+import { ShellApi } from '~/api/shell'
 
 interface ExtractionApi {
     pkg: PackageApi
     git: GitApi
     fs: FsApi
+    shell: ShellApi
 }
 
 export class TargetExtractor extends PackageBuilder {
     public async run(target: BasePackageBuilder): Promise<boolean> {
         const hash = target.getHash()
         if (await this.needsExtraction(target)) {
-            const spin = spinners.create(`Extracting '${target.package.fullName}@${hash}':`)
+            const spin = spinners.create({
+                text: `Extracting '${target.package.fullName}@${hash}':`,
+            })
             try {
                 await fs.remove(target.getTargetPath())
                 await fs.ensureDir(target.getTargetPath())
@@ -35,9 +39,16 @@ export class TargetExtractor extends PackageBuilder {
                             description: target.lock.description,
                             usage: get(this.lock.usage, ['settings', target.lock.id]) || {},
                             globals: this.lock.description,
+                            source: target.package.source.getRepositoryPath(),
+                            target: target.getTargetPath(),
                         },
                         git: new GitApi(target.package.source.getRepositoryPath(), spin),
                         fs: new FsApi(
+                            target.package.source.getRepositoryPath(),
+                            target.getTargetPath(),
+                            spin
+                        ),
+                        shell: new ShellApi(
                             target.package.source.getRepositoryPath(),
                             target.getTargetPath(),
                             spin

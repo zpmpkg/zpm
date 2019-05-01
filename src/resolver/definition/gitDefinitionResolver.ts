@@ -1,6 +1,5 @@
 import { safeLoad } from 'js-yaml'
 import { catFile } from '~/common/git'
-import { logger } from '~/common/logger'
 import { isDefined } from '~/common/util'
 import { buildSchema, validateSchema } from '~/common/validation'
 import { packageV1 } from '~/schemas/schemas'
@@ -57,7 +56,7 @@ export class GitDefinitionResolver extends DefinitionResolver {
         hash: string
     ): Promise<{ content: PackageDefinition | undefined; path?: string }> {
         for (const prefix of ['.', '']) {
-            for (const file of [`${prefix}package.json`, `${prefix}package.yml`]) {
+            for (const file of [`${prefix}zpm.json`, `${prefix}zpm.yml`]) {
                 const fileContents = await catFile(directory, ['-p', `${hash}:${file}`])
                 if (isDefined(fileContents)) {
                     const content: PackageDefinition | undefined = safeLoad(fileContents)

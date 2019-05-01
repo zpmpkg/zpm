@@ -12,4 +12,6 @@ export interface PackageApi {
     globals: {
         [k: string]: any;
     };
+    target: string;
+    source: string;
 }

@@ -14,7 +14,7 @@ class Version {
         this.raw = version;
         if (util_1.isDefined(version)) {
             const found = lodash_1.first(find_versions_1.default(version, { loose: true }));
-            this.semver = found ? new semver_1.SemVer(found) : undefined;
+            this.semver = found ? new semver_1.SemVer(found, { includePrerelease: true }) : undefined;
             if (!util_1.isDefined(this.semver)) {
                 version = version.trim();
                 if (areAllowedTagCharacters(version)) {
@@ -33,7 +33,10 @@ class Version {
         }
     }
     toString() {
-        return this.isTag ? this.tag : this.semver.toString();
+        if (this.isTag) {
+            return this.tag;
+        }
+        return this.semver.toString();
     }
 }
 exports.Version = Version;

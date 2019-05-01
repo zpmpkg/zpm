@@ -92,21 +92,24 @@ export class Spinners {
     public spinners: Spinner[] = []
     public id: any
 
-    constructor() {
-        if (ci()) {
-            this.interval = 2000
+    public create(options: { text?: string; start?: boolean }) {
+        const { text, start } = {
+            start: true,
+            ...options,
         }
-    }
-
-    public create(text?: string) {
         const added = new Spinner(text)
         this.spinners.push(added)
+        if (start) {
+            this.start()
+        }
         return added
     }
 
     public start() {
         this.render()
-        this.id = setInterval(this.render.bind(this), this.interval)
+        if (!ci() && !this.id) {
+            this.id = setInterval(this.render.bind(this), this.interval)
+        }
 
         return this
     }
@@ -126,8 +129,10 @@ export class Spinners {
     }
 
     public stop() {
-        clearInterval(this.id)
-        this.id = undefined
+        if (!ci() && this.id) {
+            clearInterval(this.id)
+            this.id = undefined
+        }
 
         this.spinners.forEach(s => {
             s.stop()

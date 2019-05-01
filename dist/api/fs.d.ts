@@ -7,4 +7,5 @@ export declare class FsApi {
     copy(sources: string[], options?: {
         excludes?: string[];
     }): Promise<void>;
+    exists(file: string, where: 'source' | 'target'): boolean;
 }

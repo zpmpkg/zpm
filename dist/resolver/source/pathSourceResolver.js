@@ -33,9 +33,6 @@ class PathSourceResolver extends sourceResolver_1.SourceResolver {
     async getVersions() {
         return [];
     }
-    async getTags() {
-        return [];
-    }
     getPath() {
         if (factory_1.isPathEntry(this.package.entry)) {
             if (this.package.options.root) {

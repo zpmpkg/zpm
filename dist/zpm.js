@@ -52,14 +52,21 @@ class ZPM {
             return false;
         }
         if (util_1.isDefined(lockFile)) {
-            spinner_1.spinners.start();
-            const builder = new builder_1.Builder(this.registries, this.root, lockFile);
-            await builder.load();
-            spinner_1.spinners.stop();
-            await builder.build();
-            spinner_1.spinners.stop();
-            await solver.save();
-            spinner_1.spinners.stop();
+            try {
+                spinner_1.spinners.start();
+                const builder = new builder_1.Builder(this.registries, this.root, lockFile);
+                await builder.load();
+                spinner_1.spinners.stop();
+                await builder.build();
+                spinner_1.spinners.stop();
+                await solver.save();
+                spinner_1.spinners.stop();
+            }
+            catch (error) {
+                spinner_1.spinners.stop();
+                logger_1.logger.error(`Failed to build packages:\n\n${error.stack}`);
+                return false;
+            }
         }
         else {
             await solver.rollback();

@@ -62,8 +62,8 @@ class PathDefinitionResolver extends definitionResolver_1.DefinitionResolver {
     async getContent(directory, version) {
         logger_1.logger.logfile.info(`Trying to read '${this.source.package.fullName}' from '${directory}`);
         for (const prefix of ['.', '']) {
-            const json = io_1.transformPath(upath_1.join(directory, `${prefix}package.json`));
-            const yml = io_1.transformPath(upath_1.join(directory, `${prefix}package.yml`));
+            const json = io_1.transformPath(upath_1.join(directory, `${prefix}zpm.json`));
+            const yml = io_1.transformPath(upath_1.join(directory, `${prefix}zpm.yml`));
             let pth = directory;
             let content;
             if (await fs.pathExists(json)) {

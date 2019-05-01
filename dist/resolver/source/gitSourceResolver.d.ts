@@ -13,11 +13,6 @@ export declare class GitSourceResolver extends SourceResolver {
         hash: string;
         name: string;
     }[]>;
-    getTags(): Promise<{
-        version: Version;
-        hash: string;
-        name: string;
-    }[]>;
     getPath(): string;
     getCachePath(): string;
     mayPull(): Promise<any>;

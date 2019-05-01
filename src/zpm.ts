@@ -56,6 +56,7 @@ export class ZPM {
             spinners.start()
             await solver.addPackage(this.root)
             spinners.stop()
+
             lockFile = await solver.optimize()
             spinners.stop()
         } catch (error) {
@@ -65,18 +66,22 @@ export class ZPM {
         }
 
         if (isDefined(lockFile)) {
-            spinners.start()
+            try {
+                spinners.start()
+                const builder = new Builder(this.registries, this.root, lockFile)
+                await builder.load()
+                spinners.stop()
 
-            const builder = new Builder(this.registries, this.root, lockFile)
-            await builder.load()
-            spinners.stop()
+                await builder.build()
+                spinners.stop()
 
-            await builder.build()
-            spinners.stop()
-
-            await solver.save()
-
-            spinners.stop()
+                await solver.save()
+                spinners.stop()
+            } catch (error) {
+                spinners.stop()
+                logger.error(`Failed to build packages:\n\n${error.stack}`)
+                return false
+            }
         } else {
             await solver.rollback()
             logger.error(`We did not find a valid dependency graph, please check your requirements`)

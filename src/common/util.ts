@@ -10,3 +10,7 @@ export function shorten(str: string) {
 export function isDefined<T>(value: T | undefined | null): value is T {
     return (value as T) !== undefined && (value as T) !== null
 }
+
+export function sleep(ms: number) {
+    return new Promise(resolve => setTimeout(resolve, ms))
+}

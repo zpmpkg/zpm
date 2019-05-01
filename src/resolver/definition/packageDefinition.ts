@@ -52,9 +52,17 @@ export function fromPackageDefinition(
         const manifest = registries.getManifest(type)
         const requiredValues = get(pkg, ['requires', type], [] as PackageEntry[])
         let values: PackageEntry[] = []
-        if (!isArray(values)) {
+        if (!isArray(requiredValues)) {
             if (manifest.options.isBuildDefinition) {
-                values = [values]
+                const defaultUsage = cloneDeep(manifest.options.defaults![pkgType])
+                if (manifest.options.settingsPath && pkg[manifest.options.settingsPath]) {
+                    // @todo correct merging of settings
+                    requiredValues.settings = {
+                        ...defaultUsage.settings,
+                        ...pkg[manifest.options.settingsPath],
+                    }
+                }
+                values = [requiredValues]
             } else {
                 // todo throw
             }

@@ -39,7 +39,9 @@ export class Registry {
         } else {
             this.directory = join(environment.directory.registries, shortHash(this.urlOrPath))
             if (await this.mayPull()) {
-                const spin = spinners.create(`Pulling registry ${this.urlOrPath}`)
+                const spin = spinners.create({
+                    text: `Pulling registry ${this.urlOrPath}`,
+                })
                 const fetched = await cloneOrPull(this.directory, this.urlOrPath, {
                     branch: this.branch,
                     stream: spin.stream,

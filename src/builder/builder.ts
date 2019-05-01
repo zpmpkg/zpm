@@ -96,7 +96,7 @@ export class Builder {
         )
         await settledPromiseAll(
             (this.lockFile.path[type] || []).map(async pkg => {
-                if (pkg.name === '$ROOT') {
+                if (pkg.name === '$ROOT' && !this.builderTypes.includes(type)) {
                     // this.builders.push(new RootBuilder())
                 } else {
                     const found = await this.registries.searchPackage(type, {

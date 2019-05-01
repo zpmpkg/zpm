@@ -38,10 +38,6 @@ export class PathSourceResolver extends SourceResolver {
         return []
     }
 
-    public async getTags() {
-        return []
-    }
-
     public getPath(): string {
         if (isPathEntry(this.package.entry)) {
             if (this.package.options.root) {

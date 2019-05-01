@@ -6,6 +6,5 @@ export declare class PathSourceResolver extends SourceResolver {
     getRepositoryPath(): string;
     isDefinitionSeparate(): boolean;
     getVersions(): Promise<never[]>;
-    getTags(): Promise<never[]>;
     getPath(): string;
 }

@@ -79,18 +79,21 @@ class Spinners {
     constructor() {
         this.interval = 80;
         this.spinners = [];
-        if (program_1.ci()) {
-            this.interval = 2000;
-        }
     }
-    create(text) {
+    create(options) {
+        const { text, start } = Object.assign({ start: true }, options);
         const added = new Spinner(text);
         this.spinners.push(added);
+        if (start) {
+            this.start();
+        }
         return added;
     }
     start() {
         this.render();
-        this.id = setInterval(this.render.bind(this), this.interval);
+        if (!program_1.ci() && !this.id) {
+            this.id = setInterval(this.render.bind(this), this.interval);
+        }
         return this;
     }
     render() {
@@ -107,8 +110,10 @@ class Spinners {
         }
     }
     stop() {
-        clearInterval(this.id);
-        this.id = undefined;
+        if (!program_1.ci() && this.id) {
+            clearInterval(this.id);
+            this.id = undefined;
+        }
         this.spinners.forEach(s => {
             s.stop();
         });

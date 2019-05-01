@@ -104,5 +104,6 @@ export declare class SATSolver {
     private addNamedPathEntry;
     private addNamedEntry;
     private tryInsertPackage;
+    private unlockPackage;
     private toTerm;
 }

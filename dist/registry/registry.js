@@ -46,7 +46,9 @@ class Registry {
         else {
             this.directory = upath_1.join(environment_1.environment.directory.registries, util_1.shortHash(this.urlOrPath));
             if (await this.mayPull()) {
-                const spin = spinner_1.spinners.create(`Pulling registry ${this.urlOrPath}`);
+                const spin = spinner_1.spinners.create({
+                    text: `Pulling registry ${this.urlOrPath}`,
+                });
                 const fetched = await git_1.cloneOrPull(this.directory, this.urlOrPath, {
                     branch: this.branch,
                     stream: spin.stream,
