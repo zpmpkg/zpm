@@ -39,7 +39,8 @@ class Package {
         }
     }
     getHash() {
-        return `${this.manifest.type}:${this.source.getName()}:${this.fullName}`;
+        //return `${this.manifest.type}:${this.source.getName()}:${this.fullName}`
+        return `${this.manifest.type}:${this.fullName}`;
     }
     async load() {
         if (!this.loaded) {
