@@ -1,3 +1,4 @@
+import { isString } from '@zefiros/axioms/is-string'
 import cliSpinners from 'cli-spinners'
 import figures from 'figures'
 import symbols from 'log-symbols'
@@ -25,13 +26,15 @@ export class Spinner {
         const oldFrame = this.frame
         if (this.running) {
             if (this.stream.size() > 0) {
-                this.suffix = this.stream
-                    .getContentsAsString()
-                    .trimRight()
-                    .split(/\n+/)
-                    .pop()!
-                    .split(/\r+/)
-                    .pop()!
+                const sstream = this.stream.getContentsAsString()
+                if (isString(sstream)) {
+                    this.suffix = sstream
+                        .trimRight()
+                        .split(/\n+/)
+                        .pop()!
+                        .split(/\r+/)
+                        .pop()!
+                }
             }
 
             const frame = this.spinner.frames[this.frameIndex]

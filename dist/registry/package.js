@@ -1,78 +1,82 @@
 "use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (Object.hasOwnProperty.call(mod, k)) result[k] = mod[k];
+    result["default"] = mod;
+    return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const async_mutex_1 = require("async-mutex");
-const js_sha256_1 = require("js-sha256");
-const json_stable_stringify_1 = __importDefault(require("json-stable-stringify"));
-const path_1 = __importDefault(require("path"));
+const axioms_1 = require("@zefiros/axioms");
+const fs = __importStar(require("fs-extra"));
 const upath_1 = require("upath");
-const factory_1 = require("../resolver/source/factory");
-class Package {
-    constructor(manifest, entry, options) {
-        this.loaded = false;
-        this.mutex = new async_mutex_1.Mutex();
-        this.manifest = manifest;
-        this.source = factory_1.createSourceResolver(entry, this);
-        this.entry = entry;
-        this.options = Object.assign({ type: 1 /* Named */, isRoot: false }, options);
-        if (factory_1.isNamedEntry(entry)) {
-            this.fullName = entry.name;
-            const split = entry.name.split('/');
-            this.name = split[1];
-            this.vendor = split[0];
-        }
-        else if (factory_1.isPathEntry(entry)) {
-            this.fullName = this.getFullName();
-            this.name = entry.name || path_1.default.basename(entry.path);
-            this.vendor = 'Local';
-        }
-    }
-    async overrideEntry(entry) {
-        if (this.calculateEntryHash()) {
-            await this.mutex.runExclusive(async () => {
-                this.entry = entry;
-                this.source = factory_1.createSourceResolver(entry, this);
-                await this.source.load();
-            });
-        }
-    }
-    getHash() {
-        //return `${this.manifest.type}:${this.source.getName()}:${this.fullName}`
-        return `${this.manifest.type}:${this.fullName}`;
+const async_1 = require("../common/async");
+const environment_1 = require("../common/environment");
+const io_1 = require("../common/io");
+const logger_1 = require("../common/logger");
+const validation_1 = require("../common/validation");
+const entry_1 = require("../package/entry");
+const info_1 = require("../package/info");
+const package_1 = require("../package/package");
+const schemas_1 = require("../schemas/schemas");
+class Manifest {
+    constructor(registries, type, options = {}) {
+        this.entries = new Map();
+        this.validator = validation_1.buildSchema(schemas_1.entriesV1);
+        this.registries = registries;
+        this.type = type;
+        this.options = Object.assign({ isBuildDefinition: false }, options);
     }
     async load() {
-        if (!this.loaded) {
-            this.loaded = await this.source.load();
+        if (this.options.schema) {
+            this.packageValidator = validation_1.buildSchema(await this.loadFile(this.options.schema));
         }
-        return this.loaded;
+        await async_1.settledPromiseAll(this.registries.registries.map(async (registry) => {
+            let file = upath_1.join(registry.directory, `${this.type}.json`);
+            if (!(await fs.pathExists(file))) {
+                file = upath_1.join(registry.directory, `${this.type}.yml`);
+            }
+            if (await fs.pathExists(file)) {
+                const contents = await this.loadFile(file);
+                try {
+                    validation_1.validateSchema(contents, undefined, {
+                        origin: `${file}`,
+                        validator: this.validator,
+                    });
+                    for (const entry of contents.map(entry_1.transformToInternalEntry)) {
+                        this.add(entry);
+                    }
+                }
+                catch (e) {
+                    logger_1.logger.error(e);
+                }
+            }
+        }));
+        this.add({
+            path: './',
+        }, {
+            allowDevelopment: true,
+            rootDirectory: environment_1.environment.directory.zpm,
+            rootName: 'ZPM',
+            alias: 'ZPM',
+        });
     }
-    getFullName() {
-        if (this.options.isRoot) {
-            return '$ROOT';
+    add(entry, options) {
+        const info = info_1.getPackageInfo(entry, this.type, options);
+        const searchKey = info.name;
+        let pkg = this.entries.get(searchKey);
+        if (!axioms_1.isDefined(pkg)) {
+            pkg = new package_1.Package(this, info);
+            this.entries.set(searchKey, pkg);
         }
-        else if (this.options.rootHash) {
-            return `${this.getRootName()}:${upath_1.normalize(this.source.getPath())}`;
+        if (info.alias && !this.entries.has(info.alias)) {
+            this.entries.set(info.alias, pkg);
         }
-        return this.source.getPath();
+        return pkg;
     }
-    getRootName() {
-        if (this.options.isRoot) {
-            return '$ROOT';
-        }
-        else if (this.options.root) {
-            return this.options.root.options.isRoot ? '$ROOT' : this.options.rootHash;
-        }
-        else {
-            throw new Error('This should not be called');
-        }
-    }
-    calculateEntryHash() {
-        const oldValue = this.loadedEntryHash;
-        this.loadedEntryHash = js_sha256_1.sha256(json_stable_stringify_1.default(this.entry));
-        return oldValue !== this.loadedEntryHash;
+    async loadFile(file) {
+        return io_1.loadJsonOrYamlSimple(io_1.transformPath(file));
     }
 }
-exports.Package = Package;
+exports.Manifest = Manifest;
 //# sourceMappingURL=package.js.map

@@ -8,6 +8,10 @@ export interface VersionOptions {
 }
 
 export class Version {
+    public static versionInverse = 100000000
+    public static majorVersionCost = 1000000
+    public static minorVersionCost = 1000
+
     public raw: string | undefined
     public semver: SemVer | undefined
     public tag: string | undefined
@@ -32,8 +36,10 @@ export class Version {
                 }
             } else {
                 this.cost = Math.trunc(
-                    100000000 -
-                        (this.semver.major * 1000000 + this.semver.minor * 1000 + this.semver.patch)
+                    Version.versionInverse -
+                        (this.semver.major * Version.majorVersionCost +
+                            this.semver.minor * Version.minorVersionCost +
+                            this.semver.patch)
                 )
             }
         }

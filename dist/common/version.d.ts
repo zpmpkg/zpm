@@ -3,6 +3,9 @@ export interface VersionOptions {
     cost?: number;
 }
 export declare class Version {
+    static versionInverse: number;
+    static majorVersionCost: number;
+    static minorVersionCost: number;
     raw: string | undefined;
     semver: SemVer | undefined;
     tag: string | undefined;

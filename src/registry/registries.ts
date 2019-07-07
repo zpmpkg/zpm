@@ -1,20 +1,20 @@
-import { get } from '@zefiros/axioms'
 import { Mutex } from 'async-mutex'
 import { filter, flatten, has } from 'lodash'
 import { settledPromiseAll } from '~/common/async'
 import { environment } from '~/common/environment'
 import { transformPath } from '~/common/io'
 import { isDefined } from '~/common/util'
-import { Manifest } from '~/registry/manifest'
+import { InternalDefinitionEntry, InternalEntry } from '~/package/entry'
+import { PackageInfoOptions } from '~/package/info'
+import { Package } from '~/package/package'
 import { ConfigurationSchema } from '~/types/configuration.v1'
 import {
     RegistryDefinition,
-    RegistryEntry,
     RegistryNamedLocationEntry,
     RegistryPathLocationEntry,
 } from '~/types/definitions.v1'
-import { ZPM } from '../zpm'
-import { Package, PackageOptions, PackageType } from './package'
+import { ZPM } from '~/zpm'
+import { Manifest } from './package'
 import { Registry } from './registry'
 
 export function isPathRegistry(entry: RegistryDefinition): entry is RegistryPathLocationEntry {
@@ -53,29 +53,15 @@ export class Registries {
         return this.manifests[type]
     }
 
-    public async searchPackage(
-        type: string,
-        search: { name: string } & { path?: string } & { definition?: string; repository?: string }
-    ): Promise<Package | undefined> {
-        const sname = search.path ? `${search.name}:${search.path}` : search.name
-        const found = get(this.manifests, [type, 'entries', sname])
-
-        return this.addMutex.runExclusive(async () => {
-            // allow inline repositories
-            // @todo: only allow on root path
-            if (!found && search.name && search.definition && search.repository) {
-                const pkg = this.addPackage(type, {
-                    name: search.name,
-                    definition: search.definition,
-                    repository: search.repository,
-                })
-                return pkg
-            }
-            return found
-        })
+    public search(entry: InternalDefinitionEntry): {package: Package | undefined; name: string } {
+        return this.manifests[entry.type].search(entry)
     }
 
-    public addPackage(type: string, entry: RegistryEntry, options?: PackageOptions) {
+    public addPackage<E extends InternalEntry, O extends PackageInfoOptions>(
+        type: string,
+        entry: E,
+        options?: O
+    ) {
         return this.manifests[type].add(entry, options)
     }
 
@@ -97,10 +83,10 @@ export class Registries {
             ...this.zpm.config.values.registries
                 .filter(isPathRegistry)
                 .map(
-                    registry => new Registry(transformPath(registry.path), { name: registry.path })
+                    registry => new Registry(transformPath(registry.path), { name: registry.name })
                 ),
-            new Registry(environment.directory.zpm, { name: '$ZPM' }),
-            new Registry(environment.directory.workingdir, { name: '$ROOT' }),
+            new Registry(environment.directory.zpm, { name: 'ZPM' }),
+            new Registry(environment.directory.workingdir, { name: 'ROOT' }),
         ]
         const newRegistries: RegistryDefinition[] = flatten(
             filter(

@@ -1,4 +1,16 @@
-import { RegistryEntry, RegistryNamedEntry, RegistryPathEntry } from './definitions.v1'
+import {
+    RegistryEntry,
+    RegistryGDGSEntry,
+    RegistryGDPSEntry,
+    RegistryPDGSEntry,
+    RegistryPDPSEntry,
+    RegistryPSSubEntry,
+} from './definitions.v1'
 
-export type RegistryEntry = RegistryNamedEntry | RegistryPathEntry
+export type RegistryEntry =
+    | RegistryGDGSEntry
+    | RegistryGDPSEntry
+    | RegistryPDGSEntry
+    | RegistryPDPSEntry
+    | RegistryPSSubEntry
 export type EntriesSchema = RegistryEntry[]

@@ -1,105 +1,129 @@
-import { Mutex } from 'async-mutex'
-import { sha256 } from 'js-sha256'
-import stringify from 'json-stable-stringify'
-import path from 'path'
-import { normalize } from 'upath'
-import { createSourceResolver, isNamedEntry, isPathEntry } from '~/resolver/source/factory'
-import { SourceResolver } from '~/resolver/source/sourceResolver'
-import { RegistryEntry } from '~/types/definitions.v1'
-import { Manifest } from './manifest'
+import { isDefined } from '@zefiros/axioms'
+import ajv = require('ajv')
+import * as fs from 'fs-extra'
+import { join } from 'upath'
+import { settledPromiseAll } from '~/common/async'
+import { environment } from '~/common/environment'
+import { loadJsonOrYamlSimple, transformPath } from '~/common/io'
+import { logger } from '~/common/logger'
+import { buildSchema, validateSchema } from '~/common/validation'
+import { InternalDefinitionEntry, InternalEntry, transformToInternalEntry } from '~/package/entry'
+import {
+    getNameFromEntry,
+    getPackageInfo,
+    PackageInfoOptions,
+    PDPSPackageOptions,
+    isPSSub,
+    classifyType,
+    PSSubPackageOptions,
+} from '~/package/info'
+import { Package } from '~/package/package'
+import { entriesV1 } from '~/schemas/schemas'
+import { ManifestOptions } from '~/types/definitions.v1'
+import { EntriesSchema } from '~/types/entries.v1'
+import { PackagePDPSEntry } from '~/types/package.v1'
+import { Registries } from './registries'
+import { PackageType } from '~/package/type'
+import { Registry } from './registry'
 
-export const enum PackageType {
-    Path,
-    Named,
-}
+export class Manifest {
+    public type: string
+    public registries: Registries
+    public entries: Map<string, Package> = new Map<string, Package>()
+    public options: ManifestOptions
+    public packageValidator?: ajv.ValidateFunction
+    private validator = buildSchema(entriesV1)
 
-export interface PackageOptions {
-    type: PackageType
-    parent?: Package
-    root?: Package
-    isRoot?: boolean
-    rootHash?: string
-    forceName?: boolean
-    absolutePath?: string
-}
-
-export class Package {
-    public name!: string
-    public vendor!: string
-    public fullName!: string
-    public source: SourceResolver
-    public manifest: Manifest
-    public options: PackageOptions
-    public entry: RegistryEntry
-    private loaded: boolean = false
-    private loadedEntryHash?: string
-    private mutex = new Mutex()
-
-    constructor(manifest: Manifest, entry: RegistryEntry, options?: PackageOptions) {
-        this.manifest = manifest
-        this.source = createSourceResolver(entry, this)
-        this.entry = entry
+    constructor(registries: Registries, type: string, options: ManifestOptions = {}) {
+        this.registries = registries
+        this.type = type
         this.options = {
-            type: PackageType.Named,
-            isRoot: false,
+            isBuildDefinition: false,
             ...options,
         }
-
-        if (isNamedEntry(entry)) {
-            this.fullName = entry.name
-            const split = entry.name.split('/')
-            this.name = split[1]
-            this.vendor = split[0]
-        } else if (isPathEntry(entry)) {
-            this.fullName = this.getFullName()
-            this.name = entry.name || path.basename(entry.path)
-            this.vendor = 'Local'
-        }
     }
 
-    public async overrideEntry(entry: RegistryEntry) {
-        if (this.calculateEntryHash()) {
-            await this.mutex.runExclusive(async () => {
-                this.entry = entry
-                this.source = createSourceResolver(entry, this)
-                await this.source.load()
+    public async load() {
+        if (this.options.schema) {
+            this.packageValidator = buildSchema(await this.loadFile(this.options.schema))
+        }
+
+        await settledPromiseAll(
+            this.registries.registries.map(async registry => {
+                let file = join(registry.directory, `${this.type}.json`)
+                if (!(await fs.pathExists(file))) {
+                    file = join(registry.directory, `${this.type}.yml`)
+                }
+                if (await fs.pathExists(file)) {
+                    const contents: EntriesSchema = await this.loadFile(file)
+                    try {
+                        validateSchema(contents, undefined, {
+                            origin: `${file}`,
+                            validator: this.validator,
+                        })
+                        for (const entry of contents.map(transformToInternalEntry)) {
+                            this.add(entry, undefined, registry)
+                        }
+                    } catch (e) {
+                        logger.error(e)
+                    }
+                }
             })
+        )
+        this.add<PackagePDPSEntry, PDPSPackageOptions>(
+            {
+                path: './',
+            },
+            {
+                allowDevelopment: true,
+                rootDirectory: environment.directory.zpm,
+                rootName: 'ZPM',
+                alias: 'ZPM',
+            }
+        )
+    }
+
+    public add<E extends InternalEntry, O extends PackageInfoOptions>(
+        entry: E,
+        options?: O,
+        registry?: Registry
+    ): Package {
+        const pkgType = classifyType(entry)
+        if (registry && registry.name) {
+            if (pkgType === PackageType.PSSub) {
+                options = (options || {
+                    rootName: registry.name,
+                    rootDirectory: registry.directory,
+                }) as any
+            }
+        }
+        const info = getPackageInfo<E, O>(entry, this.type, pkgType, options)
+        const searchKey = info.name
+        let pkg: Package | undefined = this.entries.get(searchKey)
+        if (!isDefined(pkg)) {
+            pkg = new Package(this, info)
+            this.entries.set(searchKey, pkg)
+        }
+        if (info.alias && !this.entries.has(info.alias)) {
+            this.entries.set(info.alias, pkg)
+        }
+        return pkg!
+    }
+
+    public search(entry: InternalDefinitionEntry): { package: Package | undefined; name: string } {
+        const name = getNameFromEntry(entry)
+        // const searchKey = getName({})
+        return {
+            package: this.searchByName(name),
+            name,
         }
     }
 
-    public getHash() {
-        return `${this.manifest.type}:${this.source.getName()}:${this.fullName}`
+    public searchByName(name: string): Package | undefined {
+        return this.entries.get(name)
     }
 
-    public async load(): Promise<boolean> {
-        if (!this.loaded) {
-            this.loaded = await this.source.load()
-        }
-        return this.loaded
-    }
-
-    public getFullName(): string {
-        if (this.options.isRoot) {
-            return '$ROOT'
-        } else if (this.options.rootHash) {
-            return `${this.getRootName()}:${normalize(this.source.getPath())}`
-        }
-        return this.source.getPath()
-    }
-
-    public getRootName(): string {
-        if (this.options.isRoot) {
-            return '$ROOT'
-        } else if (this.options.root) {
-            return this.options.root.options.isRoot ? '$ROOT' : this.options.rootHash!
-        } else {
-            throw new Error('This should not be called')
-        }
-    }
-
-    private calculateEntryHash() {
-        const oldValue = this.loadedEntryHash
-        this.loadedEntryHash = sha256(stringify(this.entry))
-        return oldValue !== this.loadedEntryHash
+    private async loadFile(file: string): Promise<EntriesSchema> {
+        return loadJsonOrYamlSimple(transformPath(file))
     }
 }

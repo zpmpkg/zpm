@@ -9,7 +9,13 @@ export type PackageSchema =
  * via the `patternProperty` "\w+".
  */
 export type PackageSingularArrayEntry = PackageEntry[] | PackageEntry
-export type PackageEntry = PackagePathEntry | PackageGitEntry
+export type PackageEntry =
+    | PackageGDGSEntry
+    | PackageGDPSEntry
+    | PackagePDPSEntry
+    | PackagePDGSEntry
+    | PackageGSSubEntry
+    | PackagePSSubEntry
 
 export interface PackageDefinition {
     development?: PackageEntries
@@ -19,30 +25,50 @@ export interface PackageDefinition {
 export interface PackageEntries {
     [k: string]: PackageSingularArrayEntry
 }
-export interface PackagePathEntry {
-    name?: string
-    version?: string
-    path: string
-    optional?: boolean
-    settings?: {
-        /**
-         * This interface was referenced by `undefined`'s JSON-Schema definition
-         * via the `patternProperty` "\w+".
-         */
-        [k: string]: any
-    }
-}
-export interface PackageGitEntry {
+export interface PackageGDGSEntry {
     name: string
-    version: string
     repository?: string
     definition?: string
+    version: string
     optional?: boolean
-    settings?: {
-        /**
-         * This interface was referenced by `undefined`'s JSON-Schema definition
-         * via the `patternProperty` "\w+".
-         */
-        [k: string]: any[]
-    }
+    settings?: PackageSettings
+}
+export interface PackageSettings {
+    /**
+     * This interface was referenced by `PackageSettings`'s JSON-Schema definition
+     * via the `patternProperty` "\w+".
+     */
+    [k: string]: any[]
+}
+export interface PackageGDPSEntry {
+    definition: string
+    path: string
+    optional?: boolean
+    settings?: PackageSettings
+}
+export interface PackagePDPSEntry {
+    path: string
+    optional?: boolean
+    settings?: PackageSettings
+}
+export interface PackagePDGSEntry {
+    name: string
+    definition: string
+    repository?: string
+    version: string
+    optional?: boolean
+    settings?: PackageSettings
+}
+export interface PackageGSSubEntry {
+    name: string
+    path?: string
+    version: string
+    optional?: boolean
+    settings?: PackageSettings
+}
+export interface PackagePSSubEntry {
+    name: string
+    path?: string
+    optional?: boolean
+    settings?: PackageSettings
 }

@@ -13,6 +13,7 @@ const lodash_1 = require("lodash");
 const upath_1 = require("upath");
 const fs_1 = require("../../api/fs");
 const git_1 = require("../../api/git");
+const shell_1 = require("../../api/shell");
 const program_1 = require("../../cli/program");
 const spinner_1 = require("../../cli/spinner");
 const git_2 = require("../../common/git");
@@ -21,7 +22,6 @@ const logger_1 = require("../../common/logger");
 const sandbox_1 = require("../../sandbox/sandbox");
 const lock_1 = require("../lock");
 const packageBuilder_1 = require("../packageBuilder");
-const shell_1 = require("../../api/shell");
 class TargetExtractor extends packageBuilder_1.PackageBuilder {
     async run(target) {
         const hash = target.getHash();
@@ -54,7 +54,7 @@ class TargetExtractor extends packageBuilder_1.PackageBuilder {
                     if (script) {
                         if (lock_1.isNamedLock(target.lock) &&
                             lodash_1.isFunction(script.checkout) &&
-                            target.options.type === 0 /* NAMED */) {
+                            target.options.type === packageBuilder_1.PackageType.NAMED) {
                             await script.checkout();
                         }
                         if (lodash_1.isFunction(script.extract)) {

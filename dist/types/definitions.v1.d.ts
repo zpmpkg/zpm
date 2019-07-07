@@ -12,7 +12,7 @@ export declare type RegistryDefinition = RegistryNamedLocationEntry | RegistryPa
  * This interface was referenced by `DefinitionsSchema`'s JSON-Schema
  * via the `definition` "RegistryEntry".
  */
-export declare type RegistryEntry = RegistryNamedEntry | RegistryPathEntry;
+export declare type RegistryEntry = RegistryGDGSEntry | RegistryGDPSEntry | RegistryPDGSEntry | RegistryPDPSEntry;
 export interface DefinitionsSchema {
     [k: string]: any;
 }
@@ -46,18 +46,34 @@ export interface RegistryPathLocationEntry {
 }
 /**
  * This interface was referenced by `DefinitionsSchema`'s JSON-Schema
- * via the `definition` "RegistryNamedEntry".
+ * via the `definition` "RegistryGDGSEntry".
  */
-export interface RegistryNamedEntry {
+export interface RegistryGDGSEntry {
     name: string;
     repository: string;
     definition?: string;
 }
 /**
  * This interface was referenced by `DefinitionsSchema`'s JSON-Schema
- * via the `definition` "RegistryPathEntry".
+ * via the `definition` "RegistryGDPSEntry".
  */
-export interface RegistryPathEntry {
-    name?: string;
+export interface RegistryGDPSEntry {
+    repository: string;
+    path: string;
+}
+/**
+ * This interface was referenced by `DefinitionsSchema`'s JSON-Schema
+ * via the `definition` "RegistryPDGSEntry".
+ */
+export interface RegistryPDGSEntry {
+    name: string;
+    repository?: string;
+    path: string;
+}
+/**
+ * This interface was referenced by `DefinitionsSchema`'s JSON-Schema
+ * via the `definition` "RegistryPDPSEntry".
+ */
+export interface RegistryPDPSEntry {
     path: string;
 }

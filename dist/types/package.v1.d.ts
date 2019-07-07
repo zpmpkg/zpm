@@ -7,7 +7,7 @@ export declare type PackageSchema = PackageDefinition | {
  * via the `patternProperty` "\w+".
  */
 export declare type PackageSingularArrayEntry = PackageEntry[] | PackageEntry;
-export declare type PackageEntry = PackagePathEntry | PackageGitEntry;
+export declare type PackageEntry = PackageGDGSEntry | PackageGDPSEntry | PackagePDPSEntry | PackagePDGSEntry;
 export interface PackageDefinition {
     development?: PackageEntries;
     requires?: PackageEntries;
@@ -16,30 +16,37 @@ export interface PackageDefinition {
 export interface PackageEntries {
     [k: string]: PackageSingularArrayEntry;
 }
-export interface PackagePathEntry {
-    name?: string;
-    version?: string;
-    path: string;
-    optional?: boolean;
-    settings?: {
-        /**
-         * This interface was referenced by `undefined`'s JSON-Schema definition
-         * via the `patternProperty` "\w+".
-         */
-        [k: string]: any;
-    };
-}
-export interface PackageGitEntry {
+export interface PackageGDGSEntry {
     name: string;
-    version: string;
     repository?: string;
     definition?: string;
+    version: string;
     optional?: boolean;
-    settings?: {
-        /**
-         * This interface was referenced by `undefined`'s JSON-Schema definition
-         * via the `patternProperty` "\w+".
-         */
-        [k: string]: any[];
-    };
+    settings?: PackageSettings;
+}
+export interface PackageSettings {
+    /**
+     * This interface was referenced by `PackageSettings`'s JSON-Schema definition
+     * via the `patternProperty` "\w+".
+     */
+    [k: string]: any[];
+}
+export interface PackageGDPSEntry {
+    repository: string;
+    path: string;
+    optional?: boolean;
+    settings?: PackageSettings;
+}
+export interface PackagePDPSEntry {
+    path: string;
+    optional?: boolean;
+    settings?: PackageSettings;
+}
+export interface PackagePDGSEntry {
+    name: string;
+    definition: string;
+    repository?: string;
+    version: string;
+    optional?: boolean;
+    settings?: PackageSettings;
 }

@@ -1,7 +1,8 @@
 registries:
   # - url: 'https://github.com/zpmpkg/registry.git'
   #   branch: 'master'
-  - path: $ZPM/registry
+  - name: ZPM
+    path: $ZPM/registry
 registry:
   - name: extractor
     options:
@@ -10,14 +11,12 @@ registry:
       settingsPath: extract
       defaults:
         libraries:
-          name: ZPM
-          path: extractor/default
+          name: ZPM:extractor/default
   - name: builder
     options:
       isBuildDefinition: true
       settingsPath: build
       defaults:
         libraries:
-          name: ZPM
-          path: builder/default
+          name: ZPM:builder/default
   - name: libraries

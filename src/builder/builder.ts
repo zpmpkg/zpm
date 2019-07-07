@@ -77,7 +77,7 @@ export class Builder {
     private async createBuilders(type: string, isPackage: boolean) {
         await settledPromiseAll(
             (this.lockFile.named[type] || []).map(async pkg => {
-                const found = await this.registries.searchPackage(type, {
+                const found = await this.registries.search(type, {
                     name: pkg.name,
                 })
                 if (isDefined(found)) {
@@ -99,7 +99,7 @@ export class Builder {
                 if (pkg.name === '$ROOT' && !this.builderTypes.includes(type)) {
                     // this.builders.push(new RootBuilder())
                 } else {
-                    const found = await this.registries.searchPackage(type, {
+                    const found = await this.registries.search(type, {
                         name: pkg.name,
                         path: pkg.path,
                     })

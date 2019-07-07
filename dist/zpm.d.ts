@@ -1,6 +1,6 @@
 import { Configuration } from "./common/config";
 import { Registries } from "./registry/registries";
-import { Package } from './registry/package';
+import { Package } from './package/package';
 export declare class ZPM {
     root: Package;
     config: Configuration;

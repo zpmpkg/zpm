@@ -1,35 +1,18 @@
-import { SourceResolver } from "../resolver/source/sourceResolver";
-import { RegistryEntry } from "../types/definitions.v1";
-import { Manifest } from './manifest';
-export declare const enum PackageType {
-    Path = 0,
-    Named = 1
-}
-export interface PackageOptions {
-    type: PackageType;
-    parent?: Package;
-    root?: Package;
-    isRoot?: boolean;
-    rootHash?: string;
-    forceName?: boolean;
-    absolutePath?: string;
-}
-export declare class Package {
-    name: string;
-    vendor: string;
-    fullName: string;
-    source: SourceResolver;
-    manifest: Manifest;
-    options: PackageOptions;
-    entry: RegistryEntry;
-    private loaded;
-    private loadedEntryHash?;
-    private mutex;
-    constructor(manifest: Manifest, entry: RegistryEntry, options?: PackageOptions);
-    overrideEntry(entry: RegistryEntry): Promise<void>;
-    getHash(): string;
-    load(): Promise<boolean>;
-    getFullName(): string;
-    getRootName(): string;
-    private calculateEntryHash;
+import ajv = require('ajv');
+import { InternalEntry } from "../package/entry";
+import { PackageInfoOptions } from "../package/info";
+import { Package } from "../package/package";
+import { ManifestOptions } from "../types/definitions.v1";
+import { Registries } from './registries';
+export declare class Manifest {
+    type: string;
+    registries: Registries;
+    entries: Map<string, Package>;
+    options: ManifestOptions;
+    packageValidator?: ajv.ValidateFunction;
+    private validator;
+    constructor(registries: Registries, type: string, options?: ManifestOptions);
+    load(): Promise<void>;
+    add<E extends InternalEntry, O extends PackageInfoOptions>(entry: E, options?: O): Package;
+    private loadFile;
 }

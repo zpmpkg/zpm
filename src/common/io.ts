@@ -37,7 +37,7 @@ export async function writeJson(file: string, object: any) {
 
 export async function glob(source: string | string[], root: string, excludes: string[] = []) {
     return filter(
-        (await fg.async(source, {
+        (await fg(source, {
             cwd: root,
             absolute: true,
             ignore: excludes,
@@ -59,7 +59,7 @@ export async function copy(
             await fs.copy(file, join(destination, relative(root, file)), {
                 preserveTimestamps: true,
             })
-            //console.log(file, join(destination, relative(root, file)))
+            // console.log(file, join(destination, relative(root, file)))
         })
     )
 }

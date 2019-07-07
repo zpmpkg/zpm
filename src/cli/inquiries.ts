@@ -1,4 +1,3 @@
-import { Omit } from '@zefiros/axioms/omit'
 import inquirer from 'inquirer'
 import AwaitLock from '~/common/lock'
 import { isDefined } from '~/common/util'
@@ -12,7 +11,7 @@ class Inquisitor {
     }
     public async ask(
         name: string,
-        question: Omit<inquirer.Question, 'name'>,
+        question: inquirer.Questions,
         options: { all?: string }
     ): Promise<string> {
         return this.withLock(() => this.inquire(name, { ...question, name: 'answer' }, options))
@@ -24,7 +23,7 @@ class Inquisitor {
 
     private async inquire(
         name: string,
-        question: inquirer.Question,
+        question: inquirer.Questions,
         options: { all?: string }
     ): Promise<string> {
         const currentAnswer = this.answers[name]

@@ -6,19 +6,19 @@ import { settledPromiseAll } from './async'
 
 const dirs = new AppDirectory({ appName: 'zpm', appAuthor: 'Zefiros' })
 
-export function userData() {
+export function userData(): string {
     return dirs.userData()
 }
 
-export function userConfig() {
+export function userConfig(): string {
     return dirs.userConfig()
 }
 
-export function userCache() {
+export function userCache(): string {
     return dirs.userCache()
 }
 
-export function userLogs() {
+export function userLogs(): string {
     return dirs.userLogs()
 }
 

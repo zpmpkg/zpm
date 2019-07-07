@@ -12,6 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const fs = __importStar(require("fs-extra"));
 const is_git_url_1 = __importDefault(require("is-git-url"));
+const lodash_1 = require("lodash");
 const upath_1 = require("upath");
 const program_1 = require("../../cli/program");
 const spinner_1 = require("../../cli/spinner");
@@ -25,7 +26,6 @@ const sourceResolver_1 = require("./sourceResolver");
 const gitDefinitionResolver_1 = require("../definition/gitDefinitionResolver");
 const pathDefinitionResolver_1 = require("../definition/pathDefinitionResolver");
 const factory_1 = require("./factory");
-const lodash_1 = require("lodash");
 class GitSourceResolver extends sourceResolver_1.SourceResolver {
     constructor() {
         super(...arguments);

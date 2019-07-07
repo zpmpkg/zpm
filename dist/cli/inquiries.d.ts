@@ -1,10 +1,9 @@
-import { Omit } from '@zefiros/axioms/omit';
 import inquirer from 'inquirer';
 declare class Inquisitor {
     private answers;
     private lock;
     constructor();
-    ask(name: string, question: Omit<inquirer.Question, 'name'>, options: {
+    ask(name: string, question: inquirer.Questions, options: {
         all?: string;
     }): Promise<string>;
     withLock<O>(fn: () => Promise<O>): Promise<O>;

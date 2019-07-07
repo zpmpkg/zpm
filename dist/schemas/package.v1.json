@@ -33,45 +33,55 @@
             }
         },
         "PackageEntry": {
-            "type": "object",
             "oneOf": [
                 {
-                    "$ref": "#/definitions/PackagePathEntry"
+                    "$ref": "#/definitions/PackageGDGSEntry"
                 },
                 {
-                    "$ref": "#/definitions/PackageGitEntry"
+                    "$ref": "#/definitions/PackageGDPSEntry"
+                },
+                {
+                    "$ref": "#/definitions/PackagePDPSEntry"
+                },
+                {
+                    "$ref": "#/definitions/PackagePDGSEntry"
                 }
             ]
         },
-        "PackageGitEntry": {
+        "PackageSettings": {
+            "type": "object",
+            "patternProperties": {
+                "\\w+": {
+                    "type": "array",
+                    "items": {},
+                    "additionalItems": false
+                }
+            },
+            "additionalProperties": false
+        },
+        "PackageGDGSEntry": {
             "type": "object",
             "properties": {
                 "name": {
                     "type": "string",
                     "pattern": "^([a-zA-Z0-9_\\-]{2,50}/[a-zA-Z0-9_\\-]{2,50})$"
                 },
-                "version": {
-                    "type": "string"
-                },
                 "repository": {
-                    "type": "string"
+                    "type": "string",
+                    "pattern": "^(https://.*\\.git)$"
                 },
                 "definition": {
+                    "type": "string",
+                    "pattern": "^(https://.*\\.git)$"
+                },
+                "version": {
                     "type": "string"
                 },
                 "optional": {
                     "type": "boolean"
                 },
                 "settings": {
-                    "type": "object",
-                    "patternProperties": {
-                        "\\w+": {
-                            "type": "array",
-                            "items": {},
-                            "additionalItems": false
-                        }
-                    },
-                    "additionalProperties": false
+                    "$ref": "#/definitions/PackageSettings"
                 }
             },
             "additionalProperties": false,
@@ -80,16 +90,12 @@
                 "version"
             ]
         },
-        "PackagePathEntry": {
+        "PackageGDPSEntry": {
             "type": "object",
             "properties": {
-                "name": {
+                "repository": {
                     "type": "string",
-                    "pattern": "^([a-zA-Z0-9_\\-]{2,50}((/[a-zA-Z0-9_\\-]{2,50}))?(:.*)?)?$"
-                },
-                "version": {
-                    "type": "string",
-                    "default": "*"
+                    "pattern": "^(https://.*\\.git)$"
                 },
                 "path": {
                     "type": "string"
@@ -98,11 +104,57 @@
                     "type": "boolean"
                 },
                 "settings": {
-                    "type": "object",
-                    "patternProperties": {
-                        "\\w+": {}
-                    },
-                    "additionalProperties": false
+                    "$ref": "#/definitions/PackageSettings"
+                }
+            },
+            "additionalProperties": false,
+            "required": [
+                "repository",
+                "path"
+            ]
+        },
+        "PackagePDGSEntry": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "pattern": "^([a-zA-Z0-9_\\-]{2,50}/[a-zA-Z0-9_\\-]{2,50})$"
+                },
+                "definition": {
+                    "type": "string"
+                },
+                "repository": {
+                    "type": "string",
+                    "pattern": "^(https://.*\\.git)$"
+                },
+                "version": {
+                    "type": "string"
+                },
+                "optional": {
+                    "type": "boolean"
+                },
+                "settings": {
+                    "$ref": "#/definitions/PackageSettings"
+                }
+            },
+            "additionalProperties": false,
+            "required": [
+                "name",
+                "definition",
+                "version"
+            ]
+        },
+        "PackagePDPSEntry": {
+            "type": "object",
+            "properties": {
+                "path": {
+                    "type": "string"
+                },
+                "optional": {
+                    "type": "boolean"
+                },
+                "settings": {
+                    "$ref": "#/definitions/PackageSettings"
                 }
             },
             "additionalProperties": false,

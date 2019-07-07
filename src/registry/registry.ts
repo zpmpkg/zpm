@@ -9,6 +9,7 @@ import { cloneOrPull, CloneOrPullResult } from '~/common/git'
 import { logger } from '~/common/logger'
 import { shortHash } from '~/common/util'
 import { RegistryDefinition } from '~/types/definitions.v1'
+import { transformPath } from '~/common/io'
 
 export class Registry {
     public urlOrPath: string
@@ -20,7 +21,7 @@ export class Registry {
     public name?: string
     constructor(urlOrPath: string, options?: { branch?: string; name?: string }) {
         const { branch, name } = options || { branch: undefined, name: undefined }
-        this.urlOrPath = urlOrPath
+        this.urlOrPath = transformPath(urlOrPath)
         this.branch = branch
         this.name = name
     }

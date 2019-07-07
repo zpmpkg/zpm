@@ -1,19 +1,25 @@
 import commander from 'commander'
 
+let cliLoaded = false
 export function loadCLI() {
-    commander
-        .version('0.1.0')
-        .option('-u, --update', 'Updates dependencies and definitions')
-        .option('-H, --headless', 'Automatically accept pulling etc. during version resolution')
-        .option('-f, --force', 'Force extraction')
-        .option(
-            '-p, --path [path]',
-            'Specify the directory you want to set as root [path]',
-            process.cwd()
-        )
+    if (!cliLoaded) {
+        cliLoaded = true
+        commander
+            .version('0.1.0')
+            .option('-u, --update', 'Updates dependencies and definitions')
+            .option('-H, --headless', 'Automatically accept pulling etc. during version resolution')
+            .option('-f, --force', 'Force extraction')
+            .option(
+                '-p, --path [path]',
+                'Specify the directory you want to set as root [path]',
+                process.cwd()
+            )
 
-    commander.parse(process.argv)
+        commander.parse(process.argv)
+    }
 }
+
+loadCLI()
 
 export function update() {
     return commander.update
@@ -27,7 +33,7 @@ export function headless() {
     return commander.headless
 }
 
-export function workingdir() {
+export function workingdir(): string {
     return commander.path
 }
 

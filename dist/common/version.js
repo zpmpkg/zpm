@@ -27,8 +27,10 @@ class Version {
                 }
             }
             else {
-                this.cost = Math.trunc(100000000 -
-                    (this.semver.major * 1000000 + this.semver.minor * 1000 + this.semver.patch));
+                this.cost = Math.trunc(Version.versionInverse -
+                    (this.semver.major * Version.majorVersionCost +
+                        this.semver.minor * Version.minorVersionCost +
+                        this.semver.patch));
             }
         }
     }
@@ -39,6 +41,9 @@ class Version {
         return this.semver.toString();
     }
 }
+Version.versionInverse = 100000000;
+Version.majorVersionCost = 1000000;
+Version.minorVersionCost = 1000;
 exports.Version = Version;
 function areAllowedTagCharacters(r) {
     return /^[a-zA-Z0-9\/\-_\.]+$/.test(r);

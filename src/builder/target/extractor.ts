@@ -5,6 +5,7 @@ import { join } from 'upath'
 import { FsApi } from '~/api/fs'
 import { GitApi } from '~/api/git'
 import { PackageApi } from '~/api/package'
+import { ShellApi } from '~/api/shell'
 import { force } from '~/cli/program'
 import { spinners } from '~/cli/spinner'
 import { hasHash } from '~/common/git'
@@ -13,7 +14,6 @@ import { logger } from '~/common/logger'
 import { executeSandboxTypescript } from '~/sandbox/sandbox'
 import { isNamedLock } from '../lock'
 import { BasePackageBuilder, PackageBuilder, PackageType } from '../packageBuilder'
-import { ShellApi } from '~/api/shell'
 
 interface ExtractionApi {
     pkg: PackageApi

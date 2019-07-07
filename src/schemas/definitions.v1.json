@@ -48,24 +48,37 @@
     "properties": {
       "path": {
         "type": "string"
+      },
+      "name": {
+        "type": "string"
       }
     },
     "additionalProperties": false,
     "required": [
+      "name",
       "path"
     ]
   },
   "RegistryEntry": {
-    "oneOf": [
+    "anyOf": [
       {
-        "$ref": "#/definitions/RegistryNamedEntry"
+        "$ref": "#/definitions/RegistryGDGSEntry"
       },
       {
-        "$ref": "#/definitions/RegistryPathEntry"
+        "$ref": "#/definitions/RegistryGDPSEntry"
+      },
+      {
+        "$ref": "#/definitions/RegistryPDGSEntry"
+      },
+      {
+        "$ref": "#/definitions/RegistryPDPSEntry"
+      },
+      {
+        "$ref": "#/definitions/RegistryPSSubEntry"
       }
     ]
   },
-  "RegistryNamedEntry": {
+  "RegistryGDGSEntry": {
     "type": "object",
     "properties": {
       "name": {
@@ -87,12 +100,12 @@
       "repository"
     ]
   },
-  "RegistryPathEntry": {
+  "RegistryGDPSEntry": {
     "type": "object",
     "properties": {
-      "name": {
+      "definition": {
         "type": "string",
-        "pattern": "^([a-zA-Z0-9_\\-]{2,50}/[a-zA-Z0-9_\\-]{2,50})$"
+        "pattern": "^(https://.*\\.git)$"
       },
       "path": {
         "type": "string"
@@ -100,7 +113,57 @@
     },
     "additionalProperties": false,
     "required": [
+      "definition",
       "path"
+    ]
+  },
+  "RegistryPDGSEntry": {
+    "type": "object",
+    "properties": {
+      "name": {
+        "type": "string",
+        "pattern": "^([a-zA-Z0-9_\\-]{2,50}/[a-zA-Z0-9_\\-]{2,50})$"
+      },
+      "repository": {
+        "type": "string",
+        "pattern": "^(https://.*\\.git)$"
+      },
+      "definition": {
+        "type": "string"
+      }
+    },
+    "additionalProperties": false,
+    "required": [
+      "name",
+      "repository",
+      "definition"
+    ]
+  },
+  "RegistryPDPSEntry": {
+    "type": "object",
+    "properties": {
+      "path": {
+        "type": "string"
+      }
+    },
+    "additionalProperties": false,
+    "required": [
+      "path"
+    ]
+  },
+  "RegistryPSSubEntry": {
+    "type": "object",
+    "properties": {
+      "name": {
+        "type": "string"
+      },
+      "path": {
+        "type": "string"
+      }
+    },
+    "additionalProperties": false,
+    "required": [
+      "name"
     ]
   }
 }

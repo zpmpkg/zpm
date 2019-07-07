@@ -59,7 +59,7 @@ async function copy(source, root, destination, excludes = [], options) {
         await fs.copy(file, upath_1.join(destination, upath_1.relative(root, file)), {
             preserveTimestamps: true,
         });
-        //console.log(file, join(destination, relative(root, file)))
+        // console.log(file, join(destination, relative(root, file)))
     }));
 }
 exports.copy = copy;

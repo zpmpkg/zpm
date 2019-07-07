@@ -58,14 +58,20 @@
     "RegistryEntry": {
         "oneOf": [
             {
-                "$ref": "#/definitions/RegistryNamedEntry"
+                "$ref": "#/definitions/RegistryGDGSEntry"
             },
             {
-                "$ref": "#/definitions/RegistryPathEntry"
+                "$ref": "#/definitions/RegistryGDPSEntry"
+            },
+            {
+                "$ref": "#/definitions/RegistryPDGSEntry"
+            },
+            {
+                "$ref": "#/definitions/RegistryPDPSEntry"
             }
         ]
     },
-    "RegistryNamedEntry": {
+    "RegistryGDGSEntry": {
         "type": "object",
         "properties": {
             "name": {
@@ -87,13 +93,47 @@
             "repository"
         ]
     },
-    "RegistryPathEntry": {
+    "RegistryGDPSEntry": {
+        "type": "object",
+        "properties": {
+            "repository": {
+                "type": "string",
+                "pattern": "^(https://.*\\.git)$"
+            },
+            "path": {
+                "type": "string"
+            }
+        },
+        "additionalProperties": false,
+        "required": [
+            "repository",
+            "path"
+        ]
+    },
+    "RegistryPDGSEntry": {
         "type": "object",
         "properties": {
             "name": {
                 "type": "string",
                 "pattern": "^([a-zA-Z0-9_\\-]{2,50}/[a-zA-Z0-9_\\-]{2,50})$"
             },
+            "repository": {
+                "type": "string",
+                "pattern": "^(https://.*\\.git)$"
+            },
+            "path": {
+                "type": "string"
+            }
+        },
+        "additionalProperties": false,
+        "required": [
+            "name",
+            "path"
+        ]
+    },
+    "RegistryPDPSEntry": {
+        "type": "object",
+        "properties": {
             "path": {
                 "type": "string"
             }

@@ -21,7 +21,7 @@ class GitDefinitionResolver extends definitionResolver_1.DefinitionResolver {
             content = await this.getContent(directory, hash);
         }
         catch (e) {
-            //logger.info(e)
+            // logger.info(e)
             // @todo
         }
         content.content = validation_1.validateSchema(content.content || {}, undefined, {

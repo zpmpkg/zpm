@@ -1,8 +1,10 @@
-import { Manifest } from "./manifest";
+import { InternalEntry } from "../package/entry";
+import { PackageInfoOptions } from "../package/info";
+import { Package } from "../package/package";
 import { ConfigurationSchema } from "../types/configuration.v1";
-import { RegistryDefinition, RegistryEntry, RegistryNamedLocationEntry, RegistryPathLocationEntry } from "../types/definitions.v1";
-import { ZPM } from '../zpm';
-import { Package, PackageOptions } from './package';
+import { RegistryDefinition, RegistryNamedLocationEntry, RegistryPathLocationEntry } from "../types/definitions.v1";
+import { ZPM } from "../zpm";
+import { Manifest } from './package';
 import { Registry } from './registry';
 export declare function isPathRegistry(entry: RegistryDefinition): entry is RegistryPathLocationEntry;
 export declare function isNamedRegistry(entry: RegistryDefinition): entry is RegistryNamedLocationEntry;
@@ -28,7 +30,7 @@ export declare class Registries {
         definition?: string;
         repository?: string;
     }): Promise<Package | undefined>;
-    addPackage(type: string, entry: RegistryEntry, options?: PackageOptions): Package;
+    addPackage<E extends InternalEntry, O extends PackageInfoOptions>(type: string, entry: E, options?: O): Package;
     private loadManifests;
     private findRegistries;
 }

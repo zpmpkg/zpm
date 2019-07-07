@@ -5,12 +5,6 @@ import { NamedLock, PathLock } from '~/types/lockfile.v1'
 import { Builder } from './builder'
 import { isNamedLock } from './lock'
 
-export const enum PackageType {
-    NAMED,
-    ROOT,
-    PATH,
-}
-
 export interface BuilderOptions {
     root?: BasePackageBuilder
     type: PackageType

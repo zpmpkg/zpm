@@ -80,7 +80,7 @@ class Builder {
             });
             if (util_1.isDefined(found)) {
                 const builder = builderFactory(type, this, found, pkg, {
-                    type: 0 /* NAMED */,
+                    type: packageBuilder_1.PackageType.NAMED,
                 });
                 if (isPackage) {
                     this.packages.push(builder);
@@ -104,7 +104,7 @@ class Builder {
                 });
                 if (util_1.isDefined(found)) {
                     const builder = builderFactory(type, this, found, pkg, {
-                        type: 2 /* PATH */,
+                        type: packageBuilder_1.PackageType.PATH,
                     });
                     if (isPackage) {
                         this.packages.push(builder);

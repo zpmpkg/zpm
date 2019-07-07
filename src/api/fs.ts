@@ -1,8 +1,8 @@
+import fs from 'fs-extra'
 import { isEmpty } from 'lodash'
+import { join } from 'upath'
 import { Spinner } from '~/cli/spinner'
 import { copy } from '~/common/io'
-import fs from 'fs-extra'
-import { join } from 'upath'
 
 export class FsApi {
     public source: string

@@ -8,7 +8,7 @@
             "name": "Main TS File",
             "type": "node",
             "request": "launch",
-            "args": ["./dist/main.js",  "-p",  "C:\\Users\\Paul\\Nextcloud\\Documents\\Repositories\\definitions", "--force"],
+            "args": ["./src/main.ts",  "-p",  "C:\\Users\\Paul\\Nextcloud\\Documents\\Repositories\\definitions\\googletest", "--force"],
             "runtimeArgs": [
                 "--nolazy", "-r", "ts-node/register", "-r", "tsconfig-paths/register"],
             "sourceMaps": true,

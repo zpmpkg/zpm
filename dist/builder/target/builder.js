@@ -21,7 +21,7 @@ class TargetBuilder extends packageBuilder_1.PackageBuilder {
         //     target.getTargetPath(),
         //     target.package.source.definitionResolver.getDefinitionPath()
         const settings = this.getTargetSettings(target);
-        //console.log(settings)
+        // console.log(settings)
         if (settings.template) {
             const templateFile = upath_1.join(io_1.transformPath(this.package.source.definitionResolver.getDefinitionPath()), 'templates', `${settings.template}.cmake`);
             await this.buildTemplate(target, templateFile);

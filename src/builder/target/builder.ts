@@ -4,7 +4,7 @@ import Mustache from 'mustache'
 import { join, relative } from 'upath'
 import { workingdir } from '~/cli/program'
 import { environment } from '~/common/environment'
-import { copy, glob, isSubDirectory, transformPath } from '~/common/io'
+import { copy, isSubDirectory, transformPath } from '~/common/io'
 import { BasePackageBuilder, PackageBuilder } from '../packageBuilder'
 
 // interface BuilderApi {
@@ -36,7 +36,7 @@ export class TargetBuilder extends PackageBuilder {
         //     target.getTargetPath(),
         //     target.package.source.definitionResolver.getDefinitionPath()
         const settings = this.getTargetSettings(target)
-        //console.log(settings)
+        // console.log(settings)
         if (settings.template) {
             const templateFile = join(
                 transformPath(this.package.source.definitionResolver.getDefinitionPath()),
