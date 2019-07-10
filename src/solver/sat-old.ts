@@ -29,10 +29,7 @@ import { buildSchema, validateSchema } from '~/common/validation'
 import { Version } from '~/common/version'
 import { Package, PackageType } from '~/registry/package'
 import { Registries } from '~/registry/registries'
-import {
-    PackageDefinitionSummary,
-    PackageDescription,
-} from '~/resolver/definition/packageDefinition'
+import { PackageDefinitionSummary, PackageDescription } from '~/resolver/definition/definition'
 import { SourceVersions } from '~/resolver/source/sourceResolver'
 import { lockFileV1 } from '~/schemas/schemas'
 import { RegistryNamedEntry, RegistryPathEntry } from '~/types/definitions.v1'
@@ -378,7 +375,7 @@ export class SATSolver {
         }
 
         const levels: Array<{ settings: any; depth: number }> = []
-        minimum.map(m => {
+        for (const m of minimum) {
             let settings: any
             if (has(this.termMap.named, [term, 'settings', m])) {
                 settings = get(this.termMap.named, [term, 'settings', m])
@@ -388,14 +385,14 @@ export class SATSolver {
             if (!isEmpty(settings)) {
                 levels.push({ settings, depth: this.countParents(minimum, m) })
             }
-        })
+        }
         // @todo: allow merge strategies https://www.npmjs.com/package/deeply#default-behavior
         return merge({}, ...levels.sort((a, b) => a.depth - b.depth).map(l => l.settings))
     }
 
     public countParents(minimum: string[], parent: string, depth: number = 0) {
         const parents: Array<{ parent: string; depth: number }> = []
-        minimum.map(m => {
+        for (const m of minimum) {
             let settings: any | undefined
             if (has(this.termMap.named, [parent, 'settings', m])) {
                 settings = get(this.termMap.named, [parent, 'settings', m])
@@ -405,7 +402,7 @@ export class SATSolver {
             if (isDefined(settings)) {
                 parents.push({ parent: m, depth: this.countParents(minimum, m, depth + 1) })
             }
-        })
+        }
         if (isEmpty(parents)) {
             return depth
         } else {

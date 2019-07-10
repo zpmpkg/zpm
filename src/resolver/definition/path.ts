@@ -4,13 +4,11 @@ import { find, has, isArray } from 'lodash'
 import { join } from 'upath'
 import { loadJsonOrYaml } from '~/common/io'
 import { VersionRange } from '~/common/range'
-import { buildSchema, validateSchema } from '~/common/validation'
+import { validateSchema } from '~/common/validation'
 import { IPackage } from '~/package/package'
-import { packageV1 } from '~/schemas/schemas'
 import { PackageDefinition, PackageSchema } from '~/types/package.v1'
-import { fromPackageDefinition, PackageDefinitionSummary } from './packageDefinition'
-
-const packageValiator = buildSchema(packageV1)
+import { fromPackageDefinition, PackageDefinitionSummary } from './definition'
+import { packageValiator } from './validator'
 
 export async function getPathPackageDefinition(pkg: IPackage): Promise<PackageDefinitionSummary> {
     const info = pkg.info
@@ -18,9 +16,10 @@ export async function getPathPackageDefinition(pkg: IPackage): Promise<PackageDe
         content: undefined,
     }
     try {
-        content = await getContent(info.directories.definition)
+        content = await getPathContent(info.directories.definition)
     } catch (e) {
         //
+        // @todo
     }
     content.content = validateSchema(content.content || {}, undefined, {
         throw: true,
@@ -45,7 +44,7 @@ export async function getPathPackageDefinition(pkg: IPackage): Promise<PackageDe
     )
 }
 
-export async function getContent(
+export async function getPathContent(
     directory: string,
     version?: string
 ): Promise<{ content: PackageDefinition | undefined; path?: string }> {

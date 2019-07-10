@@ -8,7 +8,7 @@ import { logger } from '~/common/logger'
 import { isDefined } from '~/common/util'
 import { buildSchema, validateSchema } from '~/common/validation'
 import { InternalDefinitionEntry } from '~/package/entry'
-import { Package, PackageVersion } from '~/package/package'
+import { Package, PackageVersion, ParentUsage } from '~/package/package'
 import { Registries } from '~/registry/registries'
 import { lockFileV1 } from '~/schemas/schemas'
 import { LockfileSchema } from '~/types/lockfile.v1'
@@ -52,14 +52,40 @@ export class SATSolver {
         //
     }
 
-    public async addPackage(pkg: Package, addedBy?: PackageVersion) {
+    public async addPackage(pkg: Package, parent?: ParentUsage) {
         const versions = await pkg.getVersions()
+        const allowedVersions: PackageVersion[] = []
 
-        for (const version of versions) {
-            this.addPackageVersion(version)
+        this.addNewPackage(pkg, versions, parent, allowedVersions)
+        this.addVersionConstraints(parent, allowedVersions)
+    }
+
+    public addVersionConstraints(
+        parent: ParentUsage | undefined,
+        allowedVersions: PackageVersion[]
+    ) {
+        if (parent && !parent.entry.usage.optional) {
+            const allowedTerms = allowedVersions.map(v => v.id)
+            this.solver.require(Logic.implies(parent.addedBy.id, Logic.exactlyOne(...allowedTerms)))
         }
+    }
 
-        this.solver.require(Logic.exactlyOne(...versions.map(v => v.id)))
+    public addNewPackage(
+        pkg: Package,
+        versions: PackageVersion[],
+        parent: ParentUsage | undefined,
+        allowedVersions: PackageVersion[]
+    ) {
+        if (!this.loadedCache[pkg.id]) {
+            for (const version of versions) {
+                if (this.addPackageVersion(version, parent)) {
+                    allowedVersions.push(version)
+                }
+            }
+            // for all the versions require at most one of them
+            this.solver.require(Logic.exactlyOne(...versions.map(v => v.id)))
+            this.loadedCache[pkg.id] = true
+        }
     }
 
     public async expand(): Promise<boolean> {
@@ -78,7 +104,7 @@ export class SATSolver {
         if (!isDefined(this.solution)) {
             throw new Error('NO solution was found')
         }
-        this.solution.ignoreUnknownVariables()
+        //this.solution.ignoreUnknownVariables()
         const solution = this.solver.minimizeWeightedSum(
             this.solution,
             this.weights.terms,
@@ -138,10 +164,18 @@ export class SATSolver {
         return content
     }
 
-    private addPackageVersion(version: PackageVersion) {
-        this.versionMap.set(version.id, version)
-        this.weights.terms.push(version.id)
-        this.weights.weights.push(version.cost)
+    private addPackageVersion(version: PackageVersion, usage?: ParentUsage): boolean {
+        if (!this.versionMap.has(version.id)) {
+            this.versionMap.set(version.id, version)
+            this.weights.terms.push(version.id)
+            this.weights.weights.push(version.cost)
+        }
+
+        if (usage) {
+            return version.addUsage(usage)
+        }
+
+        return true
     }
 
     private async expandTerm(term: string): Promise<boolean> {
@@ -163,7 +197,7 @@ export class SATSolver {
     private async addEntry(entry: InternalDefinitionEntry, addedBy: PackageVersion) {
         const found = this.registries.search(entry)
         if (found.package) {
-            await this.addPackage(found.package)
+            await this.addPackage(found.package, { entry, addedBy })
         } else {
             logger.warn(`Failed to find '${entry.type}' package '${found.name}'`)
         }
@@ -171,13 +205,5 @@ export class SATSolver {
 
     private getLockFilePath() {
         return join(environment.directory.workingdir, '.zpm.lock')
-    }
-
-    private mayLoadPackage(hash: string): boolean {
-        if (!this.loadedCache[hash]) {
-            this.loadedCache[hash] = false
-            return true
-        }
-        return false
     }
 }

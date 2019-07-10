@@ -46,7 +46,7 @@ async function writeJson(file, object) {
 }
 exports.writeJson = writeJson;
 async function glob(source, root, excludes = []) {
-    return lodash_1.filter((await fast_glob_1.default.async(source, {
+    return lodash_1.filter((await fast_glob_1.default(source, {
         cwd: root,
         absolute: true,
         ignore: excludes,

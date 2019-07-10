@@ -1,4 +1,4 @@
-import { InternalEntry } from "../package/entry";
+import { InternalDefinitionEntry, InternalEntry } from "../package/entry";
 import { PackageInfoOptions } from "../package/info";
 import { Package } from "../package/package";
 import { ConfigurationSchema } from "../types/configuration.v1";
@@ -22,14 +22,10 @@ export declare class Registries {
         options?: import("../types/definitions.v1").ManifestOptions | undefined;
     }[];
     getManifest(type: string): Manifest;
-    searchPackage(type: string, search: {
+    search(entry: InternalDefinitionEntry): {
+        package: Package | undefined;
         name: string;
-    } & {
-        path?: string;
-    } & {
-        definition?: string;
-        repository?: string;
-    }): Promise<Package | undefined>;
+    };
     addPackage<E extends InternalEntry, O extends PackageInfoOptions>(type: string, entry: E, options?: O): Package;
     private loadManifests;
     private findRegistries;

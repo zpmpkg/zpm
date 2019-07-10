@@ -45,6 +45,12 @@
                 },
                 {
                     "$ref": "#/definitions/PackagePDGSEntry"
+                },
+                {
+                    "$ref": "#/definitions/PackageGSSubEntry"
+                },
+                {
+                    "$ref": "#/definitions/PackagePSSubEntry"
                 }
             ]
         },
@@ -93,7 +99,7 @@
         "PackageGDPSEntry": {
             "type": "object",
             "properties": {
-                "repository": {
+                "definition": {
                     "type": "string",
                     "pattern": "^(https://.*\\.git)$"
                 },
@@ -109,7 +115,7 @@
             },
             "additionalProperties": false,
             "required": [
-                "repository",
+                "definition",
                 "path"
             ]
         },
@@ -160,6 +166,54 @@
             "additionalProperties": false,
             "required": [
                 "path"
+            ]
+        },
+        "PackageGSSubEntry": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "pattern": "^(([a-zA-Z0-9_\\-]{2,50}/)?[a-zA-Z0-9_\\-]{2,50})(:[a-zA-Z0-9_\\-/]{2,50})?$"
+                },
+                "path": {
+                    "type": "string"
+                },
+                "version": {
+                    "type": "string"
+                },
+                "optional": {
+                    "type": "boolean"
+                },
+                "settings": {
+                    "$ref": "#/definitions/PackageSettings"
+                }
+            },
+            "additionalProperties": false,
+            "required": [
+                "name",
+                "version"
+            ]
+        },
+        "PackagePSSubEntry": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "pattern": "^(([a-zA-Z0-9_\\-]{2,50}/)?[a-zA-Z0-9_\\-]{2,50})(:[a-zA-Z0-9_\\-/]{2,50})?$"
+                },
+                "path": {
+                    "type": "string"
+                },
+                "optional": {
+                    "type": "boolean"
+                },
+                "settings": {
+                    "$ref": "#/definitions/PackageSettings"
+                }
+            },
+            "additionalProperties": false,
+            "required": [
+                "name"
             ]
         },
         "PackageEntries": {

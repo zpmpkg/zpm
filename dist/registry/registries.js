@@ -35,22 +35,8 @@ class Registries {
     getManifest(type) {
         return this.manifests[type];
     }
-    async searchPackage(type, search) {
-        const sname = search.path ? `${search.name}:${search.path}` : search.name;
-        const found = undefined; // get(this.manifests, [type, 'entries', sname])
-        return this.addMutex.runExclusive(async () => {
-            // allow inline repositories
-            // @todo: only allow on root path
-            if (!found && search.name && search.definition && search.repository) {
-                // const pkg = this.addPackage(type, {
-                //     name: search.name,
-                //     definition: search.definition,
-                //     repository: search.repository,
-                // })
-                // return pkg
-            }
-            return found;
-        });
+    search(entry) {
+        return this.manifests[entry.type].search(entry);
     }
     addPackage(type, entry, options) {
         return this.manifests[type].add(entry, options);
@@ -66,11 +52,15 @@ class Registries {
             ...this.zpm.config.values.registries
                 .filter(isNamedRegistry)
                 .map(registry => new registry_1.Registry(registry.url, { branch: registry.branch })),
-            ...this.zpm.config.values.registries
-                .filter(isPathRegistry)
-                .map(registry => new registry_1.Registry(io_1.transformPath(registry.path), { name: registry.path })),
-            new registry_1.Registry(environment_1.environment.directory.zpm, { name: '$ZPM' }),
-            new registry_1.Registry(environment_1.environment.directory.workingdir, { name: '$ROOT' }),
+            ...this.zpm.config.values.registries.filter(isPathRegistry).map(registry => new registry_1.Registry(io_1.transformPath(registry.path), {
+                name: registry.name,
+                workingDirectory: registry.workingDirectory,
+            })),
+            new registry_1.Registry(environment_1.environment.directory.zpm, {
+                workingDirectory: environment_1.environment.directory.zpm,
+                name: 'ZPM',
+            }),
+            new registry_1.Registry(environment_1.environment.directory.workingdir, { name: 'ROOT' }),
         ];
         const newRegistries = lodash_1.flatten(lodash_1.filter(await async_1.settledPromiseAll(registries.map(async (registry) => registry.update())), util_1.isDefined));
         // go one deeper in the registry chain (each registry may also host a registry list)

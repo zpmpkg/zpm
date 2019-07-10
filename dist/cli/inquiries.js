@@ -12,7 +12,7 @@ class Inquisitor {
         this.lock = new lock_1.default();
     }
     async ask(name, question, options) {
-        return this.withLock(() => this.inquire(name, Object.assign({}, question, { name: 'answer' }), options));
+        return this.withLock(() => this.inquire(name, { ...question, name: 'answer' }, options));
     }
     async withLock(fn) {
         return this.lock.withLock(fn);

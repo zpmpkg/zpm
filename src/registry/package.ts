@@ -93,7 +93,7 @@ export class Manifest {
             if (pkgType === PackageType.PSSub) {
                 options = (options || {
                     rootName: registry.name,
-                    rootDirectory: registry.directory,
+                    rootDirectory: registry.workingDirectory || registry.directory,
                 }) as any
             }
         }

@@ -1,8 +1,9 @@
-registries:
+registries: 
   # - url: 'https://github.com/zpmpkg/registry.git'
   #   branch: 'master'
   - name: ZPM
     path: $ZPM/registry
+    workingDirectory: $ZPM
 registry:
   - name: extractor
     options:

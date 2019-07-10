@@ -13,7 +13,10 @@ const vm2_1 = require("vm2");
 const logger_1 = require("../common/logger");
 async function executeSandboxTypescript(file, sandbox) {
     const vm = new vm2_1.NodeVM({
-        sandbox: Object.assign({ log: logger_1.logger }, sandbox),
+        sandbox: {
+            log: logger_1.logger,
+            ...sandbox,
+        },
         compiler: (code) => {
             const result = ts.transpileModule(code.code, {
                 compilerOptions: {

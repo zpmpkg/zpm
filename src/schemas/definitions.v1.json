@@ -51,6 +51,9 @@
       },
       "name": {
         "type": "string"
+      },
+      "workingDirectory": {
+        "type": "string"
       }
     },
     "additionalProperties": false,

@@ -1,4 +1,4 @@
-import { Package, PackageVersion } from "../package/package";
+import { Package, PackageVersion, ParentUsage } from "../package/package";
 import { Registries } from "../registry/registries";
 import { LockfileSchema } from "../types/lockfile.v1";
 export interface SATWeights {
@@ -16,9 +16,7 @@ export declare class SATSolver {
     loadedCache: {
         [k: string]: boolean | undefined;
     };
-    versionMap: {
-        [k: string]: PackageVersion | undefined;
-    };
+    versionMap: Map<string, PackageVersion>;
     solution: any;
     registries: Registries;
     assumptions: string[] | undefined;
@@ -28,13 +26,12 @@ export declare class SATSolver {
     load(): Promise<boolean>;
     save(): Promise<void>;
     rollback(): Promise<void>;
-    addPackage(pkg: Package): Promise<void>;
-    expand(): Promise<void>;
-    addPackageVersion(version: PackageVersion): Promise<void>;
+    addPackage(pkg: Package, parent?: ParentUsage): Promise<void>;
+    expand(): Promise<boolean>;
     optimize(): Promise<void>;
-    addPackageRequirements(value: SATRequirements): void;
     getLockFile(): Promise<LockfileSchema | undefined>;
-    private expandSolution;
+    private addPackageVersion;
+    private expandTerm;
+    private addEntry;
     private getLockFilePath;
-    private mayLoadPackage;
 }

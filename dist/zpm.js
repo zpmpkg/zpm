@@ -42,6 +42,7 @@ class ZPM {
             await solver.load();
             spinner_1.spinners.start();
             await solver.addPackage(this.root);
+            await solver.expand();
             spinner_1.spinners.stop();
             // lockFile =
             await solver.optimize();

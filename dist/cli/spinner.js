@@ -84,7 +84,10 @@ class Spinners {
         this.spinners = [];
     }
     create(options) {
-        const { text, start } = Object.assign({ start: true }, options);
+        const { text, start } = {
+            start: true,
+            ...options,
+        };
         const added = new Spinner(text);
         this.spinners.push(added);
         if (start) {

@@ -20,13 +20,19 @@ const environment_1 = require("../common/environment");
 const git_1 = require("../common/git");
 const logger_1 = require("../common/logger");
 const util_1 = require("../common/util");
+const io_1 = require("../common/io");
 class Registry {
     constructor(urlOrPath, options) {
         this.valid = true;
         this.isLocal = false;
         this.isUpdated = false;
-        const { branch, name } = options || { branch: undefined, name: undefined };
-        this.urlOrPath = urlOrPath;
+        const { branch, name, workingDirectory } = options || {
+            branch: undefined,
+            name: undefined,
+            workingDirectory: undefined,
+        };
+        this.urlOrPath = io_1.transformPath(urlOrPath);
+        this.workingDirectory = workingDirectory ? io_1.transformPath(workingDirectory) : undefined;
         this.branch = branch;
         this.name = name;
     }

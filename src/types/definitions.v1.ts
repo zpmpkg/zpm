@@ -52,6 +52,7 @@ export interface RegistryNamedLocationEntry {
 export interface RegistryPathLocationEntry {
     name: string
     path: string
+    workingDirectory?: string
 }
 /**
  * This interface was referenced by `DefinitionsSchema`'s JSON-Schema

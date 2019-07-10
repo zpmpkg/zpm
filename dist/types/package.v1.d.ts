@@ -7,7 +7,7 @@ export declare type PackageSchema = PackageDefinition | {
  * via the `patternProperty` "\w+".
  */
 export declare type PackageSingularArrayEntry = PackageEntry[] | PackageEntry;
-export declare type PackageEntry = PackageGDGSEntry | PackageGDPSEntry | PackagePDPSEntry | PackagePDGSEntry;
+export declare type PackageEntry = PackageGDGSEntry | PackageGDPSEntry | PackagePDPSEntry | PackagePDGSEntry | PackageGSSubEntry | PackagePSSubEntry;
 export interface PackageDefinition {
     development?: PackageEntries;
     requires?: PackageEntries;
@@ -32,7 +32,7 @@ export interface PackageSettings {
     [k: string]: any[];
 }
 export interface PackageGDPSEntry {
-    repository: string;
+    definition: string;
     path: string;
     optional?: boolean;
     settings?: PackageSettings;
@@ -47,6 +47,19 @@ export interface PackagePDGSEntry {
     definition: string;
     repository?: string;
     version: string;
+    optional?: boolean;
+    settings?: PackageSettings;
+}
+export interface PackageGSSubEntry {
+    name: string;
+    path?: string;
+    version: string;
+    optional?: boolean;
+    settings?: PackageSettings;
+}
+export interface PackagePSSubEntry {
+    name: string;
+    path?: string;
     optional?: boolean;
     settings?: PackageSettings;
 }

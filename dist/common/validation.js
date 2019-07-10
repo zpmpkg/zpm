@@ -9,11 +9,17 @@ const better_ajv_errors_1 = __importDefault(require("better-ajv-errors"));
 const schemas_1 = require("../schemas/schemas");
 const ajv = new ajv_1.default({ useDefaults: true, jsonPointers: true, allErrors: false });
 function buildSchema(schema) {
-    return ajv.compile(Object.assign({}, schema, { definitions: Object.assign({}, axioms_1.omit(schemas_1.definitionsV1, '$schema'), schema.definitions) }));
+    return ajv.compile({
+        ...schema,
+        definitions: { ...axioms_1.omit(schemas_1.definitionsV1, '$schema'), ...schema.definitions },
+    });
 }
 exports.buildSchema = buildSchema;
 function validateSchema(instance, schema, options) {
-    options = Object.assign({ throw: true }, (options || {}));
+    options = {
+        throw: true,
+        ...(options || {}),
+    };
     const validate = options.validator || buildSchema(schema);
     if (!validate(instance)) {
         if (options.throw) {

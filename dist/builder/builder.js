@@ -1,11 +1,4 @@
 "use strict";
-var __asyncValues = (this && this.__asyncValues) || function (o) {
-    if (!Symbol.asyncIterator) throw new TypeError("Symbol.asyncIterator is not defined.");
-    var m = o[Symbol.asyncIterator], i;
-    return m ? m.call(o) : (o = typeof __values === "function" ? __values(o) : o[Symbol.iterator](), i = {}, verb("next"), verb("throw"), verb("return"), i[Symbol.asyncIterator] = function () { return this; }, i);
-    function verb(n) { i[n] = o[n] && function (v) { return new Promise(function (resolve, reject) { v = o[n](v), settle(resolve, reject, v.done, v.value); }); }; }
-    function settle(resolve, reject, d, v) { Promise.resolve(v).then(function(v) { resolve({ value: v, done: d }); }, reject); }
-};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -46,21 +39,10 @@ class Builder {
         }
     }
     async build() {
-        var e_1, _a;
-        try {
-            for (var _b = __asyncValues(this.builderTypes), _c; _c = await _b.next(), !_c.done;) {
-                const builder = _c.value;
-                await async_1.settledPromiseAll(lodash_1.flatten(this.packages.map(async (pkg) => {
-                    await pkg.build(builder);
-                })));
-            }
-        }
-        catch (e_1_1) { e_1 = { error: e_1_1 }; }
-        finally {
-            try {
-                if (_c && !_c.done && (_a = _b.return)) await _a.call(_b);
-            }
-            finally { if (e_1) throw e_1.error; }
+        for await (const builder of this.builderTypes) {
+            await async_1.settledPromiseAll(lodash_1.flatten(this.packages.map(async (pkg) => {
+                await pkg.build(builder);
+            })));
         }
         // only wrap up when we actually extracted packages
         if (await fs_extra_1.default.pathExists(environment_1.environment.directory.extract)) {
@@ -75,7 +57,7 @@ class Builder {
     }
     async createBuilders(type, isPackage) {
         await async_1.settledPromiseAll((this.lockFile.named[type] || []).map(async (pkg) => {
-            const found = await this.registries.searchPackage(type, {
+            const found = await this.registries.search(type, {
                 name: pkg.name,
             });
             if (util_1.isDefined(found)) {
@@ -98,7 +80,7 @@ class Builder {
                 // this.builders.push(new RootBuilder())
             }
             else {
-                const found = await this.registries.searchPackage(type, {
+                const found = await this.registries.search(type, {
                     name: pkg.name,
                     path: pkg.path,
                 });

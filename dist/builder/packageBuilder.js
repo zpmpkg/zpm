@@ -9,7 +9,10 @@ class BasePackageBuilder {
         this.builder = builder;
         this.package = pkg;
         this.lock = lock;
-        this.options = Object.assign({ type: PackageType.PATH }, options);
+        this.options = {
+            type: PackageType.PATH,
+            ...options,
+        };
     }
     async build(type) {
         if (this.lock.usage && this.lock.usage.required && this.lock.usage.required[type]) {

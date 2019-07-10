@@ -16,12 +16,21 @@ export class Registry {
     public branch?: string
     public valid: boolean = true
     public directory: string | undefined
+    public workingDirectory: string | undefined
     public isLocal: boolean = false
     public isUpdated: boolean = false
     public name?: string
-    constructor(urlOrPath: string, options?: { branch?: string; name?: string }) {
-        const { branch, name } = options || { branch: undefined, name: undefined }
+    constructor(
+        urlOrPath: string,
+        options?: { branch?: string; name?: string; workingDirectory?: string }
+    ) {
+        const { branch, name, workingDirectory } = options || {
+            branch: undefined,
+            name: undefined,
+            workingDirectory: undefined,
+        }
         this.urlOrPath = transformPath(urlOrPath)
+        this.workingDirectory = workingDirectory ? transformPath(workingDirectory) : undefined
         this.branch = branch
         this.name = name
     }

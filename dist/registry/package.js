@@ -25,7 +25,10 @@ class Manifest {
         this.validator = validation_1.buildSchema(schemas_1.entriesV1);
         this.registries = registries;
         this.type = type;
-        this.options = Object.assign({ isBuildDefinition: false }, options);
+        this.options = {
+            isBuildDefinition: false,
+            ...options,
+        };
     }
     async load() {
         if (this.options.schema) {
@@ -44,7 +47,7 @@ class Manifest {
                         validator: this.validator,
                     });
                     for (const entry of contents.map(entry_1.transformToInternalEntry)) {
-                        this.add(entry);
+                        this.add(entry, undefined, registry);
                     }
                 }
                 catch (e) {
@@ -61,8 +64,17 @@ class Manifest {
             alias: 'ZPM',
         });
     }
-    add(entry, options) {
-        const info = info_1.getPackageInfo(entry, this.type, options);
+    add(entry, options, registry) {
+        const pkgType = info_1.classifyType(entry);
+        if (registry && registry.name) {
+            if (pkgType === "PSSub" /* PSSub */) {
+                options = (options || {
+                    rootName: registry.name,
+                    rootDirectory: registry.workingDirectory || registry.directory,
+                });
+            }
+        }
+        const info = info_1.getPackageInfo(entry, this.type, pkgType, options);
         const searchKey = info.name;
         let pkg = this.entries.get(searchKey);
         if (!axioms_1.isDefined(pkg)) {
@@ -73,6 +85,17 @@ class Manifest {
             this.entries.set(info.alias, pkg);
         }
         return pkg;
+    }
+    search(entry) {
+        const name = info_1.getNameFromEntry(entry);
+        // const searchKey = getName({})
+        return {
+            package: this.searchByName(name),
+            name,
+        };
+    }
+    searchByName(name) {
+        return this.entries.get(name);
     }
     async loadFile(file) {
         return io_1.loadJsonOrYamlSimple(io_1.transformPath(file));

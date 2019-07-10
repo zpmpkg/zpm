@@ -53,7 +53,7 @@ export class Registries {
         return this.manifests[type]
     }
 
-    public search(entry: InternalDefinitionEntry): {package: Package | undefined; name: string } {
+    public search(entry: InternalDefinitionEntry): { package: Package | undefined; name: string } {
         return this.manifests[entry.type].search(entry)
     }
 
@@ -80,12 +80,17 @@ export class Registries {
             ...this.zpm.config.values.registries
                 .filter(isNamedRegistry)
                 .map(registry => new Registry(registry.url, { branch: registry.branch })),
-            ...this.zpm.config.values.registries
-                .filter(isPathRegistry)
-                .map(
-                    registry => new Registry(transformPath(registry.path), { name: registry.name })
-                ),
-            new Registry(environment.directory.zpm, { name: 'ZPM' }),
+            ...this.zpm.config.values.registries.filter(isPathRegistry).map(
+                registry =>
+                    new Registry(transformPath(registry.path), {
+                        name: registry.name,
+                        workingDirectory: registry.workingDirectory,
+                    })
+            ),
+            new Registry(environment.directory.zpm, {
+                workingDirectory: environment.directory.zpm,
+                name: 'ZPM',
+            }),
             new Registry(environment.directory.workingdir, { name: 'ROOT' }),
         ]
         const newRegistries: RegistryDefinition[] = flatten(

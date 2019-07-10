@@ -22,7 +22,7 @@ class SATSolver {
         this.solver = new Logic.Solver();
         this.weights = { terms: [], weights: [] };
         this.loadedCache = {};
-        this.versionMap = {};
+        this.versionMap = new Map();
         this.minimize = true;
         this.lockValidator = validation_1.buildSchema(schemas_1.lockFileV1);
         this.registries = registries;
@@ -34,48 +34,52 @@ class SATSolver {
     async rollback() {
         //
     }
-    async addPackage(pkg) {
+    async addPackage(pkg, parent) {
         const versions = await pkg.getVersions();
-        for (const version of versions) {
-            await this.addPackageVersion(version);
+        const allowedVersions = [];
+        if (!this.loadedCache[pkg.id]) {
+            for (const version of versions) {
+                if (this.addPackageVersion(version, parent)) {
+                    allowedVersions.push(version);
+                }
+            }
+            // for all the versions require at most one of them
+            this.solver.require(Logic.exactlyOne(...versions.map(v => v.id)));
+            this.loadedCache[pkg.id] = true;
         }
-        this.solver.require(Logic.exactlyOne(...versions.map(v => v.id)));
-        this.expandSolution();
-        // if (this.mayLoadPackage(hash)) {
-        // if (versions.length > 0) {
-        //     await this.addPackageVersions(hash, versions, pkg)
-        // } else {
-        //     const definition = await pkg.source.definitionResolver.getPackageDefinition()
-        //     let hasLock = false
-        //     if (!has(this.termMap.path, [hash, 'package'])) {
-        //         this.termMap.path[hash] = {
-        //             package: pkg,
-        //             description: definition.description,
-        //             usage: {
-        //                 required: {},
-        //                 optional: {},
-        //             },
-        //             settings: {},
-        //             ...extra,
-        //         }
-        //         hasLock = true
-        //     }
-        //     const usage = await this.addDefinition(hash, definition, { package: pkg, hash })
-        //     if (hasLock) {
-        //         this.termMap.path[hash].usage = usage
-        //     }
-        //     //console.log(hash, '@')
-        //     this.solver.require(Logic.exactlyOne(hash))
-        // }
-        // await this.addDefinition(hash, pkg.resolver.definitionResolver.getPackageDefinition())
-        // }
+        if (parent) {
+            const allowedTerms = allowedVersions.map(v => v.id);
+            this.solver.require(Logic.implies(parent.addedBy.id, Logic.exactlyOne(...allowedTerms)));
+        }
     }
-    async expand() { }
-    async addPackageVersion(version) {
-        const definition = await version.getDefinition();
-        this.versionMap[version.id] = version;
-        this.weights.terms.push(version.id);
-        this.weights.weights.push(version.cost);
+    async expand() {
+        if (util_1.isDefined(this.assumptions)) {
+            this.solution = this.solver.solveAssuming(Logic.and(...this.assumptions));
+            // the assumptions were falsified
+            if (!util_1.isDefined(this.solution)) {
+                this.solution = this.solver.solve();
+            }
+        }
+        else {
+            this.solution = this.solver.solve();
+        }
+        // no valid solution exists in the solution space
+        if (!util_1.isDefined(this.solution)) {
+            throw new Error('NO solution was found');
+        }
+        //this.solution.ignoreUnknownVariables()
+        const solution = this.solver.minimizeWeightedSum(this.solution, this.weights.terms, this.weights.weights);
+        this.assumptions = solution.getTrueVars();
+        let open = false;
+        if (util_1.isDefined(this.assumptions)) {
+            for (const assumption of this.assumptions) {
+                open = open || (await this.expandTerm(assumption));
+            }
+        }
+        else {
+            // todo define solve strategy
+        }
+        return open ? this.expand() : false;
     }
     async optimize() {
         if (util_1.isDefined(this.assumptions)) {
@@ -95,31 +99,6 @@ class SATSolver {
                 .getTrueVars()
             : this.solution.getTrueVars();
     }
-    addPackageRequirements(value) {
-        // if (value.hash) {
-        //     if (isDefined(value.required)) {
-        //         value.required.forEach(r => {
-        //             this.solver.require(Logic.implies(value.hash, Logic.exactlyOne(...r)))
-        //         })
-        //     }
-        //     if (isDefined(value.optional)) {
-        //         value.optional.forEach(r => {
-        //             this.solver.require(Logic.implies(value.hash, Logic.atMostOne(...r)))
-        //         })
-        //     }
-        // } else {
-        //     if (isDefined(value.required)) {
-        //         value.required.forEach(r => {
-        //             this.solver.require(Logic.exactlyOne(...r))
-        //         })
-        //     }
-        //     if (isDefined(value.optional)) {
-        //         value.optional.forEach(r => {
-        //             this.solver.require(Logic.atMostOne(...r))
-        //         })
-        //     }
-        // }
-    }
     async getLockFile() {
         const file = this.getLockFilePath();
         let content;
@@ -138,34 +117,40 @@ class SATSolver {
         }
         return content;
     }
-    expandSolution() {
-        if (util_1.isDefined(this.assumptions)) {
-            this.solution = this.solver.solveAssuming(Logic.and(...this.assumptions));
-            // the assumptions were falsified
-            if (!util_1.isDefined(this.solution)) {
-                this.solution = this.solver.solve();
+    addPackageVersion(version, usage) {
+        if (!this.versionMap.has(version.id)) {
+            this.versionMap.set(version.id, version);
+            this.weights.terms.push(version.id);
+            this.weights.weights.push(version.cost);
+        }
+        if (usage) {
+            return version.addUsage(usage);
+        }
+        return true;
+    }
+    async expandTerm(term) {
+        const version = this.versionMap.get(term);
+        if (!version.expanded) {
+            version.expanded = true;
+            const definition = await version.getDefinition();
+            for (const required of definition.packages) {
+                await this.addEntry(required, version);
             }
-        }
-        else {
-            this.solution = this.solver.solve();
-        }
-        // no valid solution exists in the solution space
-        if (!util_1.isDefined(this.solution)) {
-            throw new Error('NO solution was found');
-        }
-        this.solution.ignoreUnknownVariables();
-        const solution = this.solver.minimizeWeightedSum(this.solution, this.weights.terms, this.weights.weights);
-        solution.getTrueVars();
-    }
-    getLockFilePath() {
-        return upath_1.join(environment_1.environment.directory.workingdir, '.zpm.lock');
-    }
-    mayLoadPackage(hash) {
-        if (!this.loadedCache[hash]) {
-            this.loadedCache[hash] = false;
             return true;
         }
         return false;
+    }
+    async addEntry(entry, addedBy) {
+        const found = this.registries.search(entry);
+        if (found.package) {
+            await this.addPackage(found.package, { entry, addedBy });
+        }
+        else {
+            logger_1.logger.warn(`Failed to find '${entry.type}' package '${found.name}'`);
+        }
+    }
+    getLockFilePath() {
+        return upath_1.join(environment_1.environment.directory.workingdir, '.zpm.lock');
     }
 }
 exports.SATSolver = SATSolver;

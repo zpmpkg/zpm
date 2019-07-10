@@ -48,15 +48,22 @@
         "properties": {
             "path": {
                 "type": "string"
+            },
+            "name": {
+                "type": "string"
+            },
+            "workingDirectory": {
+                "type": "string"
             }
         },
         "additionalProperties": false,
         "required": [
+            "name",
             "path"
         ]
     },
     "RegistryEntry": {
-        "oneOf": [
+        "anyOf": [
             {
                 "$ref": "#/definitions/RegistryGDGSEntry"
             },
@@ -68,6 +75,9 @@
             },
             {
                 "$ref": "#/definitions/RegistryPDPSEntry"
+            },
+            {
+                "$ref": "#/definitions/RegistryPSSubEntry"
             }
         ]
     },
@@ -96,7 +106,7 @@
     "RegistryGDPSEntry": {
         "type": "object",
         "properties": {
-            "repository": {
+            "definition": {
                 "type": "string",
                 "pattern": "^(https://.*\\.git)$"
             },
@@ -106,7 +116,7 @@
         },
         "additionalProperties": false,
         "required": [
-            "repository",
+            "definition",
             "path"
         ]
     },
@@ -121,14 +131,15 @@
                 "type": "string",
                 "pattern": "^(https://.*\\.git)$"
             },
-            "path": {
+            "definition": {
                 "type": "string"
             }
         },
         "additionalProperties": false,
         "required": [
             "name",
-            "path"
+            "repository",
+            "definition"
         ]
     },
     "RegistryPDPSEntry": {
@@ -141,6 +152,21 @@
         "additionalProperties": false,
         "required": [
             "path"
+        ]
+    },
+    "RegistryPSSubEntry": {
+        "type": "object",
+        "properties": {
+            "name": {
+                "type": "string"
+            },
+            "path": {
+                "type": "string"
+            }
+        },
+        "additionalProperties": false,
+        "required": [
+            "name"
         ]
     }
 }

@@ -24,6 +24,7 @@ import {
 import { GSSubPackageOptions, PackageInfoOptions, PDPSPackageOptions } from './info'
 import { get } from '@zefiros/axioms/get'
 import { varget } from '@zefiros/axioms'
+import { VersionRange } from '~/common/range'
 
 export interface InternalGDGSEntry {
     vendor: string
@@ -100,7 +101,7 @@ export interface InternalDefinitionGDGSEntry {
     type: string
     options?: PackageInfoOptions
     usage: {
-        version: string
+        version: VersionRange
         optional: boolean
         settings: PackageSettings
     }
@@ -129,9 +130,9 @@ export interface InternalDefinitionPDGSEntry {
     type: string
     options?: PackageInfoOptions
     usage: {
-        version: string
-        optional?: boolean
-        settings?: PackageSettings
+        version: VersionRange
+        optional: boolean
+        settings: PackageSettings
     }
 }
 export interface InternalDefinitionPDPSEntry {
@@ -142,15 +143,15 @@ export interface InternalDefinitionPDPSEntry {
     type: string
     options?: PDPSPackageOptions
     usage: {
-        optional?: boolean
-        settings?: PackageSettings
+        optional: boolean
+        settings: PackageSettings
     }
 }
 
 export interface InternalDefinitionGSSubEntry {
     internalDefinitionType: InternalDefinitionEntyType
     root: {
-        version: string
+        version: VersionRange
         vendor?: string
         name: string
     }
@@ -160,8 +161,8 @@ export interface InternalDefinitionGSSubEntry {
     type: string
     options?: GSSubPackageOptions
     usage: {
-        optional?: boolean
-        settings?: PackageSettings
+        optional: boolean
+        settings: PackageSettings
     }
 }
 
@@ -177,8 +178,8 @@ export interface InternalDefinitionPSSubEntry {
     type: string
     options?: GSSubPackageOptions
     usage: {
-        optional?: boolean
-        settings?: PackageSettings
+        optional: boolean
+        settings: PackageSettings
     }
 }
 
@@ -355,7 +356,7 @@ export function transformToInternalDefinitionEntry(
             const internal: InternalDefinitionGSSubEntry = {
                 internalDefinitionType: entryType,
                 root: {
-                    version: gssubEntry.version,
+                    version: new VersionRange(gssubEntry.version),
                     vendor: split.vendor,
                     name: split.name,
                 },
@@ -384,7 +385,7 @@ export function transformToInternalDefinitionEntry(
                 },
                 type,
                 usage: {
-                    version: gdgsEntry.version,
+                    version: new VersionRange(gdgsEntry.version),
                     optional: isDefined(gdgsEntry.optional) ? gdgsEntry.optional : false,
                     settings: gdgsEntry.settings || {},
                 },
@@ -418,7 +419,7 @@ export function transformToInternalDefinitionEntry(
                 },
                 type,
                 usage: {
-                    version: pdgsEntry.version,
+                    version: new VersionRange(pdgsEntry.version),
                     optional: isDefined(pdgsEntry.optional) ? pdgsEntry.optional : false,
                     settings: pdgsEntry.settings || {},
                 },

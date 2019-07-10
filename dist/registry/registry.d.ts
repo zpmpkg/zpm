@@ -4,12 +4,14 @@ export declare class Registry {
     branch?: string;
     valid: boolean;
     directory: string | undefined;
+    workingDirectory: string | undefined;
     isLocal: boolean;
     isUpdated: boolean;
     name?: string;
     constructor(urlOrPath: string, options?: {
         branch?: string;
         name?: string;
+        workingDirectory?: string;
     });
     update(): Promise<RegistryDefinition[] | undefined>;
     private mayPull;

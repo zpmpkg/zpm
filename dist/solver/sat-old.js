@@ -76,10 +76,16 @@ class SATSolver {
                 const definition = await pkg.source.definitionResolver.getPackageDefinition();
                 let hasLock = false;
                 if (!lodash_1.has(this.termMap.path, [hash, 'package'])) {
-                    this.termMap.path[hash] = Object.assign({ package: pkg, description: definition.description, usage: {
+                    this.termMap.path[hash] = {
+                        package: pkg,
+                        description: definition.description,
+                        usage: {
                             required: {},
                             optional: {},
-                        }, settings: {} }, extra);
+                        },
+                        settings: {},
+                        ...extra,
+                    };
                     hasLock = true;
                 }
                 const usage = await this.addDefinition(hash, definition, { package: pkg, hash });
@@ -426,7 +432,7 @@ class SATSolver {
         return fname;
     }
     async addNamedEntry(pkg, hash, parent) {
-        const found = await this.registries.searchPackage(pkg.type, {
+        const found = await this.registries.search(pkg.type, {
             name: pkg.description.name,
             definition: pkg.description.definition,
             repository: pkg.description.repository,
