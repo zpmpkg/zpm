@@ -49,9 +49,7 @@ describe('classifyType', () => {
     })
     describe('PDPS', () => {
         test('simple', () => {
-            const entry: InternalPDPSEntry = {
-                path: 'foo',
-            }
+            const entry: InternalPDPSEntry = {}
             expect(classifyType(entry)).toBe(PackageType.PDPS)
         })
     })

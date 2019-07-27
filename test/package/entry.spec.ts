@@ -1,4 +1,5 @@
 import { VersionRange } from '~/common/range'
+import { InternalDefinitionEntryType } from '~/package/entryType'
 import {
     getInternalDefinitionEntryType,
     InternalDefinitionGDGSEntry,
@@ -14,8 +15,8 @@ import {
     InternalPDPSEntry,
     transformToInternalDefinitionEntry,
     transformToInternalEntry,
-} from '~/package/entry'
-import { InternalDefinitionEntryType } from '~/package/entryType'
+} from '~/package/internal'
+import { Package } from '~/package/package'
 import { PackageVersion } from '~/package/packageVersion'
 import { PackageType } from '~/package/type'
 import { Manifest } from '~/registry/package'
@@ -355,9 +356,9 @@ describe('transformToInternalDefinitionEntry', () => {
                     settings: {},
                 },
             }
-            expect(transformToInternalDefinitionEntry(entry, manifest, 'fooType', parent)).toEqual(
-                internal
-            )
+            expect(transformToInternalDefinitionEntry(entry, manifest, 'fooType', parent)).toEqual([
+                internal,
+            ])
         })
         test('repository', () => {
             const entry: PackageGDGSEntry = {
@@ -380,9 +381,9 @@ describe('transformToInternalDefinitionEntry', () => {
                     settings: {},
                 },
             }
-            expect(transformToInternalDefinitionEntry(entry, manifest, 'fooType', parent)).toEqual(
-                internal
-            )
+            expect(transformToInternalDefinitionEntry(entry, manifest, 'fooType', parent)).toEqual([
+                internal,
+            ])
         })
         test('repository - definition', () => {
             const entry: PackageGDGSEntry = {
@@ -406,9 +407,9 @@ describe('transformToInternalDefinitionEntry', () => {
                     settings: {},
                 },
             }
-            expect(transformToInternalDefinitionEntry(entry, manifest, 'fooType', parent)).toEqual(
-                internal
-            )
+            expect(transformToInternalDefinitionEntry(entry, manifest, 'fooType', parent)).toEqual([
+                internal,
+            ])
         })
         test('definition', () => {
             const entry: PackageGDGSEntry = {
@@ -432,9 +433,9 @@ describe('transformToInternalDefinitionEntry', () => {
                     settings: {},
                 },
             }
-            expect(transformToInternalDefinitionEntry(entry, manifest, 'fooType', parent)).toEqual(
-                internal
-            )
+            expect(transformToInternalDefinitionEntry(entry, manifest, 'fooType', parent)).toEqual([
+                internal,
+            ])
         })
         test('extra', () => {
             const entry: PackageGDGSEntry = {
@@ -459,9 +460,9 @@ describe('transformToInternalDefinitionEntry', () => {
                     settings: {},
                 },
             }
-            expect(transformToInternalDefinitionEntry(entry, manifest, 'fooType', parent)).toEqual(
-                internal
-            )
+            expect(transformToInternalDefinitionEntry(entry, manifest, 'fooType', parent)).toEqual([
+                internal,
+            ])
         })
         test('alias', () => {
             const entry: PackageGDGSEntry = {
@@ -483,9 +484,9 @@ describe('transformToInternalDefinitionEntry', () => {
                     settings: {},
                 },
             }
-            expect(transformToInternalDefinitionEntry(entry, manifest, 'fooType', parent)).toEqual(
-                internal
-            )
+            expect(transformToInternalDefinitionEntry(entry, manifest, 'fooType', parent)).toEqual([
+                internal,
+            ])
         })
     })
     describe('GDPS', () => {
@@ -506,9 +507,9 @@ describe('transformToInternalDefinitionEntry', () => {
                     settings: {},
                 },
             }
-            expect(transformToInternalDefinitionEntry(entry, manifest, 'fooType', parent)).toEqual(
-                internal
-            )
+            expect(transformToInternalDefinitionEntry(entry, manifest, 'fooType', parent)).toEqual([
+                internal,
+            ])
         })
         test('extra', () => {
             const entry: PackageGDPSEntry = {
@@ -530,9 +531,9 @@ describe('transformToInternalDefinitionEntry', () => {
                     settings: {},
                 },
             }
-            expect(transformToInternalDefinitionEntry(entry, manifest, 'fooType', parent)).toEqual(
-                internal
-            )
+            expect(transformToInternalDefinitionEntry(entry, manifest, 'fooType', parent)).toEqual([
+                internal,
+            ])
         })
     })
     describe('PDGS', () => {
@@ -558,9 +559,9 @@ describe('transformToInternalDefinitionEntry', () => {
                     settings: {},
                 },
             }
-            expect(transformToInternalDefinitionEntry(entry, manifest, 'fooType', parent)).toEqual(
-                internal
-            )
+            expect(transformToInternalDefinitionEntry(entry, manifest, 'fooType', parent)).toEqual([
+                internal,
+            ])
         })
         test('repository', () => {
             const entry: PackagePDGSEntry = {
@@ -585,9 +586,9 @@ describe('transformToInternalDefinitionEntry', () => {
                     settings: {},
                 },
             }
-            expect(transformToInternalDefinitionEntry(entry, manifest, 'fooType', parent)).toEqual(
-                internal
-            )
+            expect(transformToInternalDefinitionEntry(entry, manifest, 'fooType', parent)).toEqual([
+                internal,
+            ])
         })
         test('extra', () => {
             const entry: PackagePDGSEntry = {
@@ -613,9 +614,9 @@ describe('transformToInternalDefinitionEntry', () => {
                     settings: {},
                 },
             }
-            expect(transformToInternalDefinitionEntry(entry, manifest, 'fooType', parent)).toEqual(
-                internal
-            )
+            expect(transformToInternalDefinitionEntry(entry, manifest, 'fooType', parent)).toEqual([
+                internal,
+            ])
         })
     })
     describe('PDPS', () => {
@@ -630,9 +631,9 @@ describe('transformToInternalDefinitionEntry', () => {
                     settings: {},
                 },
             }
-            expect(transformToInternalDefinitionEntry(entry, manifest, 'fooType', parent)).toEqual(
-                internal
-            )
+            expect(transformToInternalDefinitionEntry(entry, manifest, 'fooType', parent)).toEqual([
+                internal,
+            ])
         })
         test('extra', () => {
             const entry: PackagePDPSEntry = {
@@ -648,12 +649,55 @@ describe('transformToInternalDefinitionEntry', () => {
                     settings: {},
                 },
             }
-            expect(transformToInternalDefinitionEntry(entry, manifest, 'fooType', parent)).toEqual(
-                internal
-            )
+            expect(transformToInternalDefinitionEntry(entry, manifest, 'fooType', parent)).toEqual([
+                internal,
+            ])
         })
     })
     describe('GSSub', () => {
+        let namedParent: Package
+        beforeEach(() => {
+            parent = {
+                package: {
+                    info: {
+                        entry: {
+                            path: '',
+                        },
+                        type: PackageType.PDPS,
+                        options: {
+                            rootName: 'zpm',
+                            rootDirectory: '~/zpm',
+                            allowDevelopment: true,
+                            mayChangeRegistry: true,
+                        },
+                        directories: {
+                            definition: '~/zpm/definition',
+                            source: '~/zpm/source',
+                        },
+                    },
+                },
+            } as any
+            namedParent = {
+                info: {
+                    entry: {
+                        repository: 'foorepo',
+                        definition: 'foorepo',
+                        name: 'FooName',
+                        vendor: 'FooVendor',
+                    },
+                    type: PackageType.GDGS,
+                    options: {
+                        allowDevelopment: true,
+                        mayChangeRegistry: true,
+                    },
+                    directories: {
+                        definition: '~/named/definition',
+                        source: '~/named/source',
+                    },
+                },
+            } as any
+            manifest.searchByName = jest.fn().mockReturnValue(namedParent)
+        })
         test('simple', () => {
             const entry: PackageGSSubEntry = {
                 name: 'ZPM',
@@ -664,11 +708,22 @@ describe('transformToInternalDefinitionEntry', () => {
                 internalDefinitionType: InternalDefinitionEntryType.GSSub,
                 entry: {
                     path: 'foobar',
+                    repository: 'foorepo',
                 },
                 root: {
                     name: 'ZPM',
                     vendor: undefined,
-                    version: new VersionRange('master'),
+                    version: 'master',
+                },
+                options: {
+                    allowDevelopment: false,
+                    mayChangeRegistry: true,
+                    packageDirectory: '~/named/source',
+                    packageName: 'FooName',
+                    packageVendor: 'FooVendor',
+                    rootDirectory: '~/zpm/definition',
+                    rootName: 'zpm',
+                    subPath: 'foobar',
                 },
                 type: 'fooType',
                 usage: {
@@ -676,10 +731,21 @@ describe('transformToInternalDefinitionEntry', () => {
                     settings: {},
                 },
             }
-
-            expect(transformToInternalDefinitionEntry(entry, manifest, 'fooType', parent)).toEqual(
-                internal
-            )
+            expect(transformToInternalDefinitionEntry(entry, manifest, 'fooType', parent)).toEqual([
+                {
+                    internalDefinitionType: 'GDGS',
+                    entry: {
+                        name: 'ZPM',
+                    },
+                    type: 'fooType',
+                    usage: {
+                        version: new VersionRange('master'),
+                        optional: false,
+                        settings: {},
+                    },
+                },
+                internal,
+            ])
         })
         test('implicit path', () => {
             const entry: PackageGSSubEntry = {
@@ -690,11 +756,22 @@ describe('transformToInternalDefinitionEntry', () => {
                 internalDefinitionType: InternalDefinitionEntryType.GSSub,
                 entry: {
                     path: 'foobar',
+                    repository: 'foorepo',
                 },
                 root: {
                     name: 'ZPM',
                     vendor: undefined,
-                    version: new VersionRange('master'),
+                    version: 'master',
+                },
+                options: {
+                    allowDevelopment: false,
+                    mayChangeRegistry: true,
+                    packageDirectory: '~/named/source',
+                    packageName: 'FooName',
+                    packageVendor: 'FooVendor',
+                    rootDirectory: '~/zpm/definition',
+                    rootName: 'zpm',
+                    subPath: 'foobar',
                 },
                 type: 'fooType',
                 usage: {
@@ -702,9 +779,21 @@ describe('transformToInternalDefinitionEntry', () => {
                     settings: {},
                 },
             }
-            expect(transformToInternalDefinitionEntry(entry, manifest, 'fooType', parent)).toEqual(
-                internal
-            )
+            expect(transformToInternalDefinitionEntry(entry, manifest, 'fooType', parent)).toEqual([
+                {
+                    internalDefinitionType: 'GDGS',
+                    entry: {
+                        name: 'ZPM',
+                    },
+                    type: 'fooType',
+                    usage: {
+                        version: new VersionRange('master'),
+                        optional: false,
+                        settings: {},
+                    },
+                },
+                internal,
+            ])
         })
         test('implicit path sub', () => {
             const entry: PackageGSSubEntry = {
@@ -715,11 +804,21 @@ describe('transformToInternalDefinitionEntry', () => {
                 internalDefinitionType: InternalDefinitionEntryType.GSSub,
                 entry: {
                     path: 'foobar/barfoo',
+                    repository: 'foorepo',
                 },
                 root: {
                     name: 'ZPM',
-                    vendor: undefined,
-                    version: new VersionRange('master'),
+                    version: 'master',
+                },
+                options: {
+                    allowDevelopment: false,
+                    mayChangeRegistry: true,
+                    packageDirectory: '~/named/source',
+                    packageName: 'FooName',
+                    packageVendor: 'FooVendor',
+                    rootDirectory: '~/zpm/definition',
+                    rootName: 'zpm',
+                    subPath: 'foobar/barfoo',
                 },
                 type: 'fooType',
                 usage: {
@@ -727,9 +826,21 @@ describe('transformToInternalDefinitionEntry', () => {
                     settings: {},
                 },
             }
-            expect(transformToInternalDefinitionEntry(entry, manifest, 'fooType', parent)).toEqual(
-                internal
-            )
+            expect(transformToInternalDefinitionEntry(entry, manifest, 'fooType', parent)).toEqual([
+                {
+                    internalDefinitionType: 'GDGS',
+                    entry: {
+                        name: 'ZPM',
+                    },
+                    type: 'fooType',
+                    usage: {
+                        version: new VersionRange('master'),
+                        optional: false,
+                        settings: {},
+                    },
+                },
+                internal,
+            ])
         })
         test('implicit path sub resolve', () => {
             const entry: PackageGSSubEntry = {
@@ -740,11 +851,21 @@ describe('transformToInternalDefinitionEntry', () => {
                 internalDefinitionType: InternalDefinitionEntryType.GSSub,
                 entry: {
                     path: 'barfoo',
+                    repository: 'foorepo',
                 },
                 root: {
                     name: 'ZPM',
-                    vendor: undefined,
-                    version: new VersionRange('master'),
+                    version: 'master',
+                },
+                options: {
+                    allowDevelopment: false,
+                    mayChangeRegistry: true,
+                    packageDirectory: '~/named/source',
+                    packageName: 'FooName',
+                    packageVendor: 'FooVendor',
+                    rootDirectory: '~/zpm/definition',
+                    rootName: 'zpm',
+                    subPath: 'barfoo',
                 },
                 type: 'fooType',
                 usage: {
@@ -752,9 +873,21 @@ describe('transformToInternalDefinitionEntry', () => {
                     settings: {},
                 },
             }
-            expect(transformToInternalDefinitionEntry(entry, manifest, 'fooType', parent)).toEqual(
-                internal
-            )
+            expect(transformToInternalDefinitionEntry(entry, manifest, 'fooType', parent)).toEqual([
+                {
+                    internalDefinitionType: 'GDGS',
+                    entry: {
+                        name: 'ZPM',
+                    },
+                    type: 'fooType',
+                    usage: {
+                        version: new VersionRange('master'),
+                        optional: false,
+                        settings: {},
+                    },
+                },
+                internal,
+            ])
         })
         test('path sub', () => {
             const entry: PackageGSSubEntry = {
@@ -766,11 +899,21 @@ describe('transformToInternalDefinitionEntry', () => {
                 internalDefinitionType: InternalDefinitionEntryType.GSSub,
                 entry: {
                     path: 'foobar/barfoo',
+                    repository: 'foorepo',
                 },
                 root: {
                     name: 'ZPM',
-                    vendor: undefined,
-                    version: new VersionRange('master'),
+                    version: 'master',
+                },
+                options: {
+                    allowDevelopment: false,
+                    mayChangeRegistry: true,
+                    packageDirectory: '~/named/source',
+                    packageName: 'FooName',
+                    packageVendor: 'FooVendor',
+                    rootDirectory: '~/zpm/definition',
+                    rootName: 'zpm',
+                    subPath: 'foobar/barfoo',
                 },
                 type: 'fooType',
                 usage: {
@@ -778,9 +921,21 @@ describe('transformToInternalDefinitionEntry', () => {
                     settings: {},
                 },
             }
-            expect(transformToInternalDefinitionEntry(entry, manifest, 'fooType', parent)).toEqual(
-                internal
-            )
+            expect(transformToInternalDefinitionEntry(entry, manifest, 'fooType', parent)).toEqual([
+                {
+                    internalDefinitionType: 'GDGS',
+                    entry: {
+                        name: 'ZPM',
+                    },
+                    type: 'fooType',
+                    usage: {
+                        version: new VersionRange('master'),
+                        optional: false,
+                        settings: {},
+                    },
+                },
+                internal,
+            ])
         })
         test('path sub resolve', () => {
             const entry: PackageGSSubEntry = {
@@ -792,11 +947,21 @@ describe('transformToInternalDefinitionEntry', () => {
                 internalDefinitionType: InternalDefinitionEntryType.GSSub,
                 entry: {
                     path: 'barfoo',
+                    repository: 'foorepo',
                 },
                 root: {
                     name: 'ZPM',
-                    vendor: undefined,
-                    version: new VersionRange('master'),
+                    version: 'master',
+                },
+                options: {
+                    allowDevelopment: false,
+                    mayChangeRegistry: true,
+                    packageDirectory: '~/named/source',
+                    packageName: 'FooName',
+                    packageVendor: 'FooVendor',
+                    rootDirectory: '~/zpm/definition',
+                    rootName: 'zpm',
+                    subPath: 'barfoo',
                 },
                 type: 'fooType',
                 usage: {
@@ -804,9 +969,21 @@ describe('transformToInternalDefinitionEntry', () => {
                     settings: {},
                 },
             }
-            expect(transformToInternalDefinitionEntry(entry, manifest, 'fooType', parent)).toEqual(
-                internal
-            )
+            expect(transformToInternalDefinitionEntry(entry, manifest, 'fooType', parent)).toEqual([
+                {
+                    internalDefinitionType: 'GDGS',
+                    entry: {
+                        name: 'ZPM',
+                    },
+                    type: 'fooType',
+                    usage: {
+                        version: new VersionRange('master'),
+                        optional: false,
+                        settings: {},
+                    },
+                },
+                internal,
+            ])
         })
         test('path sub resolve 2', () => {
             const entry: PackageGSSubEntry = {
@@ -818,11 +995,21 @@ describe('transformToInternalDefinitionEntry', () => {
                 internalDefinitionType: InternalDefinitionEntryType.GSSub,
                 entry: {
                     path: 'barfoo',
+                    repository: 'foorepo',
                 },
                 root: {
                     name: 'ZPM',
-                    vendor: undefined,
-                    version: new VersionRange('master'),
+                    version: 'master',
+                },
+                options: {
+                    allowDevelopment: false,
+                    mayChangeRegistry: true,
+                    packageDirectory: '~/named/source',
+                    packageName: 'FooName',
+                    packageVendor: 'FooVendor',
+                    rootDirectory: '~/zpm/definition',
+                    rootName: 'zpm',
+                    subPath: 'barfoo',
                 },
                 type: 'fooType',
                 usage: {
@@ -830,9 +1017,21 @@ describe('transformToInternalDefinitionEntry', () => {
                     settings: {},
                 },
             }
-            expect(transformToInternalDefinitionEntry(entry, manifest, 'fooType', parent)).toEqual(
-                internal
-            )
+            expect(transformToInternalDefinitionEntry(entry, manifest, 'fooType', parent)).toEqual([
+                {
+                    internalDefinitionType: 'GDGS',
+                    entry: {
+                        name: 'ZPM',
+                    },
+                    type: 'fooType',
+                    usage: {
+                        version: new VersionRange('master'),
+                        optional: false,
+                        settings: {},
+                    },
+                },
+                internal,
+            ])
         })
         test('path sub resolve 3', () => {
             const entry: PackageGSSubEntry = {
@@ -844,11 +1043,21 @@ describe('transformToInternalDefinitionEntry', () => {
                 internalDefinitionType: InternalDefinitionEntryType.GSSub,
                 entry: {
                     path: '../barfoo',
+                    repository: 'foorepo',
                 },
                 root: {
                     name: 'ZPM',
-                    vendor: undefined,
-                    version: new VersionRange('master'),
+                    version: 'master',
+                },
+                options: {
+                    allowDevelopment: false,
+                    mayChangeRegistry: true,
+                    packageDirectory: '~/named/source',
+                    packageName: 'FooName',
+                    packageVendor: 'FooVendor',
+                    rootDirectory: '~/zpm/definition',
+                    rootName: 'zpm',
+                    subPath: '../barfoo',
                 },
                 type: 'fooType',
                 usage: {
@@ -856,9 +1065,21 @@ describe('transformToInternalDefinitionEntry', () => {
                     settings: {},
                 },
             }
-            expect(transformToInternalDefinitionEntry(entry, manifest, 'fooType', parent)).toEqual(
-                internal
-            )
+            expect(transformToInternalDefinitionEntry(entry, manifest, 'fooType', parent)).toEqual([
+                {
+                    internalDefinitionType: 'GDGS',
+                    entry: {
+                        name: 'ZPM',
+                    },
+                    type: 'fooType',
+                    usage: {
+                        version: new VersionRange('master'),
+                        optional: false,
+                        settings: {},
+                    },
+                },
+                internal,
+            ])
         })
         test('extras', () => {
             const entry: PackageGSSubEntry = {
@@ -871,11 +1092,21 @@ describe('transformToInternalDefinitionEntry', () => {
                 internalDefinitionType: InternalDefinitionEntryType.GSSub,
                 entry: {
                     path: 'foobar',
+                    repository: 'foorepo',
                 },
                 root: {
                     name: 'ZPM',
-                    vendor: undefined,
-                    version: new VersionRange('master'),
+                    version: 'master',
+                },
+                options: {
+                    allowDevelopment: false,
+                    mayChangeRegistry: true,
+                    packageDirectory: '~/named/source',
+                    packageName: 'FooName',
+                    packageVendor: 'FooVendor',
+                    rootDirectory: '~/zpm/definition',
+                    rootName: 'zpm',
+                    subPath: 'foobar',
                 },
                 type: 'fooType',
                 usage: {
@@ -883,9 +1114,21 @@ describe('transformToInternalDefinitionEntry', () => {
                     settings: {},
                 },
             }
-            expect(transformToInternalDefinitionEntry(entry, manifest, 'fooType', parent)).toEqual(
-                internal
-            )
+            expect(transformToInternalDefinitionEntry(entry, manifest, 'fooType', parent)).toEqual([
+                {
+                    internalDefinitionType: 'GDGS',
+                    entry: {
+                        name: 'ZPM',
+                    },
+                    type: 'fooType',
+                    usage: {
+                        version: new VersionRange('master'),
+                        optional: false,
+                        settings: {},
+                    },
+                },
+                internal,
+            ])
         })
     })
     describe('PSSub - path only - PDPS parent', () => {
@@ -911,6 +1154,7 @@ describe('transformToInternalDefinitionEntry', () => {
             const entry: PackagePSSubEntry = {
                 path: './foobar',
             }
+
             const internal: InternalDefinitionPSSubEntry = {
                 internalDefinitionType: InternalDefinitionEntryType.PSSub,
                 root: { vendor: undefined, name: 'zpm' },
@@ -920,13 +1164,14 @@ describe('transformToInternalDefinitionEntry', () => {
                     rootDirectory: '~/zpm',
                     allowDevelopment: true,
                     mayChangeRegistry: true,
+                    subPath: 'foobar',
                 },
                 type: 'fooType',
                 usage: { optional: false, settings: {} },
             }
-            expect(transformToInternalDefinitionEntry(entry, manifest, 'fooType', parent)).toEqual(
-                internal
-            )
+            expect(transformToInternalDefinitionEntry(entry, manifest, 'fooType', parent)).toEqual([
+                internal,
+            ])
         })
         test('extra', () => {
             const entry: PackagePSSubEntry = {
@@ -943,6 +1188,7 @@ describe('transformToInternalDefinitionEntry', () => {
                     mayChangeRegistry: true,
                     rootName: 'zpm',
                     rootDirectory: '~/zpm',
+                    subPath: 'foobar',
                 },
                 type: 'fooType',
                 usage: {
@@ -950,9 +1196,9 @@ describe('transformToInternalDefinitionEntry', () => {
                     settings: {},
                 },
             }
-            expect(transformToInternalDefinitionEntry(entry, manifest, 'fooType', parent)).toEqual(
-                internal
-            )
+            expect(transformToInternalDefinitionEntry(entry, manifest, 'fooType', parent)).toEqual([
+                internal,
+            ])
         })
     })
     describe('PSSub - Named', () => {
@@ -1001,14 +1247,15 @@ describe('transformToInternalDefinitionEntry', () => {
                     mayChangeRegistry: false,
                     rootName: 'ZPM',
                     rootDirectory: '~/zpm',
+                    subPath: 'foobar',
                 },
                 type: 'fooType',
                 usage: { optional: false, settings: {} },
             }
 
-            expect(transformToInternalDefinitionEntry(entry, manifest, 'fooType', parent)).toEqual(
-                internal
-            )
+            expect(transformToInternalDefinitionEntry(entry, manifest, 'fooType', parent)).toEqual([
+                internal,
+            ])
         })
         test('implicit path', () => {
             const entry: PackagePSSubNameEntry = {
@@ -1025,13 +1272,14 @@ describe('transformToInternalDefinitionEntry', () => {
                     mayChangeRegistry: false,
                     rootName: 'ZPM',
                     rootDirectory: '~/zpm',
+                    subPath: 'foobar',
                 },
                 type: 'fooType',
                 usage: { optional: false, settings: {} },
             }
-            expect(transformToInternalDefinitionEntry(entry, manifest, 'fooType', parent)).toEqual(
-                internal
-            )
+            expect(transformToInternalDefinitionEntry(entry, manifest, 'fooType', parent)).toEqual([
+                internal,
+            ])
         })
         test('implicit path sub', () => {
             const entry: PackagePSSubNameEntry = {
@@ -1048,13 +1296,14 @@ describe('transformToInternalDefinitionEntry', () => {
                     mayChangeRegistry: false,
                     rootName: 'ZPM',
                     rootDirectory: '~/zpm',
+                    subPath: 'foobar/barfoo',
                 },
                 type: 'fooType',
                 usage: { optional: false, settings: {} },
             }
-            expect(transformToInternalDefinitionEntry(entry, manifest, 'fooType', parent)).toEqual(
-                internal
-            )
+            expect(transformToInternalDefinitionEntry(entry, manifest, 'fooType', parent)).toEqual([
+                internal,
+            ])
         })
         test('implicit path sub resolve', () => {
             const entry: PackagePSSubNameEntry = {
@@ -1071,13 +1320,14 @@ describe('transformToInternalDefinitionEntry', () => {
                     mayChangeRegistry: false,
                     rootName: 'ZPM',
                     rootDirectory: '~/zpm',
+                    subPath: 'barfoo',
                 },
                 type: 'fooType',
                 usage: { optional: false, settings: {} },
             }
-            expect(transformToInternalDefinitionEntry(entry, manifest, 'fooType', parent)).toEqual(
-                internal
-            )
+            expect(transformToInternalDefinitionEntry(entry, manifest, 'fooType', parent)).toEqual([
+                internal,
+            ])
         })
         test('path sub', () => {
             const entry: PackagePSSubEntry = {
@@ -1095,13 +1345,14 @@ describe('transformToInternalDefinitionEntry', () => {
                     mayChangeRegistry: false,
                     rootName: 'ZPM',
                     rootDirectory: '~/zpm',
+                    subPath: 'foobar/barfoo',
                 },
                 type: 'fooType',
                 usage: { optional: false, settings: {} },
             }
-            expect(transformToInternalDefinitionEntry(entry, manifest, 'fooType', parent)).toEqual(
-                internal
-            )
+            expect(transformToInternalDefinitionEntry(entry, manifest, 'fooType', parent)).toEqual([
+                internal,
+            ])
         })
         test('path sub resolve', () => {
             const entry: PackagePSSubEntry = {
@@ -1119,13 +1370,14 @@ describe('transformToInternalDefinitionEntry', () => {
                     mayChangeRegistry: false,
                     rootName: 'ZPM',
                     rootDirectory: '~/zpm',
+                    subPath: 'barfoo',
                 },
                 type: 'fooType',
                 usage: { optional: false, settings: {} },
             }
-            expect(transformToInternalDefinitionEntry(entry, manifest, 'fooType', parent)).toEqual(
-                internal
-            )
+            expect(transformToInternalDefinitionEntry(entry, manifest, 'fooType', parent)).toEqual([
+                internal,
+            ])
         })
         test('path sub resolve 2', () => {
             const entry: PackagePSSubEntry = {
@@ -1143,13 +1395,14 @@ describe('transformToInternalDefinitionEntry', () => {
                     mayChangeRegistry: false,
                     rootName: 'ZPM',
                     rootDirectory: '~/zpm',
+                    subPath: 'barfoo',
                 },
                 type: 'fooType',
                 usage: { optional: false, settings: {} },
             }
-            expect(transformToInternalDefinitionEntry(entry, manifest, 'fooType', parent)).toEqual(
-                internal
-            )
+            expect(transformToInternalDefinitionEntry(entry, manifest, 'fooType', parent)).toEqual([
+                internal,
+            ])
         })
         test('path sub resolve 3', () => {
             const entry: PackagePSSubEntry = {
@@ -1167,13 +1420,14 @@ describe('transformToInternalDefinitionEntry', () => {
                     mayChangeRegistry: false,
                     rootName: 'ZPM',
                     rootDirectory: '~/zpm',
+                    subPath: '../barfoo',
                 },
                 type: 'fooType',
                 usage: { optional: false, settings: {} },
             }
-            expect(transformToInternalDefinitionEntry(entry, manifest, 'fooType', parent)).toEqual(
-                internal
-            )
+            expect(transformToInternalDefinitionEntry(entry, manifest, 'fooType', parent)).toEqual([
+                internal,
+            ])
         })
         test('extras', () => {
             const entry: PackagePSSubEntry = {
@@ -1192,13 +1446,14 @@ describe('transformToInternalDefinitionEntry', () => {
                     mayChangeRegistry: false,
                     rootName: 'ZPM',
                     rootDirectory: '~/zpm',
+                    subPath: 'foobar',
                 },
                 type: 'fooType',
                 usage: { optional: false, settings: {} },
             }
-            expect(transformToInternalDefinitionEntry(entry, manifest, 'fooType', parent)).toEqual(
-                internal
-            )
+            expect(transformToInternalDefinitionEntry(entry, manifest, 'fooType', parent)).toEqual([
+                internal,
+            ])
         })
     })
 })
@@ -1211,7 +1466,6 @@ describe('transformToInternalEntry', () => {
                 repository: 'https://foo.com/foo.git',
             }
             const internal: InternalGDGSEntry = {
-                type: InternalEntryType.GDGS,
                 vendor: 'Zefiros-Software',
                 name: 'Awesomeness',
                 repository: 'https://foo.com/foo.git',
@@ -1227,7 +1481,6 @@ describe('transformToInternalEntry', () => {
             }
 
             const internal: InternalGDGSEntry = {
-                type: InternalEntryType.GDGS,
                 vendor: 'Zefiros-Software',
                 name: 'Awesomeness',
                 repository: 'https://foo.com/foo.git',
@@ -1243,7 +1496,6 @@ describe('transformToInternalEntry', () => {
                 path: './foobar',
             }
             const internal: InternalGDPSEntry = {
-                type: InternalEntryType.GDPS,
                 definition: 'https://foo.com/foo.git',
                 path: './foobar',
             }
@@ -1259,7 +1511,6 @@ describe('transformToInternalEntry', () => {
             }
 
             const internal: InternalPDGSEntry = {
-                type: InternalEntryType.PDGS,
                 vendor: 'Zefiros-Software',
                 name: 'Awesomeness',
                 repository: 'https://foo.com/foo.git',
