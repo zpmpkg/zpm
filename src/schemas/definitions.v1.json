@@ -74,6 +74,9 @@
         "$ref": "#/definitions/RegistryPDGSEntry"
       },
       {
+        "$ref": "#/definitions/RegistryPDPSEntry"
+      },
+      {
         "$ref": "#/definitions/RegistryPSSubEntry"
       }
     ]
