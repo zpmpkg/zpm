@@ -1,4 +1,6 @@
 language: node_js
+node_js:
+  - "12"
 cache:
   yarn: true
 install:
@@ -13,8 +15,7 @@ after_success:
 deploy:
   provider: npm
   email: p.e.visscher@zefiros.io
-  api_key:
-    $NPM_TOKEN
+  api_key: $NPM_TOKEN
   on:
     tags: true
     repo: zpmpkg/zpm
