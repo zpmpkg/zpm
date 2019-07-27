@@ -1,64 +1,102 @@
-import { join } from 'upath'
-import { environment } from '~/common/environment'
-import { Package } from '~/registry/package'
-import { NamedLock, PathLock } from '~/types/lockfile.v1'
+import { get, isDefined } from '@zefiros/axioms'
+import { Spinner, spinners } from '~/cli/spinner'
+import { PackageVersion } from '~/package/internal'
+import { VersionLock } from '~/types/lockfile.v1'
 import { Builder } from './builder'
-import { isNamedLock } from './lock'
 
-export interface BuilderOptions {
-    root?: BasePackageBuilder
-    type: PackageType
-}
-
-export class BasePackageBuilder {
-    public lock: NamedLock | PathLock
-    public package: Package
-    public options: BuilderOptions
+export class IBuilder {
+    public versionLock: VersionLock
+    public version: PackageVersion
     public builder: Builder
-    public used: boolean = false
-
-    public constructor(
-        builder: Builder,
-        pkg: Package,
-        lock: NamedLock | PathLock,
-        options: Partial<BuilderOptions> = {}
-    ) {
+    public constructor(builder: Builder, version: PackageVersion, versionLock: VersionLock) {
         this.builder = builder
-        this.package = pkg
-        this.lock = lock
-        this.options = {
-            type: PackageType.PATH,
-            ...options,
-        }
+        this.version = version
+        this.versionLock = versionLock
     }
 
-    public async build(type: string): Promise<boolean> {
-        if (this.lock.usage && this.lock.usage.required && this.lock.usage.required[type]) {
-            const locked: string = this.lock.usage.required[type] as string
-            if (this.builder.builders[locked]) {
-                this.builder.builders[locked].used = true
-                return this.builder.builders[locked].run(this)
-            }
+    public async initialize(): Promise<boolean> {
+        return true
+    }
+
+    public async build(): Promise<boolean> {
+        return true
+    }
+}
+
+export class PackageBuilder extends IBuilder {
+    public spin: Spinner
+    public constructor(builder: Builder, version: PackageVersion, versionLock: VersionLock) {
+        super(builder, version, versionLock)
+
+        this.spin = spinners.create({
+            text: `Building '${this.version.id}':`,
+        })
+    }
+
+    public finish() {
+        this.spin.succeed(`Built '${this.version.id}'`)
+    }
+
+    public get targetPath() {
+        return this.version.targetPath
+    }
+    public get buildPath() {
+        return this.version.buildPath
+    }
+
+    public get sourcePath() {
+        return this.version.package.info.directories.source
+    }
+
+    public get hash(): string | undefined {
+        return get(this.version, ['version', 'hash'])
+    }
+
+    public get needsExtraction(): boolean {
+        return isDefined(this.targetPath)
+    }
+}
+
+export class TargetBuilder extends IBuilder {
+    public used: boolean = false
+
+    public blackboard: Map<string, any> = new Map()
+
+    public getTargets(): PackageBuilder[] {
+        return this.versionLock.usedBy
+            .map(v => this.builder.versions.get(v.versionId))
+            .filter(isDefined)
+    }
+
+    public async initialize(): Promise<boolean> {
+        const targets = this.getTargets()
+        for (const target of targets) {
+            await this.prepare(target)
         }
         return false
     }
 
-    public getTargetPath(): string {
-        return join(
-            environment.directory.extract,
-            this.package.manifest.type,
-            this.package.vendor,
-            this.package.name
-        )
+    public async build(): Promise<boolean> {
+        const targets = this.getTargets()
+        for (const target of targets) {
+            const succeeded = await this.run(target)
+            this.used = this.used || succeeded
+        }
+        return false
     }
 
-    public getHash() {
-        return isNamedLock(this.lock) ? this.lock.hash : undefined
+    public store<T extends object>(target: PackageBuilder, obj: T) {
+        this.blackboard.set(target.version.id, obj)
     }
-}
 
-export class PackageBuilder extends BasePackageBuilder {
-    public async run(target: BasePackageBuilder): Promise<boolean> {
+    public get<T extends object>(target: PackageBuilder): T | undefined {
+        return this.blackboard.get(target.version.id)
+    }
+
+    public async run(target: PackageBuilder): Promise<boolean> {
+        return false
+    }
+    public async prepare(target: PackageBuilder): Promise<boolean> {
         return true
     }
     public async finish(): Promise<boolean> {

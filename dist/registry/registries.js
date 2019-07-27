@@ -1,11 +1,11 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-const async_mutex_1 = require("async-mutex");
 const lodash_1 = require("lodash");
 const async_1 = require("../common/async");
 const environment_1 = require("../common/environment");
 const io_1 = require("../common/io");
 const util_1 = require("../common/util");
+const internal_1 = require("../package/internal");
 const package_1 = require("./package");
 const registry_1 = require("./registry");
 function isPathRegistry(entry) {
@@ -18,8 +18,8 @@ function isNamedRegistry(entry) {
 exports.isNamedRegistry = isNamedRegistry;
 class Registries {
     constructor(zpm) {
+        this.versions = new Map();
         this.manifests = {};
-        this.addMutex = new async_mutex_1.Mutex();
         this.zpm = zpm;
     }
     async load() {
@@ -35,11 +35,34 @@ class Registries {
     getManifest(type) {
         return this.manifests[type];
     }
-    search(entry) {
-        return this.manifests[entry.type].search(entry);
+    getVersion(id) {
+        return this.versions.get(id);
     }
-    addPackage(type, entry, options) {
-        return this.manifests[type].add(entry, options);
+    addVersion(id, version) {
+        if (!this.versions.has(id)) {
+            this.versions.set(id, version);
+            return true;
+        }
+        return false;
+    }
+    search(entry) {
+        const found = this.manifests[entry.type].search(entry);
+        if (found.package) {
+            if (internal_1.PackageTypeToInternalType[found.package.info.type] === entry.internalDefinitionType) {
+                return { ...found, sameType: true };
+            }
+            return { ...found, sameType: false };
+        }
+        return { ...found, sameType: false };
+    }
+    searchByName(type, name) {
+        if (type in this.manifests) {
+            return this.manifests[type].searchByName(name);
+        }
+        return undefined;
+    }
+    addPackage(type, entry, options, force) {
+        return this.manifests[type].add(entry, options, undefined, force);
     }
     async loadManifests() {
         await async_1.settledPromiseAll(this.zpm.config.values.registry.map(async (r) => {
@@ -56,10 +79,10 @@ class Registries {
                 name: registry.name,
                 workingDirectory: registry.workingDirectory,
             })),
-            new registry_1.Registry(environment_1.environment.directory.zpm, {
-                workingDirectory: environment_1.environment.directory.zpm,
-                name: 'ZPM',
-            }),
+            // new Registry(environment.directory.zpm, {
+            //     workingDirectory: environment.directory.zpm,
+            //     name: 'ZPM',
+            // }),
             new registry_1.Registry(environment_1.environment.directory.workingdir, { name: 'ROOT' }),
         ];
         const newRegistries = lodash_1.flatten(lodash_1.filter(await async_1.settledPromiseAll(registries.map(async (registry) => registry.update())), util_1.isDefined));

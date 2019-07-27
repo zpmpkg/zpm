@@ -2,57 +2,50 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "type": "object",
   "properties": {
-    "named": {
-      "type": "object",
-      "patternProperties": {
-        "\\w+": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/NamedLock"
-          },
-          "additionalItems": false
-        }
+    "versions": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/VersionLock"
       },
-      "additionalProperties": false
-    },
-    "path": {
-      "type": "object",
-      "patternProperties": {
-        "\\w+": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/PathLock"
-          },
-          "additionalItems": false
-        }
-      },
-      "additionalProperties": false
+      "additionalItems": false
     }
   },
   "additionalProperties": false,
   "required": [
-    "named",
-    "path"
+    "versions"
   ],
   "definitions": {
-    "NamedLock": {
+    "VersionLock": {
       "type": "object",
       "properties": {
-        "id": {
+        "versionId": {
           "type": "string"
         },
-        "usage": {
-          "$ref": "#/definitions/UsageLock"
+        "packageId": {
+          "type": "string"
         },
-        "name": {
-          "type": "string",
-          "pattern": "^([a-zA-Z0-9_\\-]{2,50}/[a-zA-Z0-9_\\-]{2,50})$"
+        "manifest": {
+          "type": "string"
         },
         "version": {
-          "type": "string"
-        },
-        "hash": {
-          "type": "string"
+          "type": "object",
+          "properties": {
+            "hash": {
+              "type": "string"
+            },
+            "name": {
+              "type": "string"
+            },
+            "version": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "hash",
+            "name",
+            "version"
+          ]
         },
         "settings": {
           "type": "object",
@@ -61,116 +54,59 @@
           },
           "additionalProperties": false
         },
-        "description": {
-          "type": "object",
-          "patternProperties": {
-            "\\w+": {}
-          },
-          "additionalProperties": false
-        }
-      },
-      "additionalProperties": false,
-      "required": [
-        "id",
-        "name",
-        "version",
-        "hash",
-        "settings",
-        "description"
-      ]
-    },
-    "PathLock": {
-      "type": "object",
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "usage": {
-          "$ref": "#/definitions/UsageLock"
-        },
-        "name": {
-          "type": "string",
-          "pattern": "^([a-zA-Z0-9_\\-\\$]{2,50}(/[a-zA-Z0-9_\\-]{2,50})?)$"
-        },
-        "path": {
-          "type": "string"
-        },
-        "root": {
-          "type": "string"
-        },
-        "settings": {
+        "definition": {
           "type": "object",
           "patternProperties": {
             "\\w+": {}
           },
           "additionalProperties": false
         },
-        "description": {
-          "type": "object",
-          "patternProperties": {
-            "\\w+": {}
+        "usedBy": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/UsedByVersion"
           },
-          "additionalProperties": false
-        }
-      },
-      "additionalProperties": false,
-      "required": [
-        "id",
-        "path",
-        "name",
-        "settings",
-        "description"
-      ]
-    },
-    "UsageLock": {
-      "type": "object",
-      "properties": {
-        "required": {
-          "type": "object",
-          "patternProperties": {
-            "\\w+": {
-              "$ref": "#/definitions/UsageEntryLock"
-            }
-          },
-          "additionalProperties": false
+          "additionalItems": false
         },
-        "optional": {
-          "type": "object",
-          "patternProperties": {
-            "\\w+": {
-              "$ref": "#/definitions/UsageEntryLock"
-            }
-          },
-          "additionalProperties": false
-        },
-        "settings": {
-          "type": "object",
-          "patternProperties": {
-            "\\w+": {
-              "type": "object",
-              "patternProperties": {
-                "\\w+": {}
-              },
-              "additionalProperties": false
-            }
-          },
-          "additionalProperties": false
-        }
-      },
-      "additionalProperties": false
-    },
-    "UsageEntryLock": {
-      "oneOf": [
-        {
+        "dependsOn": {
           "type": "array",
           "items": {
             "type": "string"
           },
           "additionalItems": false
-        },
-        {
-          "type": "string"
         }
+      },
+      "additionalProperties": false,
+      "required": [
+        "versionId",
+        "packageId",
+        "manifest",
+        "settings",
+        "definition",
+        "usedBy"
+      ]
+    },
+    "UsedByVersion": {
+      "type": "object",
+      "properties": {
+        "versionId": {
+          "type": "string"
+        },
+        "settings": {
+          "type": "object",
+          "patternProperties": {
+            "\\w+": {}
+          },
+          "additionalProperties": false
+        },
+        "optional": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "versionId",
+        "optional"
       ]
     }
   }

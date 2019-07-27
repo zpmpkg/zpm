@@ -35,11 +35,16 @@ export async function writeJson(file: string, object: any) {
     return true
 }
 
-export async function glob(source: string | string[], root: string, excludes: string[] = []) {
+export async function glob(
+    source: string | string[],
+    root: string,
+    excludes: string[] = [],
+    absolute = true
+) {
     return filter(
         (await fg(source, {
+            absolute,
             cwd: root,
-            absolute: true,
             ignore: excludes,
         })).map(f => f.toString()),
         f => isSubDirectory(f, root)

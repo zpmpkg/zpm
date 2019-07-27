@@ -14,5 +14,5 @@
         "editor.tabSize": 2
     },
     "typescript.tsdk": "node_modules\\typescript\\lib",
-    
+    "jest.autoEnable": false
   }

@@ -1,6 +1,12 @@
 import { Mutex } from 'async-mutex'
-import { spinners } from '~/cli/spinner'
-import { cloneOrFetch, CloneOrFetchResult, cloneOrPull, CloneOrPullResult } from '~/common/git'
+import { Spinner, spinners } from '~/cli/spinner'
+import {
+    checkout,
+    cloneOrFetch,
+    CloneOrFetchResult,
+    cloneOrPull,
+    CloneOrPullResult,
+} from '~/common/git'
 
 export class Repository {
     public directory: string
@@ -13,6 +19,9 @@ export class Repository {
         this.directory = directory
         this.url = url
         this.loaded = false
+    }
+    public async checkout(hash: string, spinner?: Spinner): Promise<void> {
+        await this.mutex.runExclusive(async () => checkout(this.directory, hash, { spinner }))
     }
 
     public async cloneOrPull(what: string) {
@@ -69,9 +78,13 @@ export class Repository {
 }
 
 const _repositories: Map<string, Repository> = new Map<string, Repository>()
-export function createRepository(directory: string, url: string) {
+export function createRepository(directory: string, url?: string) {
     if (!_repositories.has(directory)) {
-        _repositories.set(directory, new Repository(directory, url))
+        if (url) {
+            _repositories.set(directory, new Repository(directory, url))
+        } else {
+            // @todo
+        }
     }
     return _repositories.get(directory)!
 }

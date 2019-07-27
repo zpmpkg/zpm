@@ -13,7 +13,9 @@ class Version {
         const coptions = options || {};
         this.raw = version;
         if (util_1.isDefined(version)) {
-            const found = lodash_1.first(find_versions_1.default(version, { loose: true }));
+            const found = lodash_1.first(find_versions_1.default(this.translatePrerelease(version), { loose: true }));
+            found;
+            version;
             this.semver = found ? new semver_1.SemVer(found, { includePrerelease: true }) : undefined;
             if (!util_1.isDefined(this.semver)) {
                 version = version.trim();
@@ -39,6 +41,9 @@ class Version {
             return this.tag;
         }
         return this.semver.toString();
+    }
+    translatePrerelease(version) {
+        return version.replace('.beta', '-beta').replace('.alpha', '-alpha');
     }
 }
 Version.versionInverse = 100000000;

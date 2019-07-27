@@ -4,4 +4,5 @@ export const enum PackageType {
     PDGS = 'PDGS',
     PDPS = 'PDPS',
     PSSub = 'PSSub',
+    GSSub = 'GSSub',
 }

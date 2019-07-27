@@ -42,8 +42,8 @@ export interface RegistryNamedLocationEntry {
  * via the `definition` "RegistryPathLocationEntry".
  */
 export interface RegistryPathLocationEntry {
-    name: string;
     path: string;
+    name: string;
     workingDirectory?: string;
 }
 /**

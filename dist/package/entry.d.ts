@@ -1,32 +1,49 @@
-import { RegistryEntry, RegistryGDPSEntry, RegistryPDPSEntry, RegistryPSSubEntry } from "../types/definitions.v1";
+import { VersionRange } from "../common/range";
+import { Manifest } from "../registry/package";
+import { RegistryEntry } from "../types/definitions.v1";
 import { PackageEntry, PackageSettings } from "../types/package.v1";
-import { GSSubPackageOptions, PackageInfoOptions, PDPSPackageOptions } from './info';
+import { GSSubPackageOptions, InternalDefinitionEntryType, PackageInfoOptions, PackageVersion, PDPSPackageOptions, PSSubPackageOptions } from './internal';
+import { PackageInfo } from './info';
 export interface InternalGDGSEntry {
     vendor: string;
     name: string;
     repository: string;
     definition?: string;
 }
-export declare type InternalGDPSEntry = RegistryGDPSEntry;
+export interface InternalGDPSEntry {
+    definition: string;
+    path: string;
+}
 export interface InternalPDGSEntry {
-    vendor: string;
+    vendor?: string;
     name: string;
     repository: string;
     definition: string;
 }
-export declare type InternalPDPSEntry = RegistryPDPSEntry;
-export declare type InternalPSSubEntry = RegistryPSSubEntry;
-export declare type InternalEntry = InternalGDGSEntry | InternalGDPSEntry | InternalPDGSEntry | InternalPDPSEntry | InternalPSSubEntry;
+export interface InternalPDPSEntry {
+}
+export interface InternalPSSubEntry {
+    name: string;
+    path: string;
+}
+export interface InternalGSSubEntry {
+    vendor?: string;
+    name: string;
+    path: string;
+    repository: string;
+}
+export declare type InternalEntry = InternalGDGSEntry | InternalGDPSEntry | InternalPDGSEntry | InternalPDPSEntry | InternalPSSubEntry | InternalGSSubEntry;
 export declare const enum InternalEntryType {
     GDGS = "GDGS",
     GDPS = "GDPS",
     PDGS = "PDGS",
     PDPS = "PDPS",
-    PSSub = "PSSub"
+    PSSub = "PSSub",
+    GSSub = "GSSub"
 }
 export declare function transformToInternalEntry(entry: RegistryEntry): InternalEntry;
 export interface InternalDefinitionGDGSEntry {
-    internalDefinitionType: InternalDefinitionEntyType;
+    internalDefinitionType: InternalDefinitionEntryType;
     entry: {
         vendor?: string;
         name: string;
@@ -36,13 +53,13 @@ export interface InternalDefinitionGDGSEntry {
     type: string;
     options?: PackageInfoOptions;
     usage: {
-        version: string;
+        version: VersionRange;
         optional: boolean;
         settings: PackageSettings;
     };
 }
 export interface InternalDefinitionGDPSEntry {
-    internalDefinitionType: InternalDefinitionEntyType;
+    internalDefinitionType: InternalDefinitionEntryType;
     entry: {
         definition: string;
         path: string;
@@ -55,7 +72,7 @@ export interface InternalDefinitionGDPSEntry {
     };
 }
 export interface InternalDefinitionPDGSEntry {
-    internalDefinitionType: InternalDefinitionEntyType;
+    internalDefinitionType: InternalDefinitionEntryType;
     entry: {
         vendor?: string;
         name: string;
@@ -65,25 +82,23 @@ export interface InternalDefinitionPDGSEntry {
     type: string;
     options?: PackageInfoOptions;
     usage: {
-        version: string;
-        optional?: boolean;
-        settings?: PackageSettings;
+        version: VersionRange;
+        optional: boolean;
+        settings: PackageSettings;
     };
 }
 export interface InternalDefinitionPDPSEntry {
-    internalDefinitionType: InternalDefinitionEntyType;
-    entry: {
-        path: string;
-    };
+    internalDefinitionType: InternalDefinitionEntryType;
+    entry: {};
     type: string;
     options?: PDPSPackageOptions;
     usage: {
-        optional?: boolean;
-        settings?: PackageSettings;
+        optional: boolean;
+        settings: PackageSettings;
     };
 }
 export interface InternalDefinitionGSSubEntry {
-    internalDefinitionType: InternalDefinitionEntyType;
+    internalDefinitionType: InternalDefinitionEntryType;
     root: {
         version: string;
         vendor?: string;
@@ -91,16 +106,17 @@ export interface InternalDefinitionGSSubEntry {
     };
     entry: {
         path: string;
+        repository: string;
     };
     type: string;
     options?: GSSubPackageOptions;
     usage: {
-        optional?: boolean;
-        settings?: PackageSettings;
+        optional: boolean;
+        settings: PackageSettings;
     };
 }
 export interface InternalDefinitionPSSubEntry {
-    internalDefinitionType: InternalDefinitionEntyType;
+    internalDefinitionType: InternalDefinitionEntryType;
     root: {
         vendor?: string;
         name: string;
@@ -109,37 +125,17 @@ export interface InternalDefinitionPSSubEntry {
         path: string;
     };
     type: string;
-    options?: GSSubPackageOptions;
+    options?: PSSubPackageOptions;
     usage: {
-        optional?: boolean;
-        settings?: PackageSettings;
+        optional: boolean;
+        settings: PackageSettings;
     };
 }
 export declare type InternalDefinitionEntry = InternalDefinitionGDGSEntry | InternalDefinitionGDPSEntry | InternalDefinitionPDGSEntry | InternalDefinitionPDPSEntry | InternalDefinitionGSSubEntry | InternalDefinitionPSSubEntry;
-export declare const enum InternalDefinitionEntyType {
-    GDGS = "GDGS",
-    GDPS = "GDPS",
-    PDGS = "PDGS",
-    PDPS = "PDPS",
-    GSSub = "GSSub",
-    PSSub = "PSSub"
-}
-export interface PackageTypeToInternalDefinitionEntry {
-    [InternalDefinitionEntyType.GDGS]: InternalDefinitionGDGSEntry;
-    [InternalDefinitionEntyType.PDPS]: InternalDefinitionPDPSEntry;
-    [InternalDefinitionEntyType.PDGS]: InternalDefinitionPDGSEntry;
-    [InternalDefinitionEntyType.GDPS]: InternalDefinitionGDPSEntry;
-    [InternalDefinitionEntyType.GSSub]: InternalDefinitionGSSubEntry;
-    [InternalDefinitionEntyType.PSSub]: InternalDefinitionPSSubEntry;
-}
-export declare const isInternalDefinitionEntry: <K extends InternalDefinitionEntyType>(condition: K) => (entry: Partial<InternalDefinitionGDGSEntry> | Partial<InternalDefinitionGDPSEntry> | Partial<InternalDefinitionPDGSEntry> | Partial<InternalDefinitionPDPSEntry> | Partial<InternalDefinitionGSSubEntry> | Partial<InternalDefinitionPSSubEntry>) => entry is PackageTypeToInternalDefinitionEntry[K];
-export declare const isInternalGDGS: (entry: Partial<InternalDefinitionGDGSEntry> | Partial<InternalDefinitionGDPSEntry> | Partial<InternalDefinitionPDGSEntry> | Partial<InternalDefinitionPDPSEntry> | Partial<InternalDefinitionGSSubEntry> | Partial<InternalDefinitionPSSubEntry>) => entry is InternalDefinitionGDGSEntry;
-export declare const isInternalPDPS: (entry: Partial<InternalDefinitionGDGSEntry> | Partial<InternalDefinitionGDPSEntry> | Partial<InternalDefinitionPDGSEntry> | Partial<InternalDefinitionPDPSEntry> | Partial<InternalDefinitionGSSubEntry> | Partial<InternalDefinitionPSSubEntry>) => entry is InternalDefinitionPDPSEntry;
-export declare const isInternalPDGS: (entry: Partial<InternalDefinitionGDGSEntry> | Partial<InternalDefinitionGDPSEntry> | Partial<InternalDefinitionPDGSEntry> | Partial<InternalDefinitionPDPSEntry> | Partial<InternalDefinitionGSSubEntry> | Partial<InternalDefinitionPSSubEntry>) => entry is InternalDefinitionPDGSEntry;
-export declare const isInternalGDPS: (entry: Partial<InternalDefinitionGDGSEntry> | Partial<InternalDefinitionGDPSEntry> | Partial<InternalDefinitionPDGSEntry> | Partial<InternalDefinitionPDPSEntry> | Partial<InternalDefinitionGSSubEntry> | Partial<InternalDefinitionPSSubEntry>) => entry is InternalDefinitionGDPSEntry;
-export declare const isInternalGSSub: (entry: Partial<InternalDefinitionGDGSEntry> | Partial<InternalDefinitionGDPSEntry> | Partial<InternalDefinitionPDGSEntry> | Partial<InternalDefinitionPDPSEntry> | Partial<InternalDefinitionGSSubEntry> | Partial<InternalDefinitionPSSubEntry>) => entry is InternalDefinitionGSSubEntry;
-export declare const isInternalPSSub: (entry: Partial<InternalDefinitionGDGSEntry> | Partial<InternalDefinitionGDPSEntry> | Partial<InternalDefinitionPDGSEntry> | Partial<InternalDefinitionPDPSEntry> | Partial<InternalDefinitionGSSubEntry> | Partial<InternalDefinitionPSSubEntry>) => entry is InternalDefinitionPSSubEntry;
-export declare function getInternalDefinitionEntryType(entry: PackageEntry): InternalDefinitionEntyType;
+export declare function getInternalDefinitionEntryType(entry: PackageEntry): InternalDefinitionEntryType;
+export declare function internalDefinitionSubToInternalEntry(definition: InternalDefinitionEntry): InternalPSSubEntry;
+export declare function overrideInternalDefinitionToInternalEntry(definition: InternalDefinitionEntry, overriding?: PackageInfo): InternalPDGSEntry;
+export declare function overrideInternalDefinitionOptions<T extends PackageInfoOptions>(coptions: T, definition: InternalDefinitionEntry, addedBy: PackageInfo): PackageInfoOptions;
 export declare function getInternalEntryType(entry: PackageEntry): InternalEntryType;
 export declare function splitVendorName(vendorName: string): {
     vendor?: string;
@@ -149,5 +145,6 @@ export declare function splitVendorNameWithPath(vendorName: string): {
     vendor?: string;
     name: string;
     path?: string;
+    fullName?: string;
 };
-export declare function transformToInternalDefinitionEntry(entry: PackageEntry, type: string): InternalDefinitionEntry;
+export declare function transformToInternalDefinitionEntry(entry: PackageEntry, manifest: Manifest, type: string, parent: PackageVersion): InternalDefinitionEntry[];

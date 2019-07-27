@@ -1,11 +1,11 @@
 export async function extract() {
-    const includes = pkg.usage.includes || pkg.globals.extractor.includes
-    const excludes = pkg.usage.excludes || pkg.globals.extractor.excludes
+    const includes = version.usage.include || version.global.extractor.include
+    const excludes = version.usage.exclude || version.global.extractor.exclude
     await fs.copy(includes, {
         excludes,
     })
 }
 
 export async function checkout() {
-    await git.checkout(pkg.hash!)
+    await git.checkout(version.hash!)
 }

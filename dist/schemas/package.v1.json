@@ -33,7 +33,7 @@
             }
         },
         "PackageEntry": {
-            "oneOf": [
+            "anyOf": [
                 {
                     "$ref": "#/definitions/PackageGDGSEntry"
                 },
@@ -51,6 +51,9 @@
                 },
                 {
                     "$ref": "#/definitions/PackagePSSubEntry"
+                },
+                {
+                    "$ref": "#/definitions/PackagePSSubNameEntry"
                 }
             ]
         },
@@ -124,7 +127,7 @@
             "properties": {
                 "name": {
                     "type": "string",
-                    "pattern": "^([a-zA-Z0-9_\\-]{2,50}/[a-zA-Z0-9_\\-]{2,50})$"
+                    "pattern": "^([a-zA-Z0-9_\\-]{2,50}/[a-zA-Z0-9_\\-]{2,50})(:[a-zA-Z0-9_\\-/]{2,50})?$"
                 },
                 "definition": {
                     "type": "string"
@@ -153,9 +156,6 @@
         "PackagePDPSEntry": {
             "type": "object",
             "properties": {
-                "path": {
-                    "type": "string"
-                },
                 "optional": {
                     "type": "boolean"
                 },
@@ -164,9 +164,7 @@
                 }
             },
             "additionalProperties": false,
-            "required": [
-                "path"
-            ]
+            "required": []
         },
         "PackageGSSubEntry": {
             "type": "object",
@@ -199,10 +197,29 @@
             "properties": {
                 "name": {
                     "type": "string",
-                    "pattern": "^(([a-zA-Z0-9_\\-]{2,50}/)?[a-zA-Z0-9_\\-]{2,50})(:[a-zA-Z0-9_\\-/]{2,50})?$"
+                    "pattern": "^(([a-zA-Z0-9_\\-]{2,50}/)?[a-zA-Z0-9_\\-]{2,50})$"
                 },
                 "path": {
                     "type": "string"
+                },
+                "optional": {
+                    "type": "boolean"
+                },
+                "settings": {
+                    "$ref": "#/definitions/PackageSettings"
+                }
+            },
+            "additionalProperties": false,
+            "required": [
+                "path"
+            ]
+        },
+        "PackagePSSubNameEntry": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "pattern": "^(([a-zA-Z0-9_\\-]{2,50}/)?[a-zA-Z0-9_\\-]{2,50})(:[a-zA-Z0-9_\\-/]{2,50})?$"
                 },
                 "optional": {
                     "type": "boolean"

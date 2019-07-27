@@ -245,7 +245,7 @@ class SATSolver {
             return {};
         }
         const levels = [];
-        minimum.map(m => {
+        for (const m of minimum) {
             let settings;
             if (lodash_1.has(this.termMap.named, [term, 'settings', m])) {
                 settings = axioms_1.get(this.termMap.named, [term, 'settings', m]);
@@ -256,13 +256,13 @@ class SATSolver {
             if (!lodash_1.isEmpty(settings)) {
                 levels.push({ settings, depth: this.countParents(minimum, m) });
             }
-        });
+        }
         // @todo: allow merge strategies https://www.npmjs.com/package/deeply#default-behavior
         return lodash_1.merge({}, ...levels.sort((a, b) => a.depth - b.depth).map(l => l.settings));
     }
     countParents(minimum, parent, depth = 0) {
         const parents = [];
-        minimum.map(m => {
+        for (const m of minimum) {
             let settings;
             if (lodash_1.has(this.termMap.named, [parent, 'settings', m])) {
                 settings = axioms_1.get(this.termMap.named, [parent, 'settings', m]);
@@ -273,7 +273,7 @@ class SATSolver {
             if (util_1.isDefined(settings)) {
                 parents.push({ parent: m, depth: this.countParents(minimum, m, depth + 1) });
             }
-        });
+        }
         if (lodash_1.isEmpty(parents)) {
             return depth;
         }

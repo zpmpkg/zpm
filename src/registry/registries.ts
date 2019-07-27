@@ -1,12 +1,16 @@
-import { Mutex } from 'async-mutex'
 import { filter, flatten, has } from 'lodash'
 import { settledPromiseAll } from '~/common/async'
 import { environment } from '~/common/environment'
 import { transformPath } from '~/common/io'
 import { isDefined } from '~/common/util'
-import { InternalDefinitionEntry, InternalEntry } from '~/package/entry'
-import { PackageInfoOptions } from '~/package/info'
-import { Package } from '~/package/package'
+import {
+    InternalDefinitionEntry,
+    InternalEntry,
+    Package,
+    PackageInfoOptions,
+    PackageTypeToInternalType,
+    PackageVersion,
+} from '~/package/internal'
 import { ConfigurationSchema } from '~/types/configuration.v1'
 import {
     RegistryDefinition,
@@ -29,8 +33,8 @@ export class Registries {
     public registries!: Registry[]
 
     public config!: ConfigurationSchema
+    public versions: Map<string, PackageVersion> = new Map()
     private manifests: { [k: string]: Manifest } = {}
-    private addMutex: Mutex = new Mutex()
 
     constructor(zpm: ZPM) {
         this.zpm = zpm
@@ -53,16 +57,47 @@ export class Registries {
         return this.manifests[type]
     }
 
-    public search(entry: InternalDefinitionEntry): { package: Package | undefined; name: string } {
-        return this.manifests[entry.type].search(entry)
+    public getVersion(id: string): PackageVersion | undefined {
+        return this.versions.get(id)
+    }
+
+    public addVersion(id: string, version: PackageVersion): boolean {
+        if (!this.versions.has(id)) {
+            this.versions.set(id, version)
+            return true
+        }
+        return false
+    }
+
+    public search(
+        entry: InternalDefinitionEntry
+    ): { package: Package | undefined; name: string; sameType: boolean } {
+        const found = this.manifests[entry.type].search(entry)
+        if (found.package) {
+            if (
+                PackageTypeToInternalType[found.package.info.type] === entry.internalDefinitionType
+            ) {
+                return { ...found, sameType: true }
+            }
+            return { ...found, sameType: false }
+        }
+        return { ...found, sameType: false }
+    }
+
+    public searchByName(type: string, name: string) {
+        if (type in this.manifests) {
+            return this.manifests[type].searchByName(name)
+        }
+        return undefined
     }
 
     public addPackage<E extends InternalEntry, O extends PackageInfoOptions>(
         type: string,
         entry: E,
-        options?: O
+        options?: O,
+        force?: boolean
     ) {
-        return this.manifests[type].add(entry, options)
+        return this.manifests[type].add(entry, options, undefined, force)
     }
 
     private async loadManifests() {
@@ -87,10 +122,10 @@ export class Registries {
                         workingDirectory: registry.workingDirectory,
                     })
             ),
-            new Registry(environment.directory.zpm, {
-                workingDirectory: environment.directory.zpm,
-                name: 'ZPM',
-            }),
+            // new Registry(environment.directory.zpm, {
+            //     workingDirectory: environment.directory.zpm,
+            //     name: 'ZPM',
+            // }),
             new Registry(environment.directory.workingdir, { name: 'ROOT' }),
         ]
         const newRegistries: RegistryDefinition[] = flatten(

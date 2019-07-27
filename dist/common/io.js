@@ -45,10 +45,10 @@ async function writeJson(file, object) {
     return true;
 }
 exports.writeJson = writeJson;
-async function glob(source, root, excludes = []) {
+async function glob(source, root, excludes = [], absolute = true) {
     return lodash_1.filter((await fast_glob_1.default(source, {
+        absolute,
         cwd: root,
-        absolute: true,
         ignore: excludes,
     })).map(f => f.toString()), f => isSubDirectory(f, root));
 }

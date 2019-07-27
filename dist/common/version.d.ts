@@ -13,5 +13,6 @@ export declare class Version {
     isTag: boolean;
     constructor(version: string | undefined, options?: VersionOptions);
     toString(): string;
+    private translatePrerelease;
 }
 export declare function areAllowedTagCharacters(r: string): boolean;

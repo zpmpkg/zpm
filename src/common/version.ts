@@ -21,7 +21,9 @@ export class Version {
         const coptions = options || {}
         this.raw = version
         if (isDefined(version)) {
-            const found = first(findVersions(version, { loose: true }))
+            const found = first(findVersions(this.translatePrerelease(version), { loose: true }))
+            found
+            version
             this.semver = found ? new SemVer(found, { includePrerelease: true }) : undefined
             if (!isDefined(this.semver)) {
                 version = version.trim()
@@ -50,6 +52,10 @@ export class Version {
             return this.tag!
         }
         return this.semver!.toString()
+    }
+
+    private translatePrerelease(version: string): string {
+        return version.replace('.beta', '-beta').replace('.alpha', '-alpha')
     }
 }
 

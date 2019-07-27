@@ -4,13 +4,12 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const axioms_1 = require("@zefiros/axioms");
-const get_1 = require("@zefiros/axioms/get");
 const is_git_url_1 = __importDefault(require("is-git-url"));
 const lodash_1 = require("lodash");
 const upath_1 = require("upath");
 const environment_1 = require("../common/environment");
 const util_1 = require("../common/util");
-const entry_1 = require("./entry");
+const internal_1 = require("./internal");
 function classifyType(entry) {
     const gdgsEntry = entry;
     if (lodash_1.has(entry, 'name') &&
@@ -34,10 +33,13 @@ function classifyType(entry) {
         is_git_url_1.default(gdpsEntry.definition)) {
         return "GDPS" /* GDPS */;
     }
+    if (lodash_1.has(entry, 'path') && lodash_1.has(entry, 'name') && axioms_1.get(entry, ['vendor'])) {
+        return "GSSub" /* GSSub */;
+    }
     if (lodash_1.has(entry, 'path') && lodash_1.has(entry, 'name')) {
         return "PSSub" /* PSSub */;
     }
-    if (lodash_1.has(entry, 'path')) {
+    if (!lodash_1.has(entry, 'path')) {
         return "PDPS" /* PDPS */;
     }
     throw Error('This should never be called');
@@ -49,15 +51,19 @@ exports.isPDPS = exports.isPackageInfo("PDPS" /* PDPS */);
 exports.isPDGS = exports.isPackageInfo("PDGS" /* PDGS */);
 exports.isGDPS = exports.isPackageInfo("GDPS" /* GDPS */);
 exports.isPSSub = exports.isPackageInfo("PSSub" /* PSSub */);
+exports.isGSSub = exports.isPackageInfo("GSSub" /* GSSub */);
 function getId(info, type) {
     if (exports.isPDPS(info) && info.options) {
-        return `${type}:${info.options.rootName}:${info.entry.path}`;
+        return `${type}:${info.options.rootName}`;
     }
     else if (exports.isPSSub(info) && info.options) {
         return `${type}:${info.options.rootName}:${info.entry.path}`;
     }
-    else if (exports.isGDGS(info)) {
-        return `${type}:${info.entry.name}`;
+    else if (exports.isGSSub(info) && info.options) {
+        return `${type}:${info.options.packageVendor}:${info.options.packageName}+${info.entry.path}`;
+    }
+    else if (exports.isGDGS(info) || exports.isPDGS(info)) {
+        return `${type}:${info.entry.vendor}:${info.entry.name}`;
     }
     else {
         throw Error('not implemented');
@@ -67,13 +73,19 @@ function getId(info, type) {
 exports.getId = getId;
 function getName(info) {
     if (exports.isPDPS(info) && info.options) {
-        return `${info.options.rootName}:${info.entry.path}`;
+        return `${info.options.rootName}`;
     }
     else if (exports.isPSSub(info) && info.options) {
         return `${info.options.rootName}:${info.entry.path}`;
     }
+    else if (exports.isGSSub(info) && info.options) {
+        return `${info.options.packageVendor}:${info.options.packageName}+${info.entry.path}`;
+    }
     else if (exports.isGDGS(info)) {
-        return `${info.entry.name}`;
+        return `${info.entry.vendor}/${info.entry.name}`;
+    }
+    else if (exports.isPDGS(info)) {
+        return `${info.entry.vendor}/${info.entry.name}`;
     }
     else {
         throw Error('not implemented');
@@ -82,16 +94,16 @@ function getName(info) {
 }
 exports.getName = getName;
 function getNameFromEntry(entry) {
-    if (entry_1.isInternalPDPS(entry) && entry.options) {
-        return `${entry.options.rootName}:${entry.entry.path}`;
+    if (internal_1.isInternalPDPS(entry) && entry.options) {
+        return `${entry.options.rootName}`;
     }
-    else if (entry_1.isInternalPSSub(entry)) {
+    else if (internal_1.isInternalPSSub(entry) && entry.options) {
         const rootName = entry.root.vendor
             ? `${entry.root.vendor}/${entry.root.name}`
             : entry.root.name;
         return `${rootName}:${entry.entry.path}`;
     }
-    else if (entry_1.isInternalGDGS(entry)) {
+    else if (internal_1.isInternalGDGS(entry) || internal_1.isInternalPDGS(entry)) {
         if (entry.entry.vendor) {
             return `${entry.entry.vendor}/${entry.entry.name}`;
         }
@@ -105,12 +117,9 @@ function getNameFromEntry(entry) {
 exports.getNameFromEntry = getNameFromEntry;
 function getAlias(info) {
     if (exports.isPDPS(info)) {
-        return get_1.get(info, ['options', 'alias']);
+        return axioms_1.get(info, ['options', 'alias']);
     }
-    else if (exports.isPSSub(info)) {
-        return undefined;
-    }
-    else if (exports.isGDGS(info)) {
+    else if (exports.isPSSub(info) || exports.isGSSub(info) || exports.isGDGS(info) || exports.isPDGS(info)) {
         return undefined;
     }
     else {
@@ -121,7 +130,7 @@ function getAlias(info) {
 exports.getAlias = getAlias;
 function getDirectories(info) {
     if (exports.isPDPS(info) && info.options) {
-        const root = upath_1.join(info.options.rootDirectory, info.entry.path);
+        const root = info.options.rootDirectory;
         return {
             definition: root,
             source: root,
@@ -134,6 +143,12 @@ function getDirectories(info) {
             source: sub,
         };
     }
+    else if (exports.isGSSub(info) && info.options) {
+        return {
+            definition: info.options.rootDirectory,
+            source: info.options.packageDirectory,
+        };
+    }
     else if (exports.isGDGS(info)) {
         const root = upath_1.join(environment_1.environment.directory.packages, info.manifest, info.entry.vendor, info.entry.name);
         const sourceDir = upath_1.join(root, `source-${util_1.shortHash(info.entry.repository)}`);
@@ -141,6 +156,14 @@ function getDirectories(info) {
             definition: axioms_1.isDefined(info.entry.definition) && info.entry.definition !== info.entry.repository
                 ? upath_1.join(root, `definition-${util_1.shortHash(info.entry.definition)}`)
                 : sourceDir,
+            source: sourceDir,
+        };
+    }
+    else if (exports.isPDGS(info) && info.options) {
+        const root = upath_1.join(environment_1.environment.directory.packages, info.manifest, info.entry.vendor, info.entry.name);
+        const sourceDir = upath_1.join(root, `source-${util_1.shortHash(info.entry.repository)}`);
+        return {
+            definition: upath_1.join(info.options.rootDirectory, info.entry.definition),
             source: sourceDir,
         };
     }
@@ -166,6 +189,7 @@ function getPackageInfo(entry, type, pkgType, options) {
         alias: getAlias(info),
         directories: getDirectories(info),
         id: getId(info, type),
+        isSubPackage: pkgType === "PSSub" /* PSSub */ || pkgType === "GSSub" /* GSSub */,
     };
 }
 exports.getPackageInfo = getPackageInfo;

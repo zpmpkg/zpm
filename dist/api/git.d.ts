@@ -1,6 +1,7 @@
 import { Spinner } from "../cli/spinner";
+import { Repository } from "../package/repository";
 export declare class GitApi {
-    source: string;
+    repository: Repository;
     spinner?: Spinner;
     constructor(source: string, spinner?: Spinner);
     checkout(hash: string): Promise<void>;

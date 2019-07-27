@@ -20,85 +20,83 @@ const git_2 = require("../../common/git");
 const io_1 = require("../../common/io");
 const logger_1 = require("../../common/logger");
 const sandbox_1 = require("../../sandbox/sandbox");
-const lock_1 = require("../lock");
 const packageBuilder_1 = require("../packageBuilder");
-class TargetExtractor extends packageBuilder_1.PackageBuilder {
+class TargetExtractor extends packageBuilder_1.TargetBuilder {
     async run(target) {
-        const hash = target.getHash();
-        if (await this.needsExtraction(target)) {
+        if (this.needsExtraction(target) && target.targetPath) {
+            const hash = target.hash;
             const spin = spinner_1.spinners.create({
-                text: `Extracting '${target.package.fullName}@${hash}':`,
+                text: `Extracting '${target.version.id}@${hash}':`,
             });
             try {
-                await fs.remove(target.getTargetPath());
-                await fs.ensureDir(target.getTargetPath());
+                await fs.remove(target.targetPath);
+                await fs.ensureDir(target.targetPath);
                 if (await this.ensureSourceHash(target)) {
                     const extraction = {
                         pkg: {
-                            settings: target.lock.settings,
-                            description: target.lock.description,
-                            usage: axioms_1.get(this.lock.usage, ['settings', target.lock.id]) || {},
-                            globals: this.lock.description,
-                            source: target.package.source.getRepositoryPath(),
-                            target: target.getTargetPath(),
+                            settings: target.versionLock.settings,
+                            definition: target.versionLock.definition,
+                            // usage:
+                            //     get(this.versionLock.usage, ['settings', target.versionLock.id]) ||
+                            //     {},
+                            globals: this.versionLock.definition,
+                            source: target.sourcePath,
+                            target: target.targetPath,
+                            hash: target.hash,
                         },
-                        git: new git_1.GitApi(target.package.source.getRepositoryPath(), spin),
-                        fs: new fs_1.FsApi(target.package.source.getRepositoryPath(), target.getTargetPath(), spin),
-                        shell: new shell_1.ShellApi(target.package.source.getRepositoryPath(), target.getTargetPath(), spin),
+                        git: new git_1.GitApi(target.sourcePath, spin),
+                        fs: new fs_1.FsApi(target.sourcePath, target.targetPath, spin),
+                        shell: new shell_1.ShellApi(target.sourcePath, target.targetPath, spin),
                     };
-                    if (lock_1.isNamedLock(target.lock)) {
-                        extraction.pkg.hash = target.lock.hash;
-                    }
-                    const filepath = upath_1.join(io_1.transformPath(this.package.source.getDefinitionPath()), 'extract.ts');
+                    const filepath = upath_1.join(io_1.transformPath(this.version.package.info.directories.definition), 'extract.ts');
                     const script = await sandbox_1.executeSandboxTypescript(filepath, extraction);
                     if (script) {
-                        if (lock_1.isNamedLock(target.lock) &&
-                            lodash_1.isFunction(script.checkout) &&
-                            target.options.type === packageBuilder_1.PackageType.NAMED) {
+                        if (axioms_1.isDefined(target.hash) && lodash_1.isFunction(script.checkout)) {
+                            logger_1.logger.debug(`Checkout package ${target.version.id}`);
                             await script.checkout();
                         }
                         if (lodash_1.isFunction(script.extract)) {
-                            await script.extract();
+                            // await script.extract()
                         }
                     }
                 }
                 else {
-                    logger_1.logger.error(`Failed to find hash '${hash}' on package '${target.package.fullName}'`);
+                    logger_1.logger.error(`Failed to find hash '${hash}' on package '${target.version.id}'`);
                 }
-                await this.writeExtractionHash(target);
+                this.writeExtractionHash(target);
             }
             catch (err) {
                 logger_1.logger.error(err);
             }
-            spin.succeed(`Extracted '${target.package.fullName}'`);
+            spin.succeed(`Extracted '${target.version.id}'`);
         }
         return true;
     }
-    async needsExtraction(target) {
-        const hash = target.getHash();
+    needsExtraction(target) {
+        if (!axioms_1.isDefined(target.hash)) {
+            return false;
+        }
         const file = this.getExtractionHashPath(target);
-        if (!program_1.force() && (await fs.pathExists(file)) && hash) {
-            return (await fs.readFile(file)).toString() !== hash;
+        if (!program_1.force() && fs.pathExistsSync(file) && target.hash) {
+            return fs.readFileSync(file).toString() !== target.hash;
         }
         return true;
     }
-    async writeExtractionHash(target) {
-        const hash = target.getHash();
-        if (hash) {
-            await fs.writeFile(this.getExtractionHashPath(target), hash);
+    writeExtractionHash(target) {
+        if (target.hash) {
+            fs.writeFileSync(this.getExtractionHashPath(target), target.hash);
         }
     }
     getExtractionHashPath(target) {
-        return upath_1.join(target.getTargetPath(), '.EXTRACTION_HASH');
+        return upath_1.join(target.targetPath, '.EXTRACTION_HASH');
     }
     async ensureSourceHash(target) {
-        const hash = target.getHash();
-        if (hash) {
-            if (await git_2.hasHash(target.package.source.getRepositoryPath(), hash)) {
+        if (target.hash) {
+            if (await git_2.hasHash(target.version.package.info.directories.source, target.hash)) {
                 return true;
             }
             else {
-                throw new Error(`Repository '${target.package.fullName}' does not contain hash '${hash}'`);
+                throw new Error(`Package '${target.version.id}' does not contain hash '${target.hash}'`);
             }
         }
         return true;

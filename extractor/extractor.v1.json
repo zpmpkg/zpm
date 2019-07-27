@@ -5,7 +5,7 @@
     "extract": {
       "type": "object",
       "properties": {
-        "includes": {
+        "include": {
           "type": "array",
           "items": {
             "type": "string"

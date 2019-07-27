@@ -1,33 +1,15 @@
-/**
- * This interface was referenced by `undefined`'s JSON-Schema definition
- * via the `patternProperty` "\w+".
- *
- * This interface was referenced by `undefined`'s JSON-Schema definition
- * via the `patternProperty` "\w+".
- */
-export declare type UsageEntryLock = string[] | string;
-export interface LockfileSchema {
-    named: {
-        /**
-         * This interface was referenced by `undefined`'s JSON-Schema definition
-         * via the `patternProperty` "\w+".
-         */
-        [k: string]: NamedLock[];
-    };
-    path: {
-        /**
-         * This interface was referenced by `undefined`'s JSON-Schema definition
-         * via the `patternProperty` "\w+".
-         */
-        [k: string]: PathLock[];
-    };
+export interface LockFile {
+    versions: VersionLock[];
 }
-export interface NamedLock {
-    id: string;
-    usage?: UsageLock;
-    name: string;
-    version: string;
-    hash: string;
+export interface VersionLock {
+    versionId: string;
+    packageId: string;
+    manifest: string;
+    version?: {
+        hash: string;
+        name: string;
+        version: string;
+    };
     settings: {
         /**
          * This interface was referenced by `undefined`'s JSON-Schema definition
@@ -35,53 +17,24 @@ export interface NamedLock {
          */
         [k: string]: any;
     };
-    description: {
+    definition: {
         /**
          * This interface was referenced by `undefined`'s JSON-Schema definition
          * via the `patternProperty` "\w+".
          */
         [k: string]: any;
     };
+    usedBy: UsedByVersion[];
+    dependsOn?: string[];
 }
-export interface UsageLock {
-    required?: {
-        [k: string]: UsageEntryLock;
-    };
-    optional?: {
-        [k: string]: UsageEntryLock;
-    };
+export interface UsedByVersion {
+    versionId: string;
     settings?: {
         /**
          * This interface was referenced by `undefined`'s JSON-Schema definition
          * via the `patternProperty` "\w+".
          */
-        [k: string]: {
-            /**
-             * This interface was referenced by `undefined`'s JSON-Schema definition
-             * via the `patternProperty` "\w+".
-             */
-            [k: string]: any;
-        };
-    };
-}
-export interface PathLock {
-    id: string;
-    usage?: UsageLock;
-    name: string;
-    path: string;
-    root?: string;
-    settings: {
-        /**
-         * This interface was referenced by `undefined`'s JSON-Schema definition
-         * via the `patternProperty` "\w+".
-         */
         [k: string]: any;
     };
-    description: {
-        /**
-         * This interface was referenced by `undefined`'s JSON-Schema definition
-         * via the `patternProperty` "\w+".
-         */
-        [k: string]: any;
-    };
+    optional: boolean;
 }

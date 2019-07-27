@@ -18,8 +18,9 @@ class FsApi {
             await io_1.copy(sources, this.source, this.target);
         }
     }
-    exists(file, where) {
-        return fs_extra_1.default.pathExistsSync(upath_1.join(where === 'source' ? this.source : this.target, file));
+    exists(file, where = 'source') {
+        const absFile = upath_1.join(where === 'source' ? this.source : this.target, file);
+        return fs_extra_1.default.pathExistsSync(absFile);
     }
 }
 exports.FsApi = FsApi;

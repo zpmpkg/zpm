@@ -1,6 +1,6 @@
 import { Package } from "../registry/package";
 import { Registries } from "../registry/registries";
-import { PackageDefinitionSummary, PackageDescription } from "../resolver/definition/packageDefinition";
+import { PackageDefinitionSummary, PackageDescription } from "../resolver/definition/definition";
 import { SourceVersions } from "../resolver/source/sourceResolver";
 import { LockfileSchema, UsageLock } from "../types/lockfile.v1";
 import { PackageGitEntry, PackagePathEntry } from "../types/package.v1";

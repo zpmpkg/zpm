@@ -9,7 +9,7 @@ export interface GitVersion {
     name: string
 }
 
-export async function listVersions(directory: string): Promise<GitVersion[]> {
+export async function listGitVersions(directory: string): Promise<GitVersion[]> {
     const output = await showRef(directory)
     const versions = output
         .split('\n')

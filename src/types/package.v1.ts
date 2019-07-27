@@ -16,6 +16,7 @@ export type PackageEntry =
     | PackagePDGSEntry
     | PackageGSSubEntry
     | PackagePSSubEntry
+    | PackagePSSubNameEntry
 
 export interface PackageDefinition {
     development?: PackageEntries
@@ -47,7 +48,6 @@ export interface PackageGDPSEntry {
     settings?: PackageSettings
 }
 export interface PackagePDPSEntry {
-    path: string
     optional?: boolean
     settings?: PackageSettings
 }
@@ -67,8 +67,13 @@ export interface PackageGSSubEntry {
     settings?: PackageSettings
 }
 export interface PackagePSSubEntry {
+    name?: string
+    path: string
+    optional?: boolean
+    settings?: PackageSettings
+}
+export interface PackagePSSubNameEntry {
     name: string
-    path?: string
     optional?: boolean
     settings?: PackageSettings
 }

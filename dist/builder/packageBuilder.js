@@ -1,44 +1,89 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-const upath_1 = require("upath");
-const environment_1 = require("../common/environment");
-const lock_1 = require("./lock");
-class BasePackageBuilder {
-    constructor(builder, pkg, lock, options = {}) {
-        this.used = false;
+const axioms_1 = require("@zefiros/axioms");
+const spinner_1 = require("../cli/spinner");
+class IBuilder {
+    constructor(builder, version, versionLock) {
         this.builder = builder;
-        this.package = pkg;
-        this.lock = lock;
-        this.options = {
-            type: PackageType.PATH,
-            ...options,
-        };
+        this.version = version;
+        this.versionLock = versionLock;
     }
-    async build(type) {
-        if (this.lock.usage && this.lock.usage.required && this.lock.usage.required[type]) {
-            const locked = this.lock.usage.required[type];
-            if (this.builder.builders[locked]) {
-                this.builder.builders[locked].used = true;
-                return this.builder.builders[locked].run(this);
-            }
+    async initialize() {
+        return true;
+    }
+    async build() {
+        return true;
+    }
+}
+exports.IBuilder = IBuilder;
+class PackageBuilder extends IBuilder {
+    constructor(builder, version, versionLock) {
+        super(builder, version, versionLock);
+        this.spin = spinner_1.spinners.create({
+            text: `Building '${this.version.id}':`,
+        });
+    }
+    finish() {
+        this.spin.succeed(`Built '${this.version.id}'`);
+    }
+    get targetPath() {
+        return this.version.targetPath;
+    }
+    get buildPath() {
+        return this.version.buildPath;
+    }
+    get sourcePath() {
+        return this.version.package.info.directories.source;
+    }
+    get hash() {
+        return axioms_1.get(this.version, ['version', 'hash']);
+    }
+    get needsExtraction() {
+        return axioms_1.isDefined(this.targetPath);
+    }
+}
+exports.PackageBuilder = PackageBuilder;
+class TargetBuilder extends IBuilder {
+    constructor() {
+        super(...arguments);
+        this.used = false;
+        this.blackboard = new Map();
+    }
+    getTargets() {
+        return this.versionLock.usedBy
+            .map(v => this.builder.versions.get(v.versionId))
+            .filter(axioms_1.isDefined);
+    }
+    async initialize() {
+        const targets = this.getTargets();
+        for (const target of targets) {
+            await this.prepare(target);
         }
         return false;
     }
-    getTargetPath() {
-        return upath_1.join(environment_1.environment.directory.extract, this.package.manifest.type, this.package.vendor, this.package.name);
+    async build() {
+        const targets = this.getTargets();
+        for (const target of targets) {
+            const succeeded = await this.run(target);
+            this.used = this.used || succeeded;
+        }
+        return false;
     }
-    getHash() {
-        return lock_1.isNamedLock(this.lock) ? this.lock.hash : undefined;
+    store(target, obj) {
+        this.blackboard.set(target.version.id, obj);
     }
-}
-exports.BasePackageBuilder = BasePackageBuilder;
-class PackageBuilder extends BasePackageBuilder {
+    get(target) {
+        return this.blackboard.get(target.version.id);
+    }
     async run(target) {
+        return false;
+    }
+    async prepare(target) {
         return true;
     }
     async finish() {
         return true;
     }
 }
-exports.PackageBuilder = PackageBuilder;
+exports.TargetBuilder = TargetBuilder;
 //# sourceMappingURL=packageBuilder.js.map

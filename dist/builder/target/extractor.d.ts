@@ -1,8 +1,8 @@
-import { BasePackageBuilder, PackageBuilder } from '../packageBuilder';
-export declare class TargetExtractor extends PackageBuilder {
-    run(target: BasePackageBuilder): Promise<boolean>;
-    needsExtraction(target: BasePackageBuilder): Promise<boolean>;
-    writeExtractionHash(target: BasePackageBuilder): Promise<void>;
-    getExtractionHashPath(target: BasePackageBuilder): string;
-    ensureSourceHash(target: BasePackageBuilder): Promise<boolean>;
+import { IPackageBuilder, TargetBuilder } from '../packageBuilder';
+export declare class TargetExtractor extends TargetBuilder {
+    run(target: IPackageBuilder): Promise<boolean>;
+    needsExtraction(target: IPackageBuilder): boolean;
+    writeExtractionHash(target: IPackageBuilder): void;
+    getExtractionHashPath(target: IPackageBuilder): string;
+    ensureSourceHash(target: IPackageBuilder): Promise<boolean>;
 }

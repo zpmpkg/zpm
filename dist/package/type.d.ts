@@ -3,5 +3,6 @@ export declare const enum PackageType {
     GDPS = "GDPS",
     PDGS = "PDGS",
     PDPS = "PDPS",
-    PSSub = "PSSub"
+    PSSub = "PSSub",
+    GSSub = "GSSub"
 }

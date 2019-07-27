@@ -19,7 +19,8 @@ export class FsApi {
         }
     }
 
-    public exists(file: string, where: 'source' | 'target') {
-        return fs.pathExistsSync(join(where === 'source' ? this.source : this.target, file))
+    public exists(file: string, where: 'source' | 'target' = 'source') {
+        const absFile = join(where === 'source' ? this.source : this.target, file)
+        return fs.pathExistsSync(absFile)
     }
 }

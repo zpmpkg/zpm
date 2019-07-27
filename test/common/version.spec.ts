@@ -14,6 +14,24 @@ describe('Version', () => {
         expect(version.tag).toEqual(undefined)
         expect(version.semver).toEqual(new SemVer('2.0.0', { includePrerelease: true }))
     })
+    test('simple prerelease', () => {
+        const version = new Version('2.0.0-beta')
+        expect(version.isTag).toBeFalsy()
+        expect(version.tag).toEqual(undefined)
+        expect(version.semver).toEqual(new SemVer('2.0.0-beta', { includePrerelease: true }))
+    })
+    test('dot prerelease', () => {
+        const version = new Version('2.0.0.beta')
+        expect(version.isTag).toBeFalsy()
+        expect(version.tag).toEqual(undefined)
+        expect(version.semver).toEqual(new SemVer('2.0.0-beta', { includePrerelease: true }))
+    })
+    test('dot prerelease 2', () => {
+        const version = new Version('2.0.0.alpha')
+        expect(version.isTag).toBeFalsy()
+        expect(version.tag).toEqual(undefined)
+        expect(version.semver).toEqual(new SemVer('2.0.0-alpha', { includePrerelease: true }))
+    })
     test('tag', () => {
         const version = new Version('master')
         expect(version.isTag).toBeTruthy()

@@ -9,9 +9,11 @@ export declare class Spinner {
     running: boolean;
     children: Spinner[];
     constructor(text?: string);
+    write(data: any): void;
     render(): string;
     addChild(text?: string): Spinner;
     stop(): void;
+    update(text: string): void;
     stopAndPersist(options?: {
         text?: string;
         symbol?: string;

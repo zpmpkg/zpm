@@ -50,8 +50,8 @@ function getShell() {
 export class ShellApi {
     public source: string
     public target: string
-    public spinner?: Spinner
-    public constructor(source: string, target: string, spinner?: Spinner) {
+    public spinner: Spinner
+    public constructor(source: string, target: string, spinner: Spinner) {
         this.source = source
         this.target = target
         this.spinner = spinner
@@ -63,7 +63,7 @@ export class ShellApi {
 
         // })
         try {
-            child = await spawnProcess(command, this.source, this.spinner!.stream)
+            child = await spawnProcess(command, this.source, this.spinner)
         } catch (e) {
             throw new Error(`Failed to spawn process ${e.stack}`)
         }

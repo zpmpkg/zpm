@@ -3,7 +3,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const is_string_1 = require("@zefiros/axioms/is-string");
 const cli_spinners_1 = __importDefault(require("cli-spinners"));
 const figures_1 = __importDefault(require("figures"));
 const log_symbols_1 = __importDefault(require("log-symbols"));
@@ -22,12 +21,17 @@ class Spinner {
         this.spinner = cli_spinners_1.default.dots;
         this.text = text;
     }
+    write(data) {
+        if (this.stream) {
+            this.stream.write(data);
+        }
+    }
     render() {
         const oldFrame = this.frame;
         if (this.running) {
             if (this.stream.size() > 0) {
                 const sstream = this.stream.getContentsAsString();
-                if (is_string_1.isString(sstream)) {
+                if (sstream) {
                     this.suffix = sstream
                         .trimRight()
                         .split(/\n+/)
@@ -59,6 +63,9 @@ class Spinner {
     }
     stop() {
         this.running = false;
+    }
+    update(text) {
+        this.text = text;
     }
     stopAndPersist(options = {}) {
         this.running = false;

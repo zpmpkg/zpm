@@ -74,9 +74,6 @@
         "$ref": "#/definitions/RegistryPDGSEntry"
       },
       {
-        "$ref": "#/definitions/RegistryPDPSEntry"
-      },
-      {
         "$ref": "#/definitions/RegistryPSSubEntry"
       }
     ]
@@ -140,18 +137,6 @@
       "name",
       "repository",
       "definition"
-    ]
-  },
-  "RegistryPDPSEntry": {
-    "type": "object",
-    "properties": {
-      "path": {
-        "type": "string"
-      }
-    },
-    "additionalProperties": false,
-    "required": [
-      "path"
     ]
   },
   "RegistryPSSubEntry": {

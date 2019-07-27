@@ -1,5 +1,4 @@
-import { isDefined } from '@zefiros/axioms'
-import { get } from '@zefiros/axioms/get'
+import { get, isDefined } from '@zefiros/axioms'
 import isGitUrl from 'is-git-url'
 import { has, isUndefined } from 'lodash'
 import { join } from 'upath'
@@ -10,13 +9,15 @@ import {
     InternalEntry,
     InternalGDGSEntry,
     InternalGDPSEntry,
+    InternalGSSubEntry,
     InternalPDGSEntry,
     InternalPDPSEntry,
+    InternalPSSubEntry,
     isInternalGDGS,
+    isInternalPDGS,
     isInternalPDPS,
     isInternalPSSub,
-    InternalPSSubEntry,
-} from './entry'
+} from './internal'
 import { PackageType } from './type'
 
 export function classifyType(entry: InternalEntry): PackageType {
@@ -48,10 +49,13 @@ export function classifyType(entry: InternalEntry): PackageType {
     ) {
         return PackageType.GDPS
     }
+    if (has(entry, 'path') && has(entry, 'name') && get(entry, ['vendor'])) {
+        return PackageType.GSSub
+    }
     if (has(entry, 'path') && has(entry, 'name')) {
         return PackageType.PSSub
     }
-    if (has(entry, 'path')) {
+    if (!has(entry, 'path')) {
         return PackageType.PDPS
     }
     throw Error('This should never be called')
@@ -64,14 +68,19 @@ export const isPDPS = isPackageInfo(PackageType.PDPS)
 export const isPDGS = isPackageInfo(PackageType.PDGS)
 export const isGDPS = isPackageInfo(PackageType.GDPS)
 export const isPSSub = isPackageInfo(PackageType.PSSub)
+export const isGSSub = isPackageInfo(PackageType.GSSub)
 
 export function getId(info: Partial<PackageInfo>, type: string): string {
     if (isPDPS(info) && info.options) {
-        return `${type}:${info.options.rootName}:${info.entry.path}`
+        return `${type}:${info.options.rootName}`
     } else if (isPSSub(info) && info.options) {
         return `${type}:${info.options.rootName}:${info.entry.path}`
-    } else if (isGDGS(info)) {
-        return `${type}:${info.entry.name}`
+    } else if (isGSSub(info) && info.options) {
+        return `${type}:${info.options.packageVendor}:${info.options.packageName}+${
+            info.entry.path
+        }`
+    } else if (isGDGS(info) || isPDGS(info)) {
+        return `${type}:${info.entry.vendor}:${info.entry.name}`
     } else {
         throw Error('not implemented')
     }
@@ -79,25 +88,30 @@ export function getId(info: Partial<PackageInfo>, type: string): string {
 }
 export function getName(info: Partial<PackageInfo>): string {
     if (isPDPS(info) && info.options) {
-        return `${info.options.rootName}:${info.entry.path}`
+        return `${info.options.rootName}`
     } else if (isPSSub(info) && info.options) {
         return `${info.options.rootName}:${info.entry.path}`
+    } else if (isGSSub(info) && info.options) {
+        return `${info.options.packageVendor}:${info.options.packageName}+${info.entry.path}`
     } else if (isGDGS(info)) {
-        return `${info.entry.name}`
+        return `${info.entry.vendor}/${info.entry.name}`
+    } else if (isPDGS(info)) {
+        return `${info.entry.vendor}/${info.entry.name}`
     } else {
         throw Error('not implemented')
     }
     return ''
 }
+
 export function getNameFromEntry(entry: InternalDefinitionEntry): string {
     if (isInternalPDPS(entry) && entry.options) {
-        return `${entry.options.rootName}:${entry.entry.path}`
-    } else if (isInternalPSSub(entry)) {
+        return `${entry.options.rootName}`
+    } else if (isInternalPSSub(entry) && entry.options) {
         const rootName = entry.root.vendor
             ? `${entry.root.vendor}/${entry.root.name}`
             : entry.root.name
         return `${rootName}:${entry.entry.path}`
-    } else if (isInternalGDGS(entry)) {
+    } else if (isInternalGDGS(entry) || isInternalPDGS(entry)) {
         if (entry.entry.vendor) {
             return `${entry.entry.vendor}/${entry.entry.name}`
         }
@@ -111,9 +125,7 @@ export function getNameFromEntry(entry: InternalDefinitionEntry): string {
 export function getAlias(info: Partial<PackageInfo>): string | undefined {
     if (isPDPS(info)) {
         return get(info, ['options', 'alias'])
-    } else if (isPSSub(info)) {
-        return undefined
-    } else if (isGDGS(info)) {
+    } else if (isPSSub(info) || isGSSub(info) || isGDGS(info) || isPDGS(info)) {
         return undefined
     } else {
         throw Error('not implemented')
@@ -123,7 +135,7 @@ export function getAlias(info: Partial<PackageInfo>): string | undefined {
 
 export function getDirectories(info: Partial<PackageInfo>): PackageInfo['directories'] {
     if (isPDPS(info) && info.options) {
-        const root = join(info.options.rootDirectory, info.entry.path)
+        const root = info.options.rootDirectory
         return {
             definition: root,
             source: root,
@@ -133,6 +145,11 @@ export function getDirectories(info: Partial<PackageInfo>): PackageInfo['directo
         return {
             definition: sub,
             source: sub,
+        }
+    } else if (isGSSub(info) && info.options) {
+        return {
+            definition: info.options.rootDirectory,
+            source: info.options.packageDirectory,
         }
     } else if (isGDGS(info)) {
         const root = join(
@@ -147,6 +164,18 @@ export function getDirectories(info: Partial<PackageInfo>): PackageInfo['directo
                 isDefined(info.entry.definition) && info.entry.definition !== info.entry.repository
                     ? join(root, `definition-${shortHash(info.entry.definition)}`)
                     : sourceDir,
+            source: sourceDir,
+        }
+    } else if (isPDGS(info) && info.options) {
+        const root = join(
+            environment.directory.packages,
+            info.manifest,
+            info.entry.vendor,
+            info.entry.name
+        )
+        const sourceDir = join(root, `source-${shortHash(info.entry.repository)}`)
+        return {
+            definition: join(info.options.rootDirectory, info.entry.definition),
             source: sourceDir,
         }
     } else {
@@ -176,15 +205,17 @@ export function getPackageInfo<E extends InternalEntry, O extends PackageInfoOpt
         alias: getAlias(info),
         directories: getDirectories(info),
         id: getId(info, type),
+        isSubPackage: pkgType === PackageType.PSSub || pkgType === PackageType.GSSub,
     }
 }
 
 export interface PackageTypeToInternalEntry {
     [PackageType.GDGS]: GDGSPackageInfo
     [PackageType.PDPS]: PDPSPackageInfo
-    [PackageType.PDGS]: PackageInfo<InternalPDGSEntry>
+    [PackageType.PDGS]: PDGSPackageInfo
     [PackageType.GDPS]: PackageInfo<InternalGDPSEntry>
     [PackageType.PSSub]: PSSubPackageInfo
+    [PackageType.GSSub]: GSSubPackageInfo
 }
 
 export interface PackageInfo<E = InternalEntry, O = PackageInfoOptions> {
@@ -199,13 +230,17 @@ export interface PackageInfo<E = InternalEntry, O = PackageInfoOptions> {
     manifest: string
     alias?: string
     options?: O
+    isSubPackage: boolean
 }
 export interface PackageInfoOptions {
     allowDevelopment: boolean
+    mayChangeRegistry: boolean
 }
 
 export type PDPSPackageInfo = PackageInfo<InternalPDPSEntry, PDPSPackageOptions>
+export type PDGSPackageInfo = PackageInfo<InternalPDGSEntry, PDGSPackageOptions>
 export type PSSubPackageInfo = PackageInfo<InternalPSSubEntry, PSSubPackageOptions>
+export type GSSubPackageInfo = PackageInfo<InternalGSSubEntry, GSSubPackageOptions>
 export type GDGSPackageInfo = PackageInfo<InternalGDGSEntry, PackageInfoOptions>
 
 export interface PDPSPackageOptions extends PackageInfoOptions {
@@ -217,8 +252,21 @@ export interface PDPSPackageOptions extends PackageInfoOptions {
 export interface PSSubPackageOptions extends PackageInfoOptions {
     rootDirectory: string
     rootName: string
+    subPath: string
 }
-export interface GSSubPackageOptions extends PackageInfoOptions {}
+export interface PDGSPackageOptions extends PackageInfoOptions {
+    rootName: string
+    rootDirectory: string
+}
+export interface GSSubPackageOptions extends PackageInfoOptions {
+    rootName: string
+    rootDirectory: string
+    packageName: string
+    packageVendor?: string
+    packageDirectory: string
+    subPath: string
+}
+export interface PSSubPackageOptions extends PackageInfoOptions {}
 
 // export function composeEntry(entry: InternalDefinitionEntry): ComposedEntry {
 //     const entryType = getInternalEntryType(entry)

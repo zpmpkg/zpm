@@ -8,6 +8,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const fs = __importStar(require("fs-extra"));
+const lodash_1 = require("lodash");
 const upath_1 = require("upath");
 const program_1 = require("../cli/program");
 const spinner_1 = require("../cli/spinner");
@@ -18,7 +19,6 @@ const git_1 = require("../common/git");
 const util_1 = require("../common/util");
 const version_1 = require("../common/version");
 const factory_1 = require("./factory");
-const lodash_1 = require("lodash");
 class GitSource {
     constructor() {
         this.loaded = false;

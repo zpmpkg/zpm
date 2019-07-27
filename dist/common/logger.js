@@ -8,6 +8,7 @@ const json_stable_stringify_1 = __importDefault(require("json-stable-stringify")
 const lodash_1 = require("lodash");
 const winston_1 = __importDefault(require("winston"));
 const winston_daily_rotate_file_1 = __importDefault(require("winston-daily-rotate-file"));
+const program_1 = require("../cli/program");
 const environment_1 = require("./environment");
 class Logger {
     constructor() {
@@ -26,7 +27,9 @@ class Logger {
                 }),
             ],
         });
-        this.consola = consola_1.default;
+        this.consola = consola_1.default.create({
+            level: program_1.verbose() ? 'debug' : undefined,
+        });
     }
     fatal(...message) {
         this.logfile.error(message);

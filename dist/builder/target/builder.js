@@ -11,7 +11,7 @@ const program_1 = require("../../cli/program");
 const environment_1 = require("../../common/environment");
 const io_1 = require("../../common/io");
 const packageBuilder_1 = require("../packageBuilder");
-class TargetBuilder extends packageBuilder_1.PackageBuilder {
+class TargetBuilder extends packageBuilder_1.TargetBuilder {
     constructor() {
         super(...arguments);
         this.libraryPaths = [];

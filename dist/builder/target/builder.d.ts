@@ -1,7 +1,7 @@
-import { BasePackageBuilder, PackageBuilder } from '../packageBuilder';
-export declare class TargetBuilder extends PackageBuilder {
+import { IPackageBuilder, TargetBuilder } from '../packageBuilder';
+export declare class TargetBuilder extends TargetBuilder {
     private libraryPaths;
-    run(target: BasePackageBuilder): Promise<boolean>;
+    run(target: IPackageBuilder): Promise<boolean>;
     finish(): Promise<boolean>;
     private getTargetSettings;
     private buildTemplate;

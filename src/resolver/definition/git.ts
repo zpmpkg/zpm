@@ -2,7 +2,7 @@ import { isDefined } from '@zefiros/axioms'
 import { safeLoad } from 'js-yaml'
 import { catFile } from '~/common/git'
 import { validateSchema } from '~/common/validation'
-import { IPackage } from '~/package/package'
+import { IPackage, PackageVersion } from '~/package/internal'
 import { PackageDefinition } from '~/types/package.v1'
 import { GitVersion } from '../source/git'
 import { fromPackageDefinition, PackageDefinitionSummary } from './definition'
@@ -10,7 +10,8 @@ import { packageValiator } from './validator'
 
 export async function getGitPackageDefinition(
     pkg: IPackage,
-    gitVersion: GitVersion
+    gitVersion: GitVersion,
+    parent: PackageVersion
 ): Promise<PackageDefinitionSummary> {
     const info = pkg.info
     let content: { content: PackageDefinition | undefined; path?: string } = {
@@ -41,7 +42,8 @@ export async function getGitPackageDefinition(
         content.content,
         pkg.info,
         pkg.package.manifest.registries,
-        pkg.package.manifest.type
+        pkg.package.manifest.type,
+        parent
     )
 }
 

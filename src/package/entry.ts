@@ -1,8 +1,11 @@
+import { get, varget } from '@zefiros/axioms'
 import isGitUrl from 'is-git-url'
 import { has } from 'lodash'
-import { normalizeTrim, toUnix } from 'upath'
+import { join, normalizeTrim, toUnix } from 'upath'
 import { isUndefined } from 'util'
+import { VersionRange } from '~/common/range'
 import { isDefined } from '~/common/util'
+import { Manifest } from '~/registry/package'
 import {
     RegistryEntry,
     RegistryGDGSEntry,
@@ -21,26 +24,55 @@ import {
     PackagePSSubEntry,
     PackageSettings,
 } from '~/types/package.v1'
-import { GSSubPackageOptions, PackageInfoOptions, PDPSPackageOptions } from './info'
-import { get } from '@zefiros/axioms/get'
-import { varget } from '@zefiros/axioms'
-import { VersionRange } from '~/common/range'
+import {
+    GSSubPackageOptions,
+    InternalDefinitionEntryType,
+    isInternalPSSub,
+    isPDPS,
+    isPSSub,
+    PackageInfoOptions,
+    PackageVersion,
+    PDPSPackageOptions,
+    PSSubPackageOptions,
+} from './internal'
+import { isInternalPDGS, isInternalGSSub } from './entryType'
+import { isPDGS, PackageInfo, isGDGS, PDGSPackageInfo, PDGSPackageOptions, isGSSub } from './info'
 
 export interface InternalGDGSEntry {
+    //type: InternalEntryType.GDGS
     vendor: string
     name: string
     repository: string
     definition?: string
 }
-export type InternalGDPSEntry = RegistryGDPSEntry
+export interface InternalGDPSEntry {
+    //type: InternalEntryType.GDPS
+    definition: string
+    path: string
+}
 export interface InternalPDGSEntry {
-    vendor: string
+    //type: InternalEntryType.PDGS
+    vendor?: string
     name: string
     repository: string
     definition: string
 }
-export type InternalPDPSEntry = RegistryPDPSEntry
-export type InternalPSSubEntry = RegistryPSSubEntry
+export interface InternalPDPSEntry {
+    //type: InternalEntryType.PDPS
+}
+export interface InternalPSSubEntry {
+    //type: InternalEntryType.PSSub
+    name: string
+    path: string
+}
+
+export interface InternalGSSubEntry {
+    //type: InternalEntryType.GSSub
+    vendor?: string
+    name: string
+    path: string
+    repository: string
+}
 
 export type InternalEntry =
     | InternalGDGSEntry
@@ -48,6 +80,7 @@ export type InternalEntry =
     | InternalPDGSEntry
     | InternalPDPSEntry
     | InternalPSSubEntry
+    | InternalGSSubEntry
 
 export const enum InternalEntryType {
     GDGS = 'GDGS',
@@ -55,6 +88,7 @@ export const enum InternalEntryType {
     PDGS = 'PDGS',
     PDPS = 'PDPS',
     PSSub = 'PSSub',
+    GSSub = 'GSSub',
 }
 
 export function transformToInternalEntry(entry: RegistryEntry): InternalEntry {
@@ -62,6 +96,7 @@ export function transformToInternalEntry(entry: RegistryEntry): InternalEntry {
         const pdgsEntry = entry as RegistryPDGSEntry
         const split = pdgsEntry.name.split('/')
         return {
+            //type: InternalEntryType.PDGS,
             vendor: split[0],
             name: split[1],
             repository: pdgsEntry.repository,
@@ -72,6 +107,7 @@ export function transformToInternalEntry(entry: RegistryEntry): InternalEntry {
     if (has(entry, 'name') && isDefined(gdgsEntry.repository) && isGitUrl(gdgsEntry.repository)) {
         const split = gdgsEntry.name.split('/')
         return {
+            //type: InternalEntryType.GDGS,
             vendor: split[0],
             name: split[1],
             repository: gdgsEntry.repository,
@@ -79,19 +115,37 @@ export function transformToInternalEntry(entry: RegistryEntry): InternalEntry {
         }
     }
     if (!has(entry, 'name') && has(entry, 'definition') && has(entry, 'path')) {
-        return entry as InternalGDPSEntry
+        return {
+            //type: InternalEntryType.GDPS,
+            ...(entry as RegistryGDPSEntry),
+        }
     }
     if (!has(entry, 'name') && has(entry, 'path')) {
-        return entry as InternalPDPSEntry
+        return {
+            //type: InternalEntryType.PDPS,
+            ...(entry as RegistryPDPSEntry),
+        }
     }
-    if (has(entry, 'name') || (has(entry, 'path') || varget(entry, ['path'])!.includes(':'))) {
-        return entry as InternalPSSubEntry
-    }
-    return entry as InternalEntry
+    // if (has(entry, 'name') || (has(entry, 'path') || varget(entry, ['path'])!.includes(':'))) {
+    //     const subentry = entry as RegistryPSSubEntry
+    //     if (varget(subentry, ['path'])!.includes(':'))) {
+    //         return {
+    //             type: InternalEntryType.PSSub,
+    //             ...(subentry as RegistryPSSubEntry),
+    //         }
+    //     }
+    //     else {
+    //         return {
+    //             type: InternalEntryType.PSSub,
+    //             ...(entry as RegistryPSSubEntry),
+    //         }
+    //     }
+    // }
+    throw new Error('not implemented')
 }
 
 export interface InternalDefinitionGDGSEntry {
-    internalDefinitionType: InternalDefinitionEntyType
+    internalDefinitionType: InternalDefinitionEntryType
     entry: {
         vendor?: string
         name: string
@@ -107,7 +161,7 @@ export interface InternalDefinitionGDGSEntry {
     }
 }
 export interface InternalDefinitionGDPSEntry {
-    internalDefinitionType: InternalDefinitionEntyType
+    internalDefinitionType: InternalDefinitionEntryType
     entry: {
         definition: string
         path: string
@@ -120,7 +174,7 @@ export interface InternalDefinitionGDPSEntry {
     }
 }
 export interface InternalDefinitionPDGSEntry {
-    internalDefinitionType: InternalDefinitionEntyType
+    internalDefinitionType: InternalDefinitionEntryType
     entry: {
         vendor?: string
         name: string
@@ -136,10 +190,8 @@ export interface InternalDefinitionPDGSEntry {
     }
 }
 export interface InternalDefinitionPDPSEntry {
-    internalDefinitionType: InternalDefinitionEntyType
-    entry: {
-        path: string
-    }
+    internalDefinitionType: InternalDefinitionEntryType
+    entry: {}
     type: string
     options?: PDPSPackageOptions
     usage: {
@@ -149,14 +201,15 @@ export interface InternalDefinitionPDPSEntry {
 }
 
 export interface InternalDefinitionGSSubEntry {
-    internalDefinitionType: InternalDefinitionEntyType
+    internalDefinitionType: InternalDefinitionEntryType
     root: {
-        version: VersionRange
+        version: string
         vendor?: string
         name: string
     }
     entry: {
         path: string
+        repository: string
     }
     type: string
     options?: GSSubPackageOptions
@@ -167,7 +220,7 @@ export interface InternalDefinitionGSSubEntry {
 }
 
 export interface InternalDefinitionPSSubEntry {
-    internalDefinitionType: InternalDefinitionEntyType
+    internalDefinitionType: InternalDefinitionEntryType
     root: {
         vendor?: string
         name: string
@@ -176,7 +229,7 @@ export interface InternalDefinitionPSSubEntry {
         path: string
     }
     type: string
-    options?: GSSubPackageOptions
+    options?: PSSubPackageOptions
     usage: {
         optional: boolean
         settings: PackageSettings
@@ -191,46 +244,23 @@ export type InternalDefinitionEntry =
     | InternalDefinitionGSSubEntry
     | InternalDefinitionPSSubEntry
 
-export const enum InternalDefinitionEntyType {
-    GDGS = 'GDGS',
-    GDPS = 'GDPS',
-    PDGS = 'PDGS',
-    PDPS = 'PDPS',
-    GSSub = 'GSSub',
-    PSSub = 'PSSub',
-}
-
-export interface PackageTypeToInternalDefinitionEntry {
-    [InternalDefinitionEntyType.GDGS]: InternalDefinitionGDGSEntry
-    [InternalDefinitionEntyType.PDPS]: InternalDefinitionPDPSEntry
-    [InternalDefinitionEntyType.PDGS]: InternalDefinitionPDGSEntry
-    [InternalDefinitionEntyType.GDPS]: InternalDefinitionGDPSEntry
-    [InternalDefinitionEntyType.GSSub]: InternalDefinitionGSSubEntry
-    [InternalDefinitionEntyType.PSSub]: InternalDefinitionPSSubEntry
-}
-export const isInternalDefinitionEntry = <K extends InternalDefinitionEntyType>(condition: K) => (
-    entry: Partial<InternalDefinitionEntry>
-): entry is PackageTypeToInternalDefinitionEntry[K] => entry.internalDefinitionType === condition
-export const isInternalGDGS = isInternalDefinitionEntry(InternalDefinitionEntyType.GDGS)
-export const isInternalPDPS = isInternalDefinitionEntry(InternalDefinitionEntyType.PDPS)
-export const isInternalPDGS = isInternalDefinitionEntry(InternalDefinitionEntyType.PDGS)
-export const isInternalGDPS = isInternalDefinitionEntry(InternalDefinitionEntyType.GDPS)
-export const isInternalGSSub = isInternalDefinitionEntry(InternalDefinitionEntyType.GSSub)
-export const isInternalPSSub = isInternalDefinitionEntry(InternalDefinitionEntyType.PSSub)
-
-export function getInternalDefinitionEntryType(entry: PackageEntry): InternalDefinitionEntyType {
+export function getInternalDefinitionEntryType(entry: PackageEntry): InternalDefinitionEntryType {
     const gssubEntry = entry as PackageGSSubEntry
     if (has(gssubEntry, 'name') && has(gssubEntry, 'version')) {
         const hasColon = gssubEntry.name.includes(':')
         if (hasColon || gssubEntry.path) {
-            return InternalDefinitionEntyType.GSSub
+            return InternalDefinitionEntryType.GSSub
         }
     }
     const pssubEntry = entry as PackagePSSubEntry
-    if (has(pssubEntry, 'name')) {
-        const hasColon = pssubEntry.name.includes(':')
+    if (
+        (has(pssubEntry, 'name') || has(pssubEntry, 'path')) &&
+        !has(pssubEntry, 'repository') &&
+        !has(pssubEntry, 'definition')
+    ) {
+        const hasColon = (pssubEntry.name || '').includes(':')
         if (hasColon || pssubEntry.path) {
-            return InternalDefinitionEntyType.PSSub
+            return InternalDefinitionEntryType.PSSub
         }
     }
 
@@ -242,10 +272,10 @@ export function getInternalDefinitionEntryType(entry: PackageEntry): InternalDef
         ((isDefined(gdgsEntry.definition) && isGitUrl(gdgsEntry.definition)) ||
             isUndefined(gdgsEntry.definition))
     ) {
-        return InternalDefinitionEntyType.GDGS
+        return InternalDefinitionEntryType.GDGS
     }
     if (has(entry, 'name') && has(entry, 'definition')) {
-        return InternalDefinitionEntyType.PDGS
+        return InternalDefinitionEntryType.PDGS
     }
     const gdpsEntry = entry as PackageGDPSEntry
     if (
@@ -254,12 +284,80 @@ export function getInternalDefinitionEntryType(entry: PackageEntry): InternalDef
         isDefined(gdpsEntry.definition) &&
         isGitUrl(gdpsEntry.definition)
     ) {
-        return InternalDefinitionEntyType.GDPS
+        return InternalDefinitionEntryType.GDPS
     }
-    if (has(entry, 'path')) {
-        return InternalDefinitionEntyType.PDPS
+    // PDPS is always defined manually and not from a definition
+    if (!has(entry, 'path')) {
+        return InternalDefinitionEntryType.PDPS
     }
+
     throw Error('This should never be called')
+}
+
+export function internalDefinitionSubToInternalEntry(definition: InternalDefinitionEntry) {
+    // if (isInternalGSSub(definition)) {
+    //     return
+    // } else
+    if (isInternalPSSub(definition) && definition.options) {
+        const entry: InternalPSSubEntry = {
+            name: definition.options.rootName,
+            path: definition.entry.path,
+        }
+        return entry
+    }
+    if (isInternalGSSub(definition) && definition.options) {
+        const entry: InternalGSSubEntry = {
+            name: definition.options.packageName,
+            vendor: definition.options.packageVendor,
+            path: definition.entry.path,
+            repository: definition.entry.repository,
+        }
+        return entry
+    }
+    throw new Error('Failed to convert entry')
+}
+
+export function overrideInternalDefinitionToInternalEntry(
+    definition: InternalDefinitionEntry,
+    overriding?: PackageInfo
+) {
+    if (
+        isInternalPDGS(definition) &&
+        (!isDefined(overriding) ||
+            (isDefined(overriding) && (isPDGS(overriding) || isGDGS(overriding))))
+    ) {
+        if (!isDefined(overriding) && !isDefined(definition.entry.repository)) {
+            throw new Error()
+            // @todo
+        }
+        const entry: InternalPDGSEntry = {
+            vendor: definition.entry.vendor || get(overriding, ['entry', 'vendor']),
+            name: definition.entry.name,
+            repository: definition.entry.repository || get(overriding, ['entry', 'repository']),
+            definition:
+                definition.entry.definition ||
+                get(overriding, ['entry', 'definition']) ||
+                definition.entry.repository ||
+                get(overriding, ['entry', 'repository']),
+        }
+        return entry
+    }
+    throw new Error('Failed to convert entry')
+}
+export function overrideInternalDefinitionOptions<T extends PackageInfoOptions>(
+    coptions: T,
+    definition: InternalDefinitionEntry,
+    addedBy: PackageInfo
+): PackageInfoOptions {
+    if (isInternalPDGS(definition)) {
+        const options: PDGSPackageOptions = {
+            ...coptions,
+            rootDirectory: addedBy.directories.definition,
+            rootName: addedBy.alias || addedBy.name,
+        }
+        return options
+    }
+    throw new Error('Failed to convert entry')
 }
 
 export function getInternalEntryType(entry: PackageEntry): InternalEntryType {
@@ -306,7 +404,7 @@ export function splitVendorName(vendorName: string): { vendor?: string; name: st
 
 export function splitVendorNameWithPath(
     vendorName: string
-): { vendor?: string; name: string; path?: string } {
+): { vendor?: string; name: string; path?: string; fullName?: string } {
     let path: string | undefined
     if (vendorName.includes(':')) {
         const [name, p]: Array<string | undefined> = vendorName.split(':')
@@ -317,19 +415,79 @@ export function splitVendorNameWithPath(
     }
     return {
         ...splitVendorName(vendorName),
+        fullName: vendorName,
         path,
     }
 }
 
 export function transformToInternalDefinitionEntry(
     entry: PackageEntry,
-    type: string
-): InternalDefinitionEntry {
+    manifest: Manifest,
+    type: string,
+    parent: PackageVersion
+): InternalDefinitionEntry[] {
     const entryType = getInternalDefinitionEntryType(entry)
     switch (entryType) {
-        case InternalDefinitionEntyType.PSSub: {
+        case InternalDefinitionEntryType.PSSub: {
             const pssubEntry = entry as PackagePSSubEntry
-            const split = splitVendorNameWithPath(pssubEntry.name)
+            let options: InternalDefinitionPSSubEntry['options']
+            let split: ReturnType<typeof splitVendorNameWithPath>
+            let subPath = './'
+            if (isDefined(pssubEntry.name)) {
+                split = splitVendorNameWithPath(pssubEntry.name)
+                const namedParent = manifest.searchByName(split.name)
+                if (!namedParent) {
+                    throw new Error('parent not found')
+                    // @todo
+                }
+                options = {
+                    allowDevelopment: get(namedParent.info.options, ['allowDevelopment'], false),
+                    mayChangeRegistry: false,
+                    rootName: split.name,
+                    rootDirectory: namedParent.info.directories.source,
+                    subPath,
+                }
+            } else if (isPDGS(parent.package.info)) {
+                split = {
+                    vendor: parent.package.info.entry.vendor,
+                    name: parent.package.info.entry.name,
+                }
+                options = {
+                    allowDevelopment: get(parent.package.info.options, ['allowDevelopment'], false),
+                    mayChangeRegistry: get(
+                        parent.package.info.options,
+                        ['mayChangeRegistry'],
+                        false
+                    ),
+                    rootName: parent.package.info.name,
+                    rootDirectory: parent.package.info.options!.rootDirectory,
+                    subPath,
+                }
+            } else {
+                if (
+                    !isPDPS(parent.package.info) &&
+                    !isPSSub(parent.package.info) &&
+                    !isGSSub(parent.package.info)
+                ) {
+                    throw new Error(`Parent package should have been PDPS or PSSub or GSSub`)
+                }
+                subPath = varget(parent.package.info.options, ['subPath'], './')
+                split = splitVendorNameWithPath(parent.package.info.options!.rootName)
+                options = {
+                    allowDevelopment: get(parent.package.info.options, ['allowDevelopment'], false),
+                    mayChangeRegistry: get(
+                        parent.package.info.options,
+                        ['mayChangeRegistry'],
+                        false
+                    ),
+                    rootName: parent.package.info.options!.rootName,
+                    rootDirectory: parent.package.info.options!.rootDirectory,
+                    subPath,
+                }
+            }
+            options.subPath = toUnix(
+                normalizeTrim(join(subPath, split.path || pssubEntry.path || ''))
+            ).replace(/^\.\//, '')
             const internal: InternalDefinitionPSSubEntry = {
                 internalDefinitionType: entryType,
                 root: {
@@ -337,26 +495,34 @@ export function transformToInternalDefinitionEntry(
                     name: split.name,
                 },
                 entry: {
-                    path: toUnix(normalizeTrim(split.path || pssubEntry.path || '')).replace(
-                        /^\.\//,
-                        ''
-                    ),
+                    path: options.subPath,
                 },
+                options,
                 type,
                 usage: {
                     optional: isDefined(pssubEntry.optional) ? pssubEntry.optional : false,
                     settings: pssubEntry.settings || {},
                 },
             }
-            return internal
+            return [internal]
         }
-        case InternalDefinitionEntyType.GSSub: {
+        case InternalDefinitionEntryType.GSSub: {
             const gssubEntry = entry as PackageGSSubEntry
             const split = splitVendorNameWithPath(gssubEntry.name)
+            if (!split.fullName) {
+                throw new Error('parent not found')
+                // @todo
+            }
+            const namedParent = manifest.searchByName(split.fullName)
+            if (!namedParent || !isGDGS(namedParent.info)) {
+                throw new Error('parent not found')
+                // @todo
+            }
+            const subPath = varget(namedParent.info.options, ['subPath'], './')
             const internal: InternalDefinitionGSSubEntry = {
                 internalDefinitionType: entryType,
                 root: {
-                    version: new VersionRange(gssubEntry.version),
+                    version: gssubEntry.version,
                     vendor: split.vendor,
                     name: split.name,
                 },
@@ -365,6 +531,23 @@ export function transformToInternalDefinitionEntry(
                         /^\.\//,
                         ''
                     ),
+                    repository: namedParent.info.entry.repository,
+                },
+                options: {
+                    allowDevelopment: false,
+                    mayChangeRegistry: get(
+                        parent.package.info.options,
+                        ['mayChangeRegistry'],
+                        false
+                    ),
+                    rootName: varget(parent.package.info.options, ['rootName']),
+                    rootDirectory: parent.package.info.directories.definition,
+                    packageName: namedParent.info.entry.name,
+                    packageVendor: namedParent.info.entry.vendor,
+                    packageDirectory: namedParent.info.directories.source,
+                    subPath: toUnix(
+                        normalizeTrim(join(subPath, split.path || gssubEntry.path || ''))
+                    ).replace(/^\.\//, ''),
                 },
                 type,
                 usage: {
@@ -372,9 +555,16 @@ export function transformToInternalDefinitionEntry(
                     settings: gssubEntry.settings || {},
                 },
             }
-            return internal
+            const rootEntry: PackageGDGSEntry = {
+                name: split.fullName,
+                version: internal.root.version,
+            }
+            return [
+                ...transformToInternalDefinitionEntry(rootEntry, manifest, type, parent),
+                internal,
+            ]
         }
-        case InternalDefinitionEntyType.GDGS: {
+        case InternalDefinitionEntryType.GDGS: {
             const gdgsEntry = entry as PackageGDGSEntry
             const internal: InternalDefinitionGDGSEntry = {
                 internalDefinitionType: entryType,
@@ -390,9 +580,9 @@ export function transformToInternalDefinitionEntry(
                     settings: gdgsEntry.settings || {},
                 },
             }
-            return internal
+            return [internal]
         }
-        case InternalDefinitionEntyType.GDPS: {
+        case InternalDefinitionEntryType.GDPS: {
             const gdpsEntry = entry as PackageGDPSEntry
             const internal: InternalDefinitionGDPSEntry = {
                 internalDefinitionType: entryType,
@@ -406,9 +596,9 @@ export function transformToInternalDefinitionEntry(
                     settings: gdpsEntry.settings || {},
                 },
             }
-            return internal
+            return [internal]
         }
-        case InternalDefinitionEntyType.PDGS: {
+        case InternalDefinitionEntryType.PDGS: {
             const pdgsEntry = entry as PackagePDGSEntry
             const internal: InternalDefinitionPDGSEntry = {
                 internalDefinitionType: entryType,
@@ -424,22 +614,20 @@ export function transformToInternalDefinitionEntry(
                     settings: pdgsEntry.settings || {},
                 },
             }
-            return internal
+            return [internal]
         }
-        case InternalDefinitionEntyType.PDPS: {
+        case InternalDefinitionEntryType.PDPS: {
             const pdpsEntry = entry as PackagePDPSEntry
             const internal: InternalDefinitionPDPSEntry = {
                 internalDefinitionType: entryType,
-                entry: {
-                    path: pdpsEntry.path,
-                },
+                entry: {},
                 type,
                 usage: {
                     optional: isDefined(pdpsEntry.optional) ? pdpsEntry.optional : false,
                     settings: pdpsEntry.settings || {},
                 },
             }
-            return internal
+            return [internal]
         }
     }
 }

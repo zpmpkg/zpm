@@ -1,8 +1,8 @@
-import { IPackage } from "../../package/package";
+import { IPackage, PackageVersion } from "../../package/internal";
 import { PackageDefinition, PackageSchema } from "../../types/package.v1";
-import { PackageDefinitionSummary } from './packageDefinition';
-export declare function getPathPackageDefinition(pkg: IPackage): Promise<PackageDefinitionSummary>;
-export declare function getContent(directory: string, version?: string): Promise<{
+import { PackageDefinitionSummary } from './definition';
+export declare function getPathPackageDefinition(pkg: IPackage, parent: PackageVersion): Promise<PackageDefinitionSummary>;
+export declare function getPathContent(directory: string, version?: string): Promise<{
     content: PackageDefinition | undefined;
     path?: string;
 }>;

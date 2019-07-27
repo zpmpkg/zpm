@@ -13,6 +13,7 @@ function loadCLI() {
             .option('-u, --update', 'Updates dependencies and definitions')
             .option('-H, --headless', 'Automatically accept pulling etc. during version resolution')
             .option('-f, --force', 'Force extraction')
+            .option('-v, --verbose', 'Show debug logs')
             .option('-p, --path [path]', 'Specify the directory you want to set as root [path]', process.cwd());
         commander_1.default.parse(process.argv);
     }
@@ -31,6 +32,10 @@ function headless() {
     return commander_1.default.headless;
 }
 exports.headless = headless;
+function verbose() {
+    return commander_1.default.verbose;
+}
+exports.verbose = verbose;
 function workingdir() {
     return commander_1.default.path;
 }

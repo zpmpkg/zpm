@@ -18,9 +18,9 @@ const program_1 = require("../cli/program");
 const spinner_1 = require("../cli/spinner");
 const environment_1 = require("../common/environment");
 const git_1 = require("../common/git");
+const io_1 = require("../common/io");
 const logger_1 = require("../common/logger");
 const util_1 = require("../common/util");
-const io_1 = require("../common/io");
 class Registry {
     constructor(urlOrPath, options) {
         this.valid = true;

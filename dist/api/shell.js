@@ -53,7 +53,7 @@ class ShellApi {
         // const stdio = new BufferList(() => {
         // })
         try {
-            child = await spawnProcess(command, this.source, this.spinner.stream);
+            child = await spawnProcess(command, this.source, this.spinner);
         }
         catch (e) {
             throw new Error(`Failed to spawn process ${e.stack}`);

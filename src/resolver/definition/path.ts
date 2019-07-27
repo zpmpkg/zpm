@@ -1,16 +1,19 @@
-import { isDefined } from '@zefiros/axioms/is-defined'
+import { isDefined } from '@zefiros/axioms'
 import fs from 'fs-extra'
 import { find, has, isArray } from 'lodash'
 import { join } from 'upath'
 import { loadJsonOrYaml } from '~/common/io'
 import { VersionRange } from '~/common/range'
 import { validateSchema } from '~/common/validation'
-import { IPackage } from '~/package/package'
+import { IPackage, PackageVersion } from '~/package/internal'
 import { PackageDefinition, PackageSchema } from '~/types/package.v1'
 import { fromPackageDefinition, PackageDefinitionSummary } from './definition'
 import { packageValiator } from './validator'
 
-export async function getPathPackageDefinition(pkg: IPackage): Promise<PackageDefinitionSummary> {
+export async function getPathPackageDefinition(
+    pkg: IPackage,
+    parent: PackageVersion
+): Promise<PackageDefinitionSummary> {
     const info = pkg.info
     let content: { content: PackageDefinition | undefined; path?: string } = {
         content: undefined,
@@ -40,7 +43,8 @@ export async function getPathPackageDefinition(pkg: IPackage): Promise<PackageDe
         content.content,
         pkg.info,
         pkg.package.manifest.registries,
-        pkg.package.manifest.type
+        pkg.package.manifest.type,
+        parent
     )
 }
 

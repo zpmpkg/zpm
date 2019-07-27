@@ -15,9 +15,7 @@ const environment_1 = require("../common/environment");
 const io_1 = require("../common/io");
 const logger_1 = require("../common/logger");
 const validation_1 = require("../common/validation");
-const entry_1 = require("../package/entry");
-const info_1 = require("../package/info");
-const package_1 = require("../package/package");
+const internal_1 = require("../package/internal");
 const schemas_1 = require("../schemas/schemas");
 class Manifest {
     constructor(registries, type, options = {}) {
@@ -46,7 +44,7 @@ class Manifest {
                         origin: `${file}`,
                         validator: this.validator,
                     });
-                    for (const entry of contents.map(entry_1.transformToInternalEntry)) {
+                    for (const entry of contents.map(internal_1.transformToInternalEntry)) {
                         this.add(entry, undefined, registry);
                     }
                 }
@@ -55,17 +53,16 @@ class Manifest {
                 }
             }
         }));
-        this.add({
-            path: './',
-        }, {
-            allowDevelopment: true,
+        this.add({}, {
+            allowDevelopment: false,
+            mayChangeRegistry: false,
             rootDirectory: environment_1.environment.directory.zpm,
             rootName: 'ZPM',
             alias: 'ZPM',
         });
     }
-    add(entry, options, registry) {
-        const pkgType = info_1.classifyType(entry);
+    add(entry, options, registry, force) {
+        const pkgType = internal_1.classifyType(entry);
         if (registry && registry.name) {
             if (pkgType === "PSSub" /* PSSub */) {
                 options = (options || {
@@ -74,20 +71,23 @@ class Manifest {
                 });
             }
         }
-        const info = info_1.getPackageInfo(entry, this.type, pkgType, options);
+        const info = internal_1.getPackageInfo(entry, this.type, pkgType, options);
         const searchKey = info.name;
         let pkg = this.entries.get(searchKey);
-        if (!axioms_1.isDefined(pkg)) {
-            pkg = new package_1.Package(this, info);
+        if (!axioms_1.isDefined(pkg) || force) {
+            if (axioms_1.isDefined(pkg)) {
+                logger_1.logger.debug(`Overriding package '${pkg.info.name}' to new entry`);
+            }
+            pkg = new internal_1.Package(this, info);
             this.entries.set(searchKey, pkg);
         }
         if (info.alias && !this.entries.has(info.alias)) {
             this.entries.set(info.alias, pkg);
         }
-        return pkg;
+        return { name: searchKey, alias: info.alias, package: pkg };
     }
     search(entry) {
-        const name = info_1.getNameFromEntry(entry);
+        const name = internal_1.getNameFromEntry(entry);
         // const searchKey = getName({})
         return {
             package: this.searchByName(name),

@@ -7,23 +7,23 @@ import { environment } from '~/common/environment'
 import { loadJsonOrYamlSimple, transformPath } from '~/common/io'
 import { logger } from '~/common/logger'
 import { buildSchema, validateSchema } from '~/common/validation'
-import { InternalDefinitionEntry, InternalEntry, transformToInternalEntry } from '~/package/entry'
 import {
+    classifyType,
     getNameFromEntry,
     getPackageInfo,
+    InternalDefinitionEntry,
+    Package,
     PackageInfoOptions,
     PDPSPackageOptions,
-    isPSSub,
-    classifyType,
-    PSSubPackageOptions,
-} from '~/package/info'
-import { Package } from '~/package/package'
+    transformToInternalEntry,
+    InternalEntry,
+} from '~/package/internal'
+import { PackageType } from '~/package/type'
 import { entriesV1 } from '~/schemas/schemas'
 import { ManifestOptions } from '~/types/definitions.v1'
 import { EntriesSchema } from '~/types/entries.v1'
 import { PackagePDPSEntry } from '~/types/package.v1'
 import { Registries } from './registries'
-import { PackageType } from '~/package/type'
 import { Registry } from './registry'
 
 export class Manifest {
@@ -71,11 +71,10 @@ export class Manifest {
             })
         )
         this.add<PackagePDPSEntry, PDPSPackageOptions>(
+            {},
             {
-                path: './',
-            },
-            {
-                allowDevelopment: true,
+                allowDevelopment: false,
+                mayChangeRegistry: false,
                 rootDirectory: environment.directory.zpm,
                 rootName: 'ZPM',
                 alias: 'ZPM',
@@ -86,8 +85,9 @@ export class Manifest {
     public add<E extends InternalEntry, O extends PackageInfoOptions>(
         entry: E,
         options?: O,
-        registry?: Registry
-    ): Package {
+        registry?: Registry,
+        force?: boolean
+    ) {
         const pkgType = classifyType(entry)
         if (registry && registry.name) {
             if (pkgType === PackageType.PSSub) {
@@ -100,14 +100,17 @@ export class Manifest {
         const info = getPackageInfo<E, O>(entry, this.type, pkgType, options)
         const searchKey = info.name
         let pkg: Package | undefined = this.entries.get(searchKey)
-        if (!isDefined(pkg)) {
+        if (!isDefined(pkg) || force) {
+            if (isDefined(pkg)) {
+                logger.debug(`Overriding package '${pkg.info.name}' to new entry`)
+            }
             pkg = new Package(this, info)
             this.entries.set(searchKey, pkg)
         }
         if (info.alias && !this.entries.has(info.alias)) {
             this.entries.set(info.alias, pkg)
         }
-        return pkg!
+        return { name: searchKey, alias: info.alias, package: pkg }
     }
 
     public search(entry: InternalDefinitionEntry): { package: Package | undefined; name: string } {

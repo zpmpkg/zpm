@@ -3,31 +3,31 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const is_defined_1 = require("@zefiros/axioms/is-defined");
+const axioms_1 = require("@zefiros/axioms");
 const fs_extra_1 = __importDefault(require("fs-extra"));
 const lodash_1 = require("lodash");
 const upath_1 = require("upath");
 const io_1 = require("../../common/io");
 const range_1 = require("../../common/range");
 const validation_1 = require("../../common/validation");
-const schemas_1 = require("../../schemas/schemas");
-const packageDefinition_1 = require("./packageDefinition");
-const packageValiator = validation_1.buildSchema(schemas_1.packageV1);
-async function getPathPackageDefinition(pkg) {
+const definition_1 = require("./definition");
+const validator_1 = require("./validator");
+async function getPathPackageDefinition(pkg, parent) {
     const info = pkg.info;
     let content = {
         content: undefined,
     };
     try {
-        content = await getContent(info.directories.definition);
+        content = await getPathContent(info.directories.definition);
     }
     catch (e) {
         //
+        // @todo
     }
     content.content = validation_1.validateSchema(content.content || {}, undefined, {
         throw: true,
         origin: `package '${info.name}' definition on path '${content.path}'`,
-        validator: packageValiator,
+        validator: validator_1.packageValiator,
     });
     if (pkg.package.manifest.packageValidator) {
         content.content = validation_1.validateSchema(content.content || {}, undefined, {
@@ -36,13 +36,13 @@ async function getPathPackageDefinition(pkg) {
             validator: pkg.package.manifest.packageValidator,
         });
     }
-    if (!is_defined_1.isDefined(content.content)) {
+    if (!axioms_1.isDefined(content.content)) {
         throw new Error(`Could not find a matching schema`);
     }
-    return packageDefinition_1.fromPackageDefinition(content.content, pkg.info, pkg.package.manifest.registries, pkg.package.manifest.type);
+    return definition_1.fromPackageDefinition(content.content, pkg.info, pkg.package.manifest.registries, pkg.package.manifest.type, parent);
 }
 exports.getPathPackageDefinition = getPathPackageDefinition;
-async function getContent(directory, version) {
+async function getPathContent(directory, version) {
     for (const prefix of ['.', '']) {
         const json = upath_1.join(directory, `${prefix}zpm.json`);
         const yml = upath_1.join(directory, `${prefix}zpm.yml`);
@@ -60,14 +60,14 @@ async function getContent(directory, version) {
     }
     return { content: undefined, path: directory };
 }
-exports.getContent = getContent;
+exports.getPathContent = getPathContent;
 function getYamlDefinition(yml, version) {
     if (lodash_1.isArray(yml)) {
-        if (isSingularYaml(yml) || !is_defined_1.isDefined(version)) {
+        if (isSingularYaml(yml) || !axioms_1.isDefined(version)) {
             return yml[0];
         }
         const found = lodash_1.find(yml, (y) => {
-            if (is_defined_1.isDefined(y.versions)) {
+            if (axioms_1.isDefined(y.versions)) {
                 return new range_1.VersionRange(y.versions).satisfies(version);
             }
             return false;
@@ -96,7 +96,7 @@ function isSingularYaml(yml) {
 }
 exports.isSingularYaml = isSingularYaml;
 function getDefinition(yml) {
-    if (is_defined_1.isDefined(yml.versions)) {
+    if (axioms_1.isDefined(yml.versions)) {
         return yml.definition;
     }
     return yml;

@@ -1,14 +1,14 @@
 import { Spinner } from '~/cli/spinner'
-import { checkout } from '~/common/git'
+import { createRepository, Repository } from '~/package/repository'
 
 export class GitApi {
-    public source: string
+    public repository: Repository
     public spinner?: Spinner
     public constructor(source: string, spinner?: Spinner) {
-        this.source = source
+        this.repository = createRepository(source)
         this.spinner = spinner
     }
     public async checkout(hash: string): Promise<void> {
-        return checkout(this.source, hash, { spinner: this.spinner })
+        return this.repository.checkout(hash, this.spinner)
     }
 }

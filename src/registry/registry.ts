@@ -6,10 +6,10 @@ import { headless, update } from '~/cli/program'
 import { spinners } from '~/cli/spinner'
 import { environment } from '~/common/environment'
 import { cloneOrPull, CloneOrPullResult } from '~/common/git'
+import { transformPath } from '~/common/io'
 import { logger } from '~/common/logger'
 import { shortHash } from '~/common/util'
 import { RegistryDefinition } from '~/types/definitions.v1'
-import { transformPath } from '~/common/io'
 
 export class Registry {
     public urlOrPath: string

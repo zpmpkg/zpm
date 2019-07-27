@@ -1,45 +1,43 @@
-zpm_project()
+{{cmake.project}}
 
-add_library("${PROJECT_NAME}" INTERFACE)
+add_library({{cmake.project_name}} INTERFACE)
 
-target_include_directories("${PROJECT_NAME}" INTERFACE 
-{{#include.files}}
-    "{{.}}"
-{{/include.files}}
+target_include_directories({{cmake.project_name}} SYSTEM INTERFACE 
+    {{#public.include}}
+        "{{this}}"
+    {{/public.include}}
 )
 
-{{#define}}
-target_compile_definitions("${PROJECT_NAME}" INTERFACE 
-{{/define}}
-    {{#define.definitions}}
-    {{.}}
-    {{/define.definitions}}
-{{#define}}
+{{#if public.define}}
+target_compile_definitions({{cmake.project_name}} INTERFACE 
+    {{#each public.define}}
+    {{this}}
+    {{/each}}
 )
-{{/define}}
 
-{{#link}}
-target_link_libraries("${PROJECT_NAME}" INTERFACE 
-{{/link}}
-    {{#link.libraries}}
-    {{.}}
-    {{/link.libraries}}
-{{#link}}
+{{/if~}}
+
+{{#if public.link}}
+target_link_libraries({{cmake.project_name}} INTERFACE 
+    {{#each public.link}}
+    {{this}}
+    {{/each}}
 )
-{{/link}}
 
-{{#compile}}
-target_compile_features("${PROJECT_NAME}" INTERFACE 
-{{/compile}}
-    {{#compile.features}}
-    {{.}}
-    {{/compile.features}}
-{{#compile}}
+{{/if~}}
+
+{{#if public.compile}}
+target_compile_features({{cmake.project_name}} INTERFACE 
+    {{#each public.compile}}
+    {{this}}
+    {{/each}}
 )
-{{/compile}}
 
-{{#custom}}
-{{.}}
-{{/custom}}
+{{/if~}}
 
-zpm_default_target("${PROJECT_NAME}")
+{{#if custom}}
+{{custom}}
+
+{{/if~}}
+
+{{cmake.target}}

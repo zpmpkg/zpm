@@ -16,6 +16,14 @@
       }
     ]
   },
-  "include": ["src/**/*.ts", "src/**/*.js", "src/**/*.json", "test/**/*.ts", "./*.js"],
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.js",
+    "src/**/*.json",
+    "test/**/*.ts",
+    "./*.js",
+    "src/solver/sat-old.tsx",
+    "src/package/gdps.tsx"
+  ],
   "exclude": [".vscode", "node_modules"]
 }

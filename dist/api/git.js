@@ -1,13 +1,13 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-const git_1 = require("../common/git");
+const repository_1 = require("../package/repository");
 class GitApi {
     constructor(source, spinner) {
-        this.source = source;
+        this.repository = repository_1.createRepository(source);
         this.spinner = spinner;
     }
     async checkout(hash) {
-        return git_1.checkout(this.source, hash, { spinner: this.spinner });
+        return this.repository.checkout(hash, this.spinner);
     }
 }
 exports.GitApi = GitApi;

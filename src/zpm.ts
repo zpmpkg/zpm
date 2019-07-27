@@ -1,6 +1,8 @@
+import { isDefined } from '@zefiros/axioms'
 import { Configuration } from '~/common/config'
 import { environment, loadEnvironment } from '~/common/environment'
 import { Registries } from '~/registry/registries'
+import { Builder } from './builder/builder'
 import { spinners } from './cli/spinner'
 import { logger } from './common/logger'
 import { storage } from './common/storage'
@@ -8,6 +10,7 @@ import { InternalPDPSEntry } from './package/entry'
 import { PDPSPackageOptions } from './package/info'
 import { Package } from './package/package'
 import { SATSolver } from './solver/sat'
+import { LockFile } from './types/lockfile.v1'
 
 export class ZPM {
     public root!: Package
@@ -24,16 +27,15 @@ export class ZPM {
         this.config.load()
         await this.registries.load()
 
-        const rootEntry: InternalPDPSEntry = {
-            path: './',
-        }
+        const rootEntry: InternalPDPSEntry = {}
         const rootOptions: PDPSPackageOptions = {
             alias: 'ROOT',
             rootName: 'ROOT',
             rootDirectory: environment.directory.workingdir,
             allowDevelopment: true,
+            mayChangeRegistry: true,
         }
-        this.root = this.registries.addPackage('libraries', rootEntry, rootOptions)
+        this.root = this.registries.addPackage('libraries', rootEntry, rootOptions).package
         try {
             await this.root.load()
         } catch (error) {
@@ -46,17 +48,17 @@ export class ZPM {
         }
 
         const solver = new SATSolver(this.registries)
-        // let lockFile: SATSolution | undefined
+        let lockFile: LockFile | undefined
         try {
+            spinners.start()
+
+            await solver.addPackage(this.root)
             await solver.load()
 
-            spinners.start()
-            await solver.addPackage(this.root)
             await solver.expand()
             spinners.stop()
 
-            // lockFile =
-            await solver.optimize()
+            lockFile = await solver.optimize()
             spinners.stop()
         } catch (error) {
             spinners.stop()
@@ -64,27 +66,26 @@ export class ZPM {
             return false
         }
 
-        // if (isDefined(lockFile)) {
-        //     try {
-        //         spinners.start()
-        //         const builder = new Builder(this.registries, this.root, lockFile)
-        //         await builder.load()
-        //         spinners.stop()
+        if (isDefined(lockFile)) {
+            try {
+                spinners.start()
 
-        //         await builder.build()
-        //         spinners.stop()
+                const builder = new Builder(this.registries, lockFile)
+                builder.load()
 
-        //         await solver.save()
-        //         spinners.stop()
-        //     } catch (error) {
-        //         spinners.stop()
-        //         logger.error(`Failed to build packages:\n\n${error.stack}`)
-        //         return false
-        //     }
-        // } else {
-        //     await solver.rollback()
-        //     logger.error(`We did not find a valid dependency graph, please check your requirements`)
-        // }
+                await builder.build()
+
+                spinners.stop()
+
+                await solver.save()
+            } catch (error) {
+                spinners.stop()
+                logger.error(`Failed to build packages:\n\n${error.stack}`)
+                return false
+            }
+        } else {
+            logger.error(`We did not find a valid dependency graph, please check your requirements`)
+        }
 
         return true
     }

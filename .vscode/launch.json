@@ -8,14 +8,15 @@
             "name": "Main TS File",
             "type": "node",
             "request": "launch",
-            "args": ["./src/main.ts",  "-p",  "C:\\Users\\Paul\\Nextcloud\\Documents\\Repositories\\definitions\\googletest", "--force"],
+            "args": ["./src/main.ts",  "-p",  "googletest", "--force"],
             "runtimeArgs": [
                 "--nolazy", "-r", "ts-node/register", "-r", "tsconfig-paths/register"],
             "sourceMaps": true,
             "cwd": "${workspaceRoot}",
             "protocol": "inspector",
             "smartStep": true,
-            "skipFiles": ["<node_internals>/**"]
+            "skipFiles": ["<node_internals>/**"],
+            "outputCapture": "std"
         }
     ]
 }

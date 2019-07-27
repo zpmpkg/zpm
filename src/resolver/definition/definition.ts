@@ -1,9 +1,11 @@
-import { isDefined } from '@zefiros/axioms'
-import { get } from '@zefiros/axioms/get'
-import { omit } from '@zefiros/axioms/omit'
-import { cloneDeep, isArray, isEmpty } from 'lodash'
-import { InternalDefinitionEntry, transformToInternalDefinitionEntry } from '~/package/entry'
-import { PackageInfo } from '~/package/info'
+import { get, isDefined, omit } from '@zefiros/axioms'
+import { cloneDeep, isArray, isEmpty, flatten } from 'lodash'
+import {
+    InternalDefinitionEntry,
+    PackageInfo,
+    PackageVersion,
+    transformToInternalDefinitionEntry,
+} from '~/package/internal'
 import { Manifest } from '~/registry/package'
 import { Registries } from '~/registry/registries'
 import { PackageDefinition, PackageEntry } from '~/types/package.v1'
@@ -19,7 +21,8 @@ export function getEntries(
     pkg: PackageDefinition,
     manifest: Manifest,
     type: string,
-    pkgType: string
+    pkgType: string,
+    parent: PackageVersion
 ): InternalDefinitionEntry[] {
     const requiredValues = get(pkg, ['requires', type], [])
     let values: PackageEntry[] = []
@@ -40,19 +43,23 @@ export function getEntries(
     } else {
         values = requiredValues as PackageEntry[]
     }
-    return values.map(v => transformToInternalDefinitionEntry(v, type))
+    return flatten(values.map(v => transformToInternalDefinitionEntry(v, manifest, type, parent)))
 }
 
 function addDevelopmentPackages(
     values: InternalDefinitionEntry[],
+    manifest: Manifest,
     info: PackageInfo,
     pkg: PackageDefinition,
-    type: string
+    type: string,
+    parent: PackageVersion
 ) {
     if (info.options && info.options.allowDevelopment) {
         const development = get(pkg, ['development', type], [] as PackageEntry[])
-        const developmentArray = (!isArray(development) ? [development] : development).map(d =>
-            transformToInternalDefinitionEntry(d, type)
+        const developmentArray = flatten(
+            (!isArray(development) ? [development] : development).map(d =>
+                transformToInternalDefinitionEntry(d, manifest, type, parent)
+            )
         )
         for (const entry of developmentArray) {
             // @todo remove duplicates
@@ -71,7 +78,8 @@ function setDefaults(
     manifest: Manifest,
     pkgType: string,
     pkg: PackageDefinition,
-    type: string
+    type: string,
+    parent: PackageVersion
 ) {
     if (isEmpty(values) && isDefined((manifest.options.defaults || {})[pkgType])) {
         const defaultUsage: PackageEntry = cloneDeep(manifest.options.defaults![pkgType])
@@ -82,7 +90,7 @@ function setDefaults(
                 ...pkg[manifest.options.settingsPath],
             }
         }
-        values.push(transformToInternalDefinitionEntry(defaultUsage, type))
+        values.push(...transformToInternalDefinitionEntry(defaultUsage, manifest, type, parent))
     }
 }
 
@@ -90,7 +98,8 @@ export function fromPackageDefinition(
     pkg: PackageDefinition,
     info: PackageInfo,
     registries: Registries,
-    pkgType: string
+    pkgType: string,
+    parent: PackageVersion
 ): PackageDefinitionSummary {
     const types = registries.getTypes()
     const definition: PackageDefinitionSummary = {
@@ -99,10 +108,10 @@ export function fromPackageDefinition(
     }
     for (const type of types) {
         const manifest = registries.getManifest(type)
-        const entries = getEntries(pkg, manifest, type, pkgType)
+        const entries = getEntries(pkg, manifest, type, pkgType, parent)
 
-        addDevelopmentPackages(entries, info, pkg, type)
-        setDefaults(entries, manifest, pkgType, pkg, type)
+        addDevelopmentPackages(entries, manifest, info, pkg, type, parent)
+        setDefaults(entries, manifest, pkgType, pkg, type, parent)
 
         definition.packages.push(...entries)
     }

@@ -1,15 +1,15 @@
-export interface PackageApi {
+export interface PackageVersionApi {
     hash?: string;
     settings: {
         [k: string]: any;
     };
-    description: {
+    definition: {
         [k: string]: any;
     };
     usage: {
         [k: string]: any;
     };
-    globals: {
+    global: {
         [k: string]: any;
     };
     target: string;

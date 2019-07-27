@@ -3,6 +3,7 @@ import stringify from 'json-stable-stringify'
 import { isObjectLike } from 'lodash'
 import winston from 'winston'
 import DailyRotateFile from 'winston-daily-rotate-file'
+import { verbose } from '~/cli/program'
 import { environment } from './environment'
 
 class Logger {
@@ -21,7 +22,9 @@ class Logger {
             }),
         ],
     })
-    private consola = Consola
+    private consola = Consola.create({
+        level: verbose() ? 'debug' : undefined,
+    })
 
     public fatal(...message: any[]): void {
         this.logfile.error(message)
