@@ -77,6 +77,7 @@ export class Repository {
     }
 }
 
+// tslint:disable-next-line: variable-name
 const _repositories: Map<string, Repository> = new Map<string, Repository>()
 export function createRepository(directory: string, url?: string) {
     if (!_repositories.has(directory)) {

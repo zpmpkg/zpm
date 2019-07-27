@@ -17,7 +17,9 @@ import {
     RegistryNamedLocationEntry,
     RegistryPathLocationEntry,
 } from '~/types/definitions.v1'
+// tslint:disable-next-line: no-circular-imports
 import { ZPM } from '~/zpm'
+// tslint:disable-next-line: no-circular-imports
 import { Manifest } from './package'
 import { Registry } from './registry'
 
@@ -49,6 +51,7 @@ export class Registries {
         return this.zpm.config.values.registry.map(r => r.name)
     }
 
+    // tslint:disable-next-line: no-accessor-field-mismatch
     public getRegistries() {
         return this.zpm.config.values.registry
     }

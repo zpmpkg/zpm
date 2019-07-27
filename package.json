@@ -1,6 +1,7 @@
 {
   "license": "MIT",
-  "name": "@zpmpk/zpm",
+  "name": "@zpmpkg/zpm",
+  "repository": "https://github.com/zpmpkg/zpm",
   "version": "0.1.0",
   "main": "./dist/main.js",
   "bin": {
@@ -8,14 +9,14 @@
   },
   "scripts": {
     "prettier:fix": "yarn prettier --write src/**/*.ts",
-    "fix": "yarn lint --fix --project tsconfig.json",
+    "fix": "yarn lint --fix",
     "lint": "tslint --project tsconfig.json",
     "types:generate": "yarn ts-node tools/generate-types.ts && (yarn fix || true) && yarn prettier:fix",
     "build": "ttsc -p tsconfig.dist.json",
-    "start": "./node_modules/.bin/webpack --config ./webpack.config.js --mode development && node build/main.js",
-    "main": "ts-node -T -r tsconfig-paths/register src/main.ts",
-    "debug": "ts-node -r tsconfig-paths/register src/main.ts --inspect",
-    "package": "rm -rf dist && yarn build && find dist -type f -regex '.*.js.map' -exec sed -i.bak 's|../src|./src|g' {} \\; && find dist -type f -regex '.*.bak' -exec rm {} \\; && cp -r package.json LICENSE CHANGELOG.md README.md src dist/"
+    "test": "ttsc && jest test",
+    "release": "yarn standard-version -a",
+    "release:dry": "yarn release --dry-run",
+    "package": "rm -r dist && yarn build && find dist -type f -regex '.*.js.map' -exec sed -i.bak 's|../src|./src|g' {} \\; && find dist -type f -regex '.*.bak' -exec rm {} \\; && cp -r package.json LICENSE CHANGELOG.md README.md src dist/"
   },
   "devDependencies": {
     "@types/bl": "^2.1.0",

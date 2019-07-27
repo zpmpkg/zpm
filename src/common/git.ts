@@ -31,7 +31,7 @@ export async function _fetch(
     } = {}
 ) {
     return git(destination)
-        .outputHandler((command, stdout, stderr) => {
+        .outputHandler((_, stdout, stderr) => {
             if (options.stream) {
                 stdout.pipe(options.stream)
                 stderr.pipe(options.stream)
@@ -50,7 +50,7 @@ export async function _clone(
     options: { options?: string[]; stream?: NodeJS.WritableStream } = {}
 ) {
     return git()
-        .outputHandler((command, stdout, stderr) => {
+        .outputHandler((_, stdout, stderr) => {
             if (options.stream) {
                 stdout.pipe(options.stream)
                 stderr.pipe(options.stream)
@@ -209,7 +209,7 @@ export async function checkout(
             ? options.spinner.addChild('Checking out hash')
             : undefined
         await git(destination)
-            .outputHandler((command, stdout, stderr) => {
+            .outputHandler((_, stdout, stderr) => {
                 if (checkoutSpin) {
                     stdout.pipe(checkoutSpin.stream)
                     stderr.pipe(checkoutSpin.stream)
@@ -226,7 +226,7 @@ export async function checkout(
                 ? options.spinner.addChild('Checking out submodules')
                 : undefined
             await git(destination)
-                .outputHandler((command, stdout, stderr) => {
+                .outputHandler((_, stdout, stderr) => {
                     if (spin) {
                         stdout.pipe(spin.stream)
                         stderr.pipe(spin.stream)

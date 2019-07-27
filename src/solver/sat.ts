@@ -62,7 +62,7 @@ export class SATSolver {
                         await this.expandTerm(version.versionId)
                         this.assumptions.push(version.versionId)
                     } else {
-                        console.log(`failure ${version.versionId}`)
+                        logger.warn(`failure ${version.versionId}`)
                         // @todo
                     }
                 }

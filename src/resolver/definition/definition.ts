@@ -1,5 +1,5 @@
 import { get, isDefined, omit } from '@zefiros/axioms'
-import { cloneDeep, isArray, isEmpty, flatten } from 'lodash'
+import { cloneDeep, flatten, isArray, isEmpty } from 'lodash'
 import {
     InternalDefinitionEntry,
     PackageInfo,

@@ -22,8 +22,6 @@ export class Version {
         this.raw = version
         if (isDefined(version)) {
             const found = first(findVersions(this.translatePrerelease(version), { loose: true }))
-            found
-            version
             this.semver = found ? new SemVer(found, { includePrerelease: true }) : undefined
             if (!isDefined(this.semver)) {
                 version = version.trim()

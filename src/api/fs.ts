@@ -13,7 +13,7 @@ export class FsApi {
         this.target = target
         this.spinner = spinner
     }
-    public async copy(sources: string[], options?: { excludes?: string[] }): Promise<void> {
+    public async copy(sources: string[], _?: { excludes?: string[] }): Promise<void> {
         if (!isEmpty(sources)) {
             await copy(sources, this.source, this.target)
         }

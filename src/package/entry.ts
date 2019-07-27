@@ -12,7 +12,6 @@ import {
     RegistryGDPSEntry,
     RegistryPDGSEntry,
     RegistryPDPSEntry,
-    RegistryPSSubEntry,
 } from '~/types/definitions.v1'
 import {
     PackageEntry,
@@ -24,6 +23,8 @@ import {
     PackagePSSubEntry,
     PackageSettings,
 } from '~/types/package.v1'
+import { isInternalGSSub, isInternalPDGS } from './entryType'
+import { isGDGS, isGSSub, isPDGS, PackageInfo, PDGSPackageOptions } from './info'
 import {
     GSSubPackageOptions,
     InternalDefinitionEntryType,
@@ -35,39 +36,37 @@ import {
     PDPSPackageOptions,
     PSSubPackageOptions,
 } from './internal'
-import { isInternalPDGS, isInternalGSSub } from './entryType'
-import { isPDGS, PackageInfo, isGDGS, PDGSPackageInfo, PDGSPackageOptions, isGSSub } from './info'
 
 export interface InternalGDGSEntry {
-    //type: InternalEntryType.GDGS
+    // type: InternalEntryType.GDGS
     vendor: string
     name: string
     repository: string
     definition?: string
 }
 export interface InternalGDPSEntry {
-    //type: InternalEntryType.GDPS
+    // type: InternalEntryType.GDPS
     definition: string
     path: string
 }
 export interface InternalPDGSEntry {
-    //type: InternalEntryType.PDGS
+    // type: InternalEntryType.PDGS
     vendor?: string
     name: string
     repository: string
     definition: string
 }
 export interface InternalPDPSEntry {
-    //type: InternalEntryType.PDPS
+    // type: InternalEntryType.PDPS
 }
 export interface InternalPSSubEntry {
-    //type: InternalEntryType.PSSub
+    // type: InternalEntryType.PSSub
     name: string
     path: string
 }
 
 export interface InternalGSSubEntry {
-    //type: InternalEntryType.GSSub
+    // type: InternalEntryType.GSSub
     vendor?: string
     name: string
     path: string
@@ -96,7 +95,7 @@ export function transformToInternalEntry(entry: RegistryEntry): InternalEntry {
         const pdgsEntry = entry as RegistryPDGSEntry
         const split = pdgsEntry.name.split('/')
         return {
-            //type: InternalEntryType.PDGS,
+            // type: InternalEntryType.PDGS,
             vendor: split[0],
             name: split[1],
             repository: pdgsEntry.repository,
@@ -107,7 +106,7 @@ export function transformToInternalEntry(entry: RegistryEntry): InternalEntry {
     if (has(entry, 'name') && isDefined(gdgsEntry.repository) && isGitUrl(gdgsEntry.repository)) {
         const split = gdgsEntry.name.split('/')
         return {
-            //type: InternalEntryType.GDGS,
+            // type: InternalEntryType.GDGS,
             vendor: split[0],
             name: split[1],
             repository: gdgsEntry.repository,
@@ -116,13 +115,13 @@ export function transformToInternalEntry(entry: RegistryEntry): InternalEntry {
     }
     if (!has(entry, 'name') && has(entry, 'definition') && has(entry, 'path')) {
         return {
-            //type: InternalEntryType.GDPS,
+            // type: InternalEntryType.GDPS,
             ...(entry as RegistryGDPSEntry),
         }
     }
     if (!has(entry, 'name') && has(entry, 'path')) {
         return {
-            //type: InternalEntryType.PDPS,
+            // type: InternalEntryType.PDPS,
             ...(entry as RegistryPDPSEntry),
         }
     }

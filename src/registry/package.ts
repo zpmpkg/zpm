@@ -12,11 +12,11 @@ import {
     getNameFromEntry,
     getPackageInfo,
     InternalDefinitionEntry,
+    InternalEntry,
     Package,
     PackageInfoOptions,
     PDPSPackageOptions,
     transformToInternalEntry,
-    InternalEntry,
 } from '~/package/internal'
 import { PackageType } from '~/package/type'
 import { entriesV1 } from '~/schemas/schemas'

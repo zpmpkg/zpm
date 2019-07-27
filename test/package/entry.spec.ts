@@ -1,3 +1,4 @@
+import { VersionRange } from '~/common/range'
 import {
     getInternalDefinitionEntryType,
     InternalDefinitionGDGSEntry,
@@ -6,15 +7,19 @@ import {
     InternalDefinitionPDGSEntry,
     InternalDefinitionPDPSEntry,
     InternalDefinitionPSSubEntry,
+    InternalEntryType,
     InternalGDGSEntry,
     InternalGDPSEntry,
     InternalPDGSEntry,
     InternalPDPSEntry,
     transformToInternalDefinitionEntry,
     transformToInternalEntry,
-    InternalEntryType,
 } from '~/package/entry'
 import { InternalDefinitionEntryType } from '~/package/entryType'
+import { PackageVersion } from '~/package/packageVersion'
+import { PackageType } from '~/package/type'
+import { Manifest } from '~/registry/package'
+import { Registries } from '~/registry/registries'
 import {
     RegistryGDGSEntry,
     RegistryGDPSEntry,
@@ -30,12 +35,6 @@ import {
     PackagePSSubEntry,
     PackagePSSubNameEntry,
 } from '~/types/package.v1'
-import { Version } from '~/common/version'
-import { VersionRange } from '~/common/range'
-import { Manifest } from '~/registry/package'
-import { Registries } from '~/registry/registries'
-import { PackageVersion } from '~/package/packageVersion'
-import { PackageType } from '~/package/type'
 
 describe('getInternalDefinitionEntryType', () => {
     describe('GDGS', () => {

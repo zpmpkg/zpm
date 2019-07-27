@@ -7,8 +7,11 @@ import { isDefined } from '~/common/util'
 import { PackageVersion } from '~/package/internal'
 import { Registries } from '~/registry/registries'
 import { LockFile, VersionLock } from '~/types/lockfile.v1'
+// tslint:disable-next-line: no-circular-imports
 import { TargetCMakeBuilder } from './cmakebuilder'
+// tslint:disable-next-line: no-circular-imports
 import { TargetExtractor } from './extractor'
+// tslint:disable-next-line: no-circular-imports
 import { IBuilder, PackageBuilder, TargetBuilder } from './packageBuilder'
 
 export class Builder {

@@ -26,7 +26,7 @@ export function validateSchema<T, R = T>(
             throw new Error(
                 `Failed to validate${
                     options.origin ? ` ${options.origin}` : ''
-                }:\n\n${betterAjvErrors(schema, instance, [validate.errors![0]], {
+                }:\n\n${betterAjvErrors(schema, instance, validate.errors, {
                     indent: 2,
                 })}`
             )

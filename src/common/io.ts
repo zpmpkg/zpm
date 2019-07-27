@@ -56,7 +56,7 @@ export async function copy(
     root: string,
     destination: string,
     excludes: string[] = [],
-    options?: { spinner?: Spinner }
+    _?: { spinner?: Spinner }
 ) {
     const files = await glob(source, root, excludes)
     await settledPromiseAll(

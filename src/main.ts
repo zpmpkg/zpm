@@ -13,7 +13,7 @@ async function main() {
 }
 
 main()
-    .then(result => {
+    .then(_ => {
         logger.success('Done')
     })
     .catch(error => {

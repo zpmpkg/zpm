@@ -5,6 +5,7 @@ import { SourceVersion } from './sourceVersion'
 export abstract class IPackageVersion {
     public id: string
     public version!: PackageVersion
+    // tslint:disable-next-line: variable-name
     protected _package: IPackage
     public constructor(pkg: IPackage, id: string) {
         this._package = pkg

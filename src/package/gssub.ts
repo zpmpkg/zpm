@@ -1,20 +1,19 @@
 import { isDefined } from '@zefiros/axioms'
+import { join } from 'upath'
+import { environment } from '~/common/environment'
 import { logger } from '~/common/logger'
 import { Version } from '~/common/version'
 import { PackageDefinitionSummary } from '~/resolver/definition/definition'
 import { getPathPackageDefinition } from '~/resolver/definition/path'
 import {
+    GSSubPackageInfo,
+    InternalDefinitionGSSubEntry,
     IPackage,
     IPackageVersion,
     PackageVersion,
     ParentUsage,
-    PSSubPackageInfo,
-    InternalDefinitionGSSubEntry,
-    GSSubPackageInfo,
 } from './internal'
 import { createRepository } from './repository'
-import { join } from 'upath'
-import { environment } from '~/common/environment'
 
 export class GSSubPackageVersion extends IPackageVersion {
     public async getDefinition(parent: PackageVersion): Promise<PackageDefinitionSummary> {

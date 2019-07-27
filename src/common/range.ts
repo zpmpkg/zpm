@@ -19,8 +19,7 @@ export class VersionRange {
     }
 
     public satisfies(version: Version | string): boolean {
-        const semVersion: Version =
-            version instanceof Version ? (version as Version) : new Version(version as string)
+        const semVersion: Version = version instanceof Version ? version : new Version(version)
 
         if (semVersion.isTag) {
             return this.tags.filter(x => x === semVersion.tag).length > 0

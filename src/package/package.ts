@@ -2,13 +2,13 @@ import { isUndefined } from 'util'
 import { Manifest } from '~/registry/package'
 import {
     GDGSPackage,
+    GSSubPackage,
     IPackage,
     PackageInfo,
     PackageVersion,
     PDGSPackage,
     PDPSPackage,
     PSSubPackage,
-    GSSubPackage,
 } from './internal'
 import { PackageType } from './type'
 

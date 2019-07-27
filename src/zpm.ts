@@ -1,6 +1,7 @@
 import { isDefined } from '@zefiros/axioms'
 import { Configuration } from '~/common/config'
 import { environment, loadEnvironment } from '~/common/environment'
+// tslint:disable-next-line: no-circular-imports
 import { Registries } from '~/registry/registries'
 import { Builder } from './builder/builder'
 import { spinners } from './cli/spinner'
@@ -8,7 +9,9 @@ import { logger } from './common/logger'
 import { storage } from './common/storage'
 import { InternalPDPSEntry } from './package/entry'
 import { PDPSPackageOptions } from './package/info'
+// tslint:disable-next-line: no-circular-imports
 import { Package } from './package/package'
+// tslint:disable-next-line: no-circular-imports
 import { SATSolver } from './solver/sat'
 import { LockFile } from './types/lockfile.v1'
 

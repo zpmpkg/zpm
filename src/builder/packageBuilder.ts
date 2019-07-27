@@ -93,10 +93,10 @@ export class TargetBuilder extends IBuilder {
         return this.blackboard.get(target.version.id)
     }
 
-    public async run(target: PackageBuilder): Promise<boolean> {
+    public async run(_: PackageBuilder): Promise<boolean> {
         return false
     }
-    public async prepare(target: PackageBuilder): Promise<boolean> {
+    public async prepare(_: PackageBuilder): Promise<boolean> {
         return true
     }
     public async finish(): Promise<boolean> {

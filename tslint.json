@@ -2,5 +2,8 @@
   "extends": [
     "@zefiros/npm-defaults/tslint.json",
     "typestrict"
-  ]
+  ],
+  "rules": {
+    "no-use-before-declare": false
+  }
 }

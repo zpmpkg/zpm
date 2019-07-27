@@ -1,14 +1,14 @@
 import { get, isDefined } from '@zefiros/axioms'
 import fs from 'fs-extra'
 import Handlebars from 'handlebars'
+import { uniq } from 'lodash'
 import { join, relative } from 'upath'
 import { workingdir } from '~/cli/program'
 import { environment } from '~/common/environment'
 import { copy, glob, isSubDirectory } from '~/common/io'
+import { InternalGSSubEntry } from '~/package/entry'
 import { PackageType } from '~/package/type'
 import { PackageBuilder, TargetBuilder } from './packageBuilder'
-import { uniq } from 'lodash'
-import { InternalGSSubEntry } from '~/package/entry'
 
 interface TemplateAccessview {
     include?: string[]
@@ -224,6 +224,7 @@ ${uniq(this.libraryPaths)
             globs: {},
             default: get(settings, ['default'], false),
             cmake: {
+                // tslint:disable-next-line: no-invalid-template-strings
                 project_name: '${PROJECT_NAME}',
             },
         }
@@ -235,6 +236,7 @@ ${uniq(this.libraryPaths)
             result.cmake = {
                 ...result.cmake,
                 project: 'zpm_project()',
+                // tslint:disable-next-line: no-invalid-template-strings
                 target: 'zpm_default_target(${PROJECT_NAME})',
             }
         } else {
@@ -244,7 +246,9 @@ ${uniq(this.libraryPaths)
                     (target.version.package.entry as InternalGSSubEntry).path
                 }")`,
                 target:
+                    // tslint:disable-next-line: no-invalid-template-strings
                     'zpm_alias(${PROJECT_NAME})' +
+                    // tslint:disable-next-line: no-invalid-template-strings
                     (result.default ? '\nzpm_default_target(${PROJECT_NAME})' : ''),
             }
         }
