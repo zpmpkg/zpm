@@ -11,7 +11,6 @@ import {
     RegistryGDGSEntry,
     RegistryGDPSEntry,
     RegistryPDGSEntry,
-    RegistryPDPSEntry,
 } from '~/types/definitions.v1'
 import {
     PackageEntry,
@@ -119,11 +118,8 @@ export function transformToInternalEntry(entry: RegistryEntry): InternalEntry {
             ...(entry as RegistryGDPSEntry),
         }
     }
-    if (!has(entry, 'name') && has(entry, 'path')) {
-        return {
-            // type: InternalEntryType.PDPS,
-            ...(entry as RegistryPDPSEntry),
-        }
+    if (!has(entry, 'name') && !has(entry, 'path')) {
+        return {}
     }
     // if (has(entry, 'name') || (has(entry, 'path') || varget(entry, ['path'])!.includes(':'))) {
     //     const subentry = entry as RegistryPSSubEntry
@@ -245,7 +241,7 @@ export type InternalDefinitionEntry =
 
 export function getInternalDefinitionEntryType(entry: PackageEntry): InternalDefinitionEntryType {
     const gssubEntry = entry as PackageGSSubEntry
-    if (has(gssubEntry, 'name') && has(gssubEntry, 'version')) {
+    if (has(gssubEntry, 'name') && gssubEntry.name.includes('/') && has(gssubEntry, 'version')) {
         const hasColon = gssubEntry.name.includes(':')
         if (hasColon || gssubEntry.path) {
             return InternalDefinitionEntryType.GSSub

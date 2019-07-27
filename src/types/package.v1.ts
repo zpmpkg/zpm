@@ -62,6 +62,7 @@ export interface PackagePDGSEntry {
 export interface PackageGSSubEntry {
     name: string
     path?: string
+    definition?: string
     version: string
     optional?: boolean
     settings?: PackageSettings

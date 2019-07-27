@@ -8,7 +8,6 @@ import {
     InternalDefinitionPDGSEntry,
     InternalDefinitionPDPSEntry,
     InternalDefinitionPSSubEntry,
-    InternalEntryType,
     InternalGDGSEntry,
     InternalGDPSEntry,
     InternalPDGSEntry,
@@ -125,14 +124,6 @@ describe('getInternalDefinitionEntryType', () => {
             }
             expect(getInternalDefinitionEntryType(entry)).toBe(InternalDefinitionEntryType.PDGS)
         })
-        test('implicit path2', () => {
-            const entry: PackagePDGSEntry = {
-                name: 'Zefiros-Software/GoogleTest:foobar',
-                version: 'master',
-                definition: './',
-            }
-            expect(getInternalDefinitionEntryType(entry)).toBe(InternalDefinitionEntryType.PDGS)
-        })
         test('extra', () => {
             const entry: PackagePDGSEntry = {
                 name: 'Zefiros-Software/Awesomeness',
@@ -161,7 +152,7 @@ describe('getInternalDefinitionEntryType', () => {
     describe('GSSub', () => {
         test('simple', () => {
             const entry: PackageGSSubEntry = {
-                name: 'ZPM',
+                name: 'Zefiros-Software/GoogleTest',
                 path: './foobar',
                 version: 'master',
             }
@@ -169,14 +160,23 @@ describe('getInternalDefinitionEntryType', () => {
         })
         test('implicit path', () => {
             const entry: PackageGSSubEntry = {
-                name: 'ZPM:foobar',
+                name: 'Zefiros-Software/GoogleTest:foobar',
                 version: 'master',
             }
             expect(getInternalDefinitionEntryType(entry)).toBe(InternalDefinitionEntryType.GSSub)
         })
+        test('implicit path2', () => {
+            const entry: PackageGSSubEntry = {
+                name: 'Zefiros-Software/GoogleTest:foobar',
+                version: 'master',
+                definition: './',
+            }
+            // this is not a PDGS
+            expect(getInternalDefinitionEntryType(entry)).toBe(InternalDefinitionEntryType.GSSub)
+        })
         test('extras', () => {
             const entry: PackageGSSubEntry = {
-                name: 'ZPM',
+                name: 'Zefiros-Software/GoogleTest',
                 path: './foobar',
                 version: 'master',
                 settings: {},
@@ -700,7 +700,7 @@ describe('transformToInternalDefinitionEntry', () => {
         })
         test('simple', () => {
             const entry: PackageGSSubEntry = {
-                name: 'ZPM',
+                name: 'Zefiros-Software/ZPM',
                 path: './foobar',
                 version: 'master',
             }
@@ -712,7 +712,7 @@ describe('transformToInternalDefinitionEntry', () => {
                 },
                 root: {
                     name: 'ZPM',
-                    vendor: undefined,
+                    vendor: 'Zefiros-Software',
                     version: 'master',
                 },
                 options: {
@@ -736,6 +736,7 @@ describe('transformToInternalDefinitionEntry', () => {
                     internalDefinitionType: 'GDGS',
                     entry: {
                         name: 'ZPM',
+                        vendor: 'Zefiros-Software',
                     },
                     type: 'fooType',
                     usage: {
@@ -749,7 +750,7 @@ describe('transformToInternalDefinitionEntry', () => {
         })
         test('implicit path', () => {
             const entry: PackageGSSubEntry = {
-                name: 'ZPM:foobar',
+                name: 'Zefiros-Software/ZPM:foobar',
                 version: 'master',
             }
             const internal: InternalDefinitionGSSubEntry = {
@@ -760,7 +761,7 @@ describe('transformToInternalDefinitionEntry', () => {
                 },
                 root: {
                     name: 'ZPM',
-                    vendor: undefined,
+                    vendor: 'Zefiros-Software',
                     version: 'master',
                 },
                 options: {
@@ -784,6 +785,7 @@ describe('transformToInternalDefinitionEntry', () => {
                     internalDefinitionType: 'GDGS',
                     entry: {
                         name: 'ZPM',
+                        vendor: 'Zefiros-Software',
                     },
                     type: 'fooType',
                     usage: {
@@ -797,7 +799,7 @@ describe('transformToInternalDefinitionEntry', () => {
         })
         test('implicit path sub', () => {
             const entry: PackageGSSubEntry = {
-                name: 'ZPM:foobar/barfoo',
+                name: 'Zefiros-Software/ZPM:foobar/barfoo',
                 version: 'master',
             }
             const internal: InternalDefinitionGSSubEntry = {
@@ -808,6 +810,7 @@ describe('transformToInternalDefinitionEntry', () => {
                 },
                 root: {
                     name: 'ZPM',
+                    vendor: 'Zefiros-Software',
                     version: 'master',
                 },
                 options: {
@@ -831,6 +834,7 @@ describe('transformToInternalDefinitionEntry', () => {
                     internalDefinitionType: 'GDGS',
                     entry: {
                         name: 'ZPM',
+                        vendor: 'Zefiros-Software',
                     },
                     type: 'fooType',
                     usage: {
@@ -844,7 +848,7 @@ describe('transformToInternalDefinitionEntry', () => {
         })
         test('implicit path sub resolve', () => {
             const entry: PackageGSSubEntry = {
-                name: 'ZPM:foobar/../barfoo',
+                name: 'Zefiros-Software/ZPM:foobar/../barfoo',
                 version: 'master',
             }
             const internal: InternalDefinitionGSSubEntry = {
@@ -855,6 +859,7 @@ describe('transformToInternalDefinitionEntry', () => {
                 },
                 root: {
                     name: 'ZPM',
+                    vendor: 'Zefiros-Software',
                     version: 'master',
                 },
                 options: {
@@ -878,6 +883,7 @@ describe('transformToInternalDefinitionEntry', () => {
                     internalDefinitionType: 'GDGS',
                     entry: {
                         name: 'ZPM',
+                        vendor: 'Zefiros-Software',
                     },
                     type: 'fooType',
                     usage: {
@@ -891,7 +897,7 @@ describe('transformToInternalDefinitionEntry', () => {
         })
         test('path sub', () => {
             const entry: PackageGSSubEntry = {
-                name: 'ZPM',
+                name: 'Zefiros-Software/ZPM',
                 path: './foobar/barfoo',
                 version: 'master',
             }
@@ -903,6 +909,7 @@ describe('transformToInternalDefinitionEntry', () => {
                 },
                 root: {
                     name: 'ZPM',
+                    vendor: 'Zefiros-Software',
                     version: 'master',
                 },
                 options: {
@@ -926,6 +933,7 @@ describe('transformToInternalDefinitionEntry', () => {
                     internalDefinitionType: 'GDGS',
                     entry: {
                         name: 'ZPM',
+                        vendor: 'Zefiros-Software',
                     },
                     type: 'fooType',
                     usage: {
@@ -939,7 +947,7 @@ describe('transformToInternalDefinitionEntry', () => {
         })
         test('path sub resolve', () => {
             const entry: PackageGSSubEntry = {
-                name: 'ZPM',
+                name: 'Zefiros-Software/ZPM',
                 path: './foobar/../barfoo',
                 version: 'master',
             }
@@ -951,6 +959,7 @@ describe('transformToInternalDefinitionEntry', () => {
                 },
                 root: {
                     name: 'ZPM',
+                    vendor: 'Zefiros-Software',
                     version: 'master',
                 },
                 options: {
@@ -974,6 +983,7 @@ describe('transformToInternalDefinitionEntry', () => {
                     internalDefinitionType: 'GDGS',
                     entry: {
                         name: 'ZPM',
+                        vendor: 'Zefiros-Software',
                     },
                     type: 'fooType',
                     usage: {
@@ -987,7 +997,7 @@ describe('transformToInternalDefinitionEntry', () => {
         })
         test('path sub resolve 2', () => {
             const entry: PackageGSSubEntry = {
-                name: 'ZPM',
+                name: 'Zefiros-Software/ZPM',
                 path: 'foobar/../barfoo',
                 version: 'master',
             }
@@ -999,6 +1009,7 @@ describe('transformToInternalDefinitionEntry', () => {
                 },
                 root: {
                     name: 'ZPM',
+                    vendor: 'Zefiros-Software',
                     version: 'master',
                 },
                 options: {
@@ -1022,6 +1033,7 @@ describe('transformToInternalDefinitionEntry', () => {
                     internalDefinitionType: 'GDGS',
                     entry: {
                         name: 'ZPM',
+                        vendor: 'Zefiros-Software',
                     },
                     type: 'fooType',
                     usage: {
@@ -1035,7 +1047,7 @@ describe('transformToInternalDefinitionEntry', () => {
         })
         test('path sub resolve 3', () => {
             const entry: PackageGSSubEntry = {
-                name: 'ZPM',
+                name: 'Zefiros-Software/ZPM',
                 path: '../barfoo',
                 version: 'master',
             }
@@ -1047,6 +1059,7 @@ describe('transformToInternalDefinitionEntry', () => {
                 },
                 root: {
                     name: 'ZPM',
+                    vendor: 'Zefiros-Software',
                     version: 'master',
                 },
                 options: {
@@ -1070,6 +1083,7 @@ describe('transformToInternalDefinitionEntry', () => {
                     internalDefinitionType: 'GDGS',
                     entry: {
                         name: 'ZPM',
+                        vendor: 'Zefiros-Software',
                     },
                     type: 'fooType',
                     usage: {
@@ -1083,7 +1097,7 @@ describe('transformToInternalDefinitionEntry', () => {
         })
         test('extras', () => {
             const entry: PackageGSSubEntry = {
-                name: 'ZPM',
+                name: 'Zefiros-Software/ZPM',
                 path: './foobar',
                 version: 'master',
                 settings: {},
@@ -1096,6 +1110,7 @@ describe('transformToInternalDefinitionEntry', () => {
                 },
                 root: {
                     name: 'ZPM',
+                    vendor: 'Zefiros-Software',
                     version: 'master',
                 },
                 options: {
@@ -1119,6 +1134,7 @@ describe('transformToInternalDefinitionEntry', () => {
                     internalDefinitionType: 'GDGS',
                     entry: {
                         name: 'ZPM',
+                        vendor: 'Zefiros-Software',
                     },
                     type: 'fooType',
                     usage: {
@@ -1521,10 +1537,8 @@ describe('transformToInternalEntry', () => {
     })
     describe('PDPS', () => {
         test('simple', () => {
-            const entry: RegistryPDPSEntry = {
-                path: './foobar',
-            }
-            const internal: InternalPDPSEntry = { path: './foobar' }
+            const entry: RegistryPDPSEntry = {}
+            const internal: InternalPDPSEntry = {}
             expect(transformToInternalEntry(entry)).toEqual(internal)
         })
     })

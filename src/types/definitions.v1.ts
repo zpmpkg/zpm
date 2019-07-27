@@ -18,7 +18,6 @@ export type RegistryEntry =
     | RegistryGDGSEntry
     | RegistryGDPSEntry
     | RegistryPDGSEntry
-    | RegistryPDPSEntry
     | RegistryPSSubEntry
 
 export interface DefinitionsSchema {
@@ -82,16 +81,14 @@ export interface RegistryPDGSEntry {
 }
 /**
  * This interface was referenced by `DefinitionsSchema`'s JSON-Schema
- * via the `definition` "RegistryPDPSEntry".
- */
-export interface RegistryPDPSEntry {
-    path: string
-}
-/**
- * This interface was referenced by `DefinitionsSchema`'s JSON-Schema
  * via the `definition` "RegistryPSSubEntry".
  */
 export interface RegistryPSSubEntry {
     name: string
     path?: string
 }
+/**
+ * This interface was referenced by `DefinitionsSchema`'s JSON-Schema
+ * via the `definition` "RegistryPDPSEntry".
+ */
+export interface RegistryPDPSEntry {}

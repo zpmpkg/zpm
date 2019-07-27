@@ -176,6 +176,9 @@
         "path": {
           "type": "string"
         },
+        "definition": {
+          "type": "string"
+        },
         "version": {
           "type": "string"
         },

@@ -139,6 +139,12 @@
       "definition"
     ]
   },
+  "RegistryPDPSEntry": {
+    "type": "object",
+    "properties": {},
+    "additionalProperties": false,
+    "required": []
+  },
   "RegistryPSSubEntry": {
     "type": "object",
     "properties": {
