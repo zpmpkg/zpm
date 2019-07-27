@@ -2,7 +2,7 @@
   "license": "MIT",
   "name": "@zpmpkg/zpm",
   "repository": "https://github.com/zpmpkg/zpm",
-  "version": "0.1.0",
+  "version": "0.2.0-0",
   "main": "./dist/main.js",
   "bin": {
     "zpm": "./dist/main.js"
