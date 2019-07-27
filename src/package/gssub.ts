@@ -18,9 +18,7 @@ import { createRepository } from './repository'
 export class GSSubPackageVersion extends IPackageVersion {
     public async getDefinition(parent: PackageVersion): Promise<PackageDefinitionSummary> {
         logger.logfile.info(
-            `Trying to read '${this.package.info.entry.path}' from '${
-                this.package.info.directories.definition
-            }`
+            `Trying to read '${this.package.info.entry.path}' from '${this.package.info.directories.definition}`
         )
         return getPathPackageDefinition(this.package, parent)
     }

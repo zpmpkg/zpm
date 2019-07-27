@@ -43,9 +43,7 @@ export class ZPM {
             await this.root.load()
         } catch (error) {
             logger.error(
-                `Failed to load the definition of the root package:\n\n${error.message}\n${
-                    error.stack
-                }`
+                `Failed to load the definition of the root package:\n\n${error.message}\n${error.stack}`
             )
             return false
         }

@@ -76,9 +76,7 @@ export function getId(info: Partial<PackageInfo>, type: string): string {
     } else if (isPSSub(info) && info.options) {
         return `${type}:${info.options.rootName}:${info.entry.path}`
     } else if (isGSSub(info) && info.options) {
-        return `${type}:${info.options.packageVendor}:${info.options.packageName}+${
-            info.entry.path
-        }`
+        return `${type}:${info.options.packageVendor}:${info.options.packageName}+${info.entry.path}`
     } else if (isGDGS(info) || isPDGS(info)) {
         return `${type}:${info.entry.vendor}:${info.entry.name}`
     } else {

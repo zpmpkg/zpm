@@ -10,7 +10,7 @@
   "scripts": {
     "prettier:fix": "yarn prettier --write src/**/*.ts",
     "fix": "yarn lint --fix",
-    "lint": "tslint --project tsconfig.json",
+    "lint": "tslint --project tsconfig.json -c tslint.json -t verbose",
     "types:generate": "yarn ts-node tools/generate-types.ts && (yarn fix || true) && yarn prettier:fix",
     "build": "ttsc -p tsconfig.dist.json",
     "test": "ttsc && jest test",
