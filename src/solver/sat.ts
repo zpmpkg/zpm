@@ -24,6 +24,7 @@ import {
 import { Registries } from '~/registry/registries'
 import { lockFileV1 } from '~/schemas/schemas'
 import { LockFile, UsedByVersion, VersionLock } from '~/types/lockfile.v1'
+import { version } from 'winston';
 
 export interface SATWeights {
     terms: string[]
@@ -39,7 +40,6 @@ export class SATSolver {
 
     public registries: Registries
     public assumptions: string[] | undefined
-    public minimize: boolean = true
     public lock?: LockFile
     private lockValidator = buildSchema(lockFileV1)
 
@@ -52,21 +52,48 @@ export class SATSolver {
 
         try {
             if (isDefined(this.lock)) {
-                // const types: string[] = this.registries.getTypes()
-                this.assumptions = []
-                // for (const type of types) {
-                for (const version of this.lock.versions) {
-                    const found = this.registries.searchByName(version.manifest, version.packageId)
-                    if (isDefined(found)) {
-                        await this.addPackage(found)
-                        await this.expandTerm(version.versionId)
-                        this.assumptions.push(version.versionId)
-                    } else {
-                        logger.warn(`failure ${version.versionId}`)
-                        // @todo
+                
+                const graph = new Graph()
+                for (const m of this.lock.versions) {
+                    graph.setNode(m.versionId, m)
+                }
+                for (const node of this.lock.versions) {
+                    for (const from of node.dependsOn || []) {
+                        graph.setEdge(from, node.versionId)
                     }
                 }
-                // }
+                const sorted = alg.topsort(graph)
+                const components: string[][] = []
+                for (const subgraph of alg.components(graph)) {
+                    const dependsOn = sorted.filter(value => -1 !== subgraph.indexOf(value))
+                    const distances = alg.dijkstra(graph, dependsOn[0])
+                    for (const [id, prop] of Object.entries(distances)) {
+                        if (!components[prop.distance]) {
+                            components[prop.distance] = []
+                        }
+                        components[prop.distance].push(id)                        
+                    }
+                }
+
+                this.assumptions = []
+                for (const layer of components) {
+                    if (isEmpty(layer)) {
+                        continue
+                    }
+                    // do a bfs parallel layer processing
+                    await Promise.all(layer.map(async versionId => {
+                        const version = graph.node(versionId)
+                        const found = this.registries.searchByName(version.manifest, version.packageId)
+                        if (isDefined(found)) {
+                            await this.addPackage(found)
+                            await this.expandTerm(versionId)
+                            this.assumptions!.push(versionId)
+                        } else {
+                            logger.warn(`failure ${versionId}`)
+                            // @todo
+                        }
+                    }))
+                }
             }
         } catch (error) {
             logger.error(error)
@@ -138,15 +165,17 @@ export class SATSolver {
             this.solution = this.solver.solve()
         }
 
+        if (!this.solution) {
+            await this.expand()
+        }
+
         // no valid solution exists in the solution space
         if (!isDefined(this.solution)) {
             throw new Error('NO solution was found')
         }
-        // this.solution.ignoreUnknownVariables()
-        const solution = this.solver.minimizeWeightedSum(
-            this.solution,
-            this.weights.terms,
-            this.weights.weights
+
+        const solution = Logic.disablingAssertions(() =>
+            this.solver.minimizeWeightedSum(this.solution, this.weights.terms, this.weights.weights)
         )
         this.assumptions = solution.getTrueVars()
 
@@ -163,45 +192,37 @@ export class SATSolver {
 
     public async optimize(): Promise<LockFile | undefined> {
         if (isDefined(this.assumptions) && !isDefined(this.solution)) {
-            this.solution = this.solver.solveAssuming(Logic.not(...this.assumptions))
+            this.solution = this.solver.solveAssuming(Logic.and(...this.assumptions))
         }
-        this.minimize = isDefined(this.solution) || update()
-
-        if (!isDefined(this.solution)) {
-            this.solution = this.solver.solve()
+        if (!isDefined(this.solution) || update()) {
+            logger.info(`Updating solution`)
+            await this.expand()
         }
 
         if (!isDefined(this.solution)) {
             throw new Error('NO solution was found')
         }
 
-        this.solution.ignoreUnknownVariables()
-        const minimum: string[] | undefined = this.minimize
-            ? this.solver
-                  .minimizeWeightedSum(this.solution, this.weights.terms, this.weights.weights)
-                  .getTrueVars()
-            : this.solution.getTrueVars()
-
-        if (!minimum) {
+        if (!this.assumptions) {
             return undefined
         }
         const nodes = new Map<string, VersionLock>()
         const graph = new Graph()
 
-        for (const m of minimum) {
+        for (const m of this.assumptions) {
             const version = this.registries.getVersion(m)
             if (version) {
-                const dependsOn = version.dependsOn.filter(value => -1 !== minimum.indexOf(value))
+                const dependsOn = version.dependsOn.filter(value => -1 !== this.assumptions!.indexOf(value))
 
                 const versionLock: VersionLock = {
                     versionId: m,
                     packageId: version.package.info.name,
                     manifest: version.package.info.manifest,
                     version: version.version,
-                    usedBy: this.getUsedByLock(version, minimum),
+                    usedBy: this.getUsedByLock(version, this.assumptions),
                     settings: {},
                     // the definion is defined since the version is already loaded and expanded
-                    definition: version.definition!.definition,
+                    definition: get(version.definition, ['definition']) || {},
                     dependsOn: !isEmpty(dependsOn) ? dependsOn : undefined,
                 }
                 nodes.set(m, versionLock)
@@ -243,9 +264,10 @@ export class SATSolver {
         }
 
         const lock: LockFile = {
-            versions,
+            // make the lock file stable
+            // order doesnt matter because we do a topo sort when we load the file
+            versions: versions.sort((a, b) => (a.versionId > b.versionId) ? 1 : -1),
         }
-        // logger.debug(JSON.stringify(lock, null, 2))
         this.lock = lock
         return lock
     }

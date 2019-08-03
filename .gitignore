@@ -84,3 +84,5 @@ package-lock.json
 
 **/extern/*
 /monorepo/googletest/test/.vscode/*
+
+/dist/*

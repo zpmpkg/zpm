@@ -6,14 +6,14 @@ if(NOT ZPM_LOADED)
   zpm_defaults()
 endif()
 
-add_executable("test-runner"
+add_executable({{cmake.dir}}
 {{#each source}}
     "{{this}}"
 {{/each}}
 )
 
 {{#if private.link}}
-target_link_libraries("test-runner" PRIVATE 
+target_link_libraries({{cmake.dir}} PRIVATE 
     {{#each private.link}}
     {{this}}
     {{/each}}
@@ -21,4 +21,4 @@ target_link_libraries("test-runner" PRIVATE
 
 {{/if~}}
 
-add_test(NAME "test-runner" COMMAND "test-runner")
+add_test(NAME {{cmake.dir}} COMMAND {{cmake.dir}})

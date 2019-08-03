@@ -1,11 +1,17 @@
 {
   "license": "MIT",
   "name": "@zpmpkg/zpm",
-  "repository": "https://github.com/zpmpkg/zpm",
-  "version": "0.2.0-0",
-  "main": "./dist/main.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/zpmpkg/zpm"
+  },
+  "files": [
+    "dist/**"
+  ],
+  "version": "0.2.0-alpha14",
+  "main": "./dist/src/main.js",
   "bin": {
-    "zpm": "./dist/main.js"
+    "zpm": "./dist/src/main.js"
   },
   "scripts": {
     "prettier:fix": "yarn prettier --write src/**/*.ts",
@@ -16,10 +22,10 @@
     "test": "ttsc && jest test",
     "release": "yarn standard-version -a",
     "release:dry": "yarn release --dry-run",
-    "package": "rm -r dist && yarn build && find dist -type f -regex '.*.js.map' -exec sed -i.bak 's|../src|./src|g' {} \\; && find dist -type f -regex '.*.bak' -exec rm {} \\; && cp -r package.json LICENSE CHANGELOG.md README.md src dist/"
+    "package": "rm -rf dist && yarn build && cp -r config.yml package.json extractor builder registry dist/",
+    "prepare": "yarn package "
   },
   "devDependencies": {
-    "@types/bl": "^2.1.0",
     "@types/cpx": "^1.5.0",
     "@types/fs-extra": "^8.0.0",
     "@types/git-url-parse": "^9.0.0",
@@ -36,11 +42,10 @@
     "@typescript-eslint/parser": "^1.13.0",
     "@zefiros/npm-defaults": "^0.1.5",
     "@zerollup/ts-transform-paths": "^1.7.3",
-    "json-schema-to-typescript": "^6.1.3",
+    "json-schema-to-typescript": "^7.0.0",
     "ts-node": "^8.3.0",
     "tsconfig-paths": "^3.8.0",
     "ttypescript": "^1.5.7",
-    "typescript": "3.5.3",
     "typestrict": "^1.0.2"
   },
   "dependencies": {
@@ -50,21 +55,17 @@
     "async-mutex": "^0.1.3",
     "await-spawn": "^2.1.2",
     "better-ajv-errors": "^0.6.4",
-    "bl": "^3.0.0",
     "cli-spinners": "^2.2.0",
     "commander": "^2.20.0",
     "consola": "^2.9.0",
     "deeply": "^3.1.0",
-    "exec-sh": "^0.3.2",
     "fast-glob": "^3.0.4",
     "figures": "^3.0.0",
     "find-versions": "^3.1.0",
     "fs-extra": "^8.1.0",
     "git-url-parse": "^11.1.2",
-    "global": "^4.4.0",
     "graphlib": "^2.1.7",
     "handlebars": "^4.1.2",
-    "hash-it": "^4.0.4",
     "inquirer": "^6.5.0",
     "is-git-url": "^1.0.0",
     "js-sha256": "^0.9.0",
@@ -76,8 +77,9 @@
     "logic-solver": "^2.0.1",
     "node-persist": "^3.0.5",
     "semver": "^6.3.0",
-    "simple-git": "^1.122.0",
+    "simple-git": "^1.123.0",
     "stream-buffers": "^3.0.2",
+    "typescript": "3.5.3",
     "upath": "^1.1.2",
     "vm2": "^3.8.2",
     "winston": "^3.2.1",

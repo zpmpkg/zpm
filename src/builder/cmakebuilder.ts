@@ -2,7 +2,7 @@ import { get, isDefined } from '@zefiros/axioms'
 import fs from 'fs-extra'
 import Handlebars from 'handlebars'
 import { uniq } from 'lodash'
-import { join, relative } from 'upath'
+import path, { join, relative } from 'upath'
 import { workingdir } from '~/cli/program'
 import { environment } from '~/common/environment'
 import { copy, glob, isSubDirectory } from '~/common/io'
@@ -10,11 +10,26 @@ import { InternalGSSubEntry } from '~/package/entry'
 import { PackageType } from '~/package/type'
 import { PackageBuilder, TargetBuilder } from './packageBuilder'
 
+interface TemplateCondition {
+    on: string
+    let: {
+        include?: string[]
+        source?: string[]
+        define?: string[]
+        link?: string[]
+        feature?: string[]
+        option?: string[]
+        custom?: string
+    }
+}
+
 interface TemplateAccessview {
     include?: string[]
     define?: string[]
     link?: string[]
-    compile?: string[]
+    feature?: string[]
+    option?: string[]
+    conditions?: TemplateCondition[]
 }
 
 interface TemplateView {
@@ -28,8 +43,22 @@ interface TemplateView {
     default: boolean
     cmake: {
         project_name: string
+        dir: string
         target?: string
         project?: string
+    }
+}
+
+interface TemplateSettingsCondition {
+    on: string
+    let: {
+        include?: string[]
+        source?: string[]
+        define?: string[]
+        link?: string[]
+        feature?: string[]
+        option?: string[]
+        custom?: string
     }
 }
 interface TemplateSettingsAccessView {
@@ -37,6 +66,8 @@ interface TemplateSettingsAccessView {
     define?: string[]
     link?: string[]
     feature?: string[]
+    option?: string[]
+    conditions?: TemplateSettingsCondition[]
 }
 
 interface TemplateSettings {
@@ -201,6 +232,13 @@ ${uniq(this.libraryPaths)
             settings.public.feature = [...(settings.public.feature || []), ...settings.feature]
             delete settings.feature
         }
+        if (settings.conditions) {
+            settings.public.conditions = [
+                ...(settings.public.conditions || []),
+                ...settings.conditions,
+            ]
+            delete settings.conditions
+        }
 
         return { settings: settings as TemplateSettings, self }
     }
@@ -208,6 +246,29 @@ ${uniq(this.libraryPaths)
     private async buildTemplate(target: PackageBuilder, file: string) {
         const template = (await fs.readFile(file)).toString()
         const view = await this.getTemplateView(target)
+        view.public.conditions = view.public.conditions
+            ? view.public.conditions.map(c => ({
+                  on: c.on,
+                  let: {
+                      ...c.let,
+                      custom: c.let.custom
+                          ? Handlebars.compile(c.let.custom, { noEscape: true })(view)
+                          : undefined,
+                  },
+              }))
+            : undefined
+        view.private.conditions = view.private.conditions
+            ? view.private.conditions.map(c => ({
+                  on: c.on,
+                  let: {
+                      ...c.let,
+                      custom: c.let.custom
+                          ? Handlebars.compile(c.let.custom, { noEscape: true })(view)
+                          : undefined,
+                  },
+              }))
+            : undefined
+
         if (view.custom) {
             view.custom = Handlebars.compile(view.custom, { noEscape: true })(view)
         }
@@ -219,13 +280,18 @@ ${uniq(this.libraryPaths)
     private async getTemplateView(target: PackageBuilder): Promise<TemplateView> {
         const { settings } = this.getTargetSettings(target)
         const result: TemplateView = {
-            public: {},
-            private: {},
+            public: {
+                conditions: [],
+            },
+            private: {
+                conditions: [],
+            },
             globs: {},
             default: get(settings, ['default'], false),
             cmake: {
                 // tslint:disable-next-line: no-invalid-template-strings
                 project_name: '${PROJECT_NAME}',
+                dir: target.buildPath.split(path.sep).pop()!,
             },
         }
         if (!settings) {
@@ -267,11 +333,29 @@ ${uniq(this.libraryPaths)
             }
             if (settingsAccess.link) {
                 resultAccess.link = settingsAccess.link.map((f: string) =>
-                    f.replace(':', '+').replace('/', '::')
+                    f.replace(/(^\:)\:/, '+').replace('/', '::')
                 )
             }
             if (settingsAccess.feature) {
-                resultAccess.compile = settingsAccess.feature
+                resultAccess.feature = settingsAccess.feature
+            }
+            if (settingsAccess.conditions) {
+                resultAccess.conditions = await Promise.all(
+                    settingsAccess.conditions.map(async c => ({
+                        on: c.on,
+                        let: {
+                            ...(c.let.include ? { include: c.let.include } : {}),
+                            ...(c.let.source
+                                ? { source: await glob(c.let.source, target.buildPath, [], false) }
+                                : {}),
+                            ...(c.let.define ? { define: c.let.define } : {}),
+                            ...(c.let.link ? { link: c.let.link } : {}),
+                            ...(c.let.feature ? { feature: c.let.feature } : {}),
+                            ...(c.let.option ? { option: c.let.option } : {}),
+                            ...(c.let.custom ? { option: c.let.custom } : {}),
+                        },
+                    }))
+                )
             }
         }
 
