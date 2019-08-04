@@ -1,1 +1,0 @@
-{"version":3,"file":"ipackageVersion.js","sourceRoot":"","sources":["../../src/package/ipackageVersion.ts"],"names":[],"mappings":";;AAIA,MAAsB,eAAe;IAIjC,YAAmB,GAAa,EAAE,EAAU;QACxC,IAAI,CAAC,QAAQ,GAAG,GAAG,CAAA;QACnB,IAAI,CAAC,EAAE,GAAG,EAAE,CAAA;IAChB,CAAC;IAED,IAAW,OAAO;QACd,OAAO,IAAI,CAAC,QAAQ,CAAA;IACxB,CAAC;IAEM,UAAU;QACb,OAAO,SAAS,CAAA;IACpB,CAAC;CAUJ;AAzBD,0CAyBC"}

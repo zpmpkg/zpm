@@ -1,1 +1,0 @@
-{"version":3,"file":"definitionResolver.js","sourceRoot":"","sources":["../../../src/resolver/definition/definitionResolver.ts"],"names":[],"mappings":";;AAGA,MAAsB,kBAAkB;IAGpC,YAAY,MAAsB;QAC9B,IAAI,CAAC,MAAM,GAAG,MAAM,CAAA;IACxB,CAAC;IAIM,iBAAiB;QACpB,OAAO,IAAI,CAAC,MAAM,CAAC,iBAAiB,EAAE,CAAA;IAC1C,CAAC;CACJ;AAZD,gDAYC"}
