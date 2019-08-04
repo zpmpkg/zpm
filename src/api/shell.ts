@@ -1,13 +1,13 @@
 import { spawn } from 'child_process'
 import { Spinner } from '~/cli/spinner'
-import { logger } from '~/common/logger';
+import { logger } from '~/common/logger'
 
 class ShellError extends Error {
     public code: number
     public stderr: string | null
     constructor(message: string, code: number, stderr: string | null) {
         super(message)
-        this.code= code
+        this.code = code
         this.stderr = stderr
     }
 }
@@ -38,7 +38,7 @@ async function spawnProcess(command: string, cwd: string, stream: any) {
             if (code === 0) {
                 resolve()
             } else {
-                const err = new ShellError(`child exited with code ${code}`,code, stderr)
+                const err = new ShellError(`child exited with code ${code}`, code, stderr)
                 reject(err)
             }
         })
@@ -74,7 +74,7 @@ export class ShellApi {
         try {
             child = await spawnProcess(command, this.source, this.spinner)
         } catch (e) {
-            let error:ShellError= e;
+            const error: ShellError = e
             logger.error(`Failed to spawn process '${command}': ${error.stderr} ${error.stack}`)
         }
         return child

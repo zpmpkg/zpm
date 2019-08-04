@@ -41,6 +41,7 @@ target_compile_features({{@root.cmake.project_name}} INTERFACE
     {{this}}
     {{/each}}
 )
+
 {{/if~}}
     
 {{#if public.option}}
@@ -49,7 +50,10 @@ target_compile_options({{@root.cmake.project_name}} INTERFACE
     {{this}}
     {{/each}}
 )
+
 {{/if~}}
+
+
 
 {{#each public.conditions}}
 if({{on}})
@@ -60,6 +64,7 @@ target_include_directories({{@root.cmake.project_name}} INTERFACE
     {{this}}
     {{/each}}
 )
+
 {{/if~}}
     
 {{#if let.define}}
@@ -68,6 +73,7 @@ target_compile_definitions({{@root.cmake.project_name}} INTERFACE
     {{this}}
     {{/each}}
 )
+
 {{/if~}}
     
 {{#if let.link}}
@@ -76,6 +82,7 @@ target_link_libraries({{@root.cmake.project_name}} INTERFACE
     {{this}}
     {{/each}}
 )
+
 {{/if~}}
     
 {{#if let.feature}}
@@ -84,6 +91,7 @@ target_compile_features({{@root.cmake.project_name}} INTERFACE
     {{this}}
     {{/each}}
 )
+
 {{/if~}}
     
 {{#if let.option}}
@@ -92,6 +100,7 @@ target_compile_options({{@root.cmake.project_name}} INTERFACE
     {{this}}
     {{/each}}
 )
+
 {{/if~}}
     
 {{#if let.custom}}
@@ -99,6 +108,61 @@ target_compile_options({{@root.cmake.project_name}} INTERFACE
 
 {{/if~}}
     
+{{#if otherwise}}
+else()
+    
+{{#if otherwise.include}}
+target_include_directories({{@root.cmake.project_name}} INTERFACE 
+    {{#each otherwise.include}}
+    {{this}}
+    {{/each}}
+)
+
+{{/if~}}
+    
+{{#if otherwise.define}}
+target_compile_definitions({{@root.cmake.project_name}} INTERFACE 
+    {{#each otherwise.define}}
+    {{this}}
+    {{/each}}
+)
+
+{{/if~}}
+    
+{{#if otherwise.link}}
+target_link_libraries({{@root.cmake.project_name}} INTERFACE 
+    {{#each otherwise.link}}
+    {{this}}
+    {{/each}}
+)
+
+{{/if~}}
+    
+{{#if otherwise.feature}}
+target_compile_features({{@root.cmake.project_name}} INTERFACE 
+    {{#each otherwise.feature}}
+    {{this}}
+    {{/each}}
+)
+
+{{/if~}}
+    
+{{#if otherwise.option}}
+target_compile_options({{@root.cmake.project_name}} INTERFACE 
+    {{#each otherwise.option}}
+    {{this}}
+    {{/each}}
+)
+
+{{/if~}}
+    
+{{#if otherwise.custom}}
+{{this}}
+
+{{/if~}}
+    
+{{/if~}}
+
 endif()
 
 {{/each~}}

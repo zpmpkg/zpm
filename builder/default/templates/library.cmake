@@ -87,6 +87,7 @@ target_include_directories({{@root.cmake.project_name}} PUBLIC
     {{this}}
     {{/each}}
 )
+
 {{/if~}}
     
 {{#if let.define}}
@@ -95,6 +96,7 @@ target_compile_definitions({{@root.cmake.project_name}} PUBLIC
     {{this}}
     {{/each}}
 )
+
 {{/if~}}
     
 {{#if let.link}}
@@ -103,6 +105,7 @@ target_link_libraries({{@root.cmake.project_name}} PUBLIC
     {{this}}
     {{/each}}
 )
+
 {{/if~}}
     
 {{#if let.feature}}
@@ -111,6 +114,7 @@ target_compile_features({{@root.cmake.project_name}} PUBLIC
     {{this}}
     {{/each}}
 )
+
 {{/if~}}
     
 {{#if let.option}}
@@ -119,6 +123,7 @@ target_compile_options({{@root.cmake.project_name}} PUBLIC
     {{this}}
     {{/each}}
 )
+
 {{/if~}}
     
 {{#if let.source}}
@@ -127,10 +132,66 @@ target_sources({{@root.cmake.project_name}} PUBLIC
     {{this}}
     {{/each}}
 )
+
 {{/if~}}
 
 {{#if let.custom}}
 {{this}}
+
+{{/if~}}
+
+{{#if otherwise}}
+else()
+    
+{{#if otherwise.include}}
+target_include_directories({{@root.cmake.project_name}} PUBLIC 
+    {{#each otherwise.include}}
+    {{this}}
+    {{/each}}
+)
+
+{{/if~}}
+    
+{{#if otherwise.define}}
+target_compile_definitions({{@root.cmake.project_name}} PUBLIC 
+    {{#each otherwise.define}}
+    {{this}}
+    {{/each}}
+)
+
+{{/if~}}
+    
+{{#if otherwise.link}}
+target_link_libraries({{@root.cmake.project_name}} PUBLIC 
+    {{#each otherwise.link}}
+    {{this}}
+    {{/each}}
+)
+
+{{/if~}}
+    
+{{#if otherwise.feature}}
+target_compile_features({{@root.cmake.project_name}} PUBLIC 
+    {{#each otherwise.feature}}
+    {{this}}
+    {{/each}}
+)
+
+{{/if~}}
+    
+{{#if otherwise.option}}
+target_compile_options({{@root.cmake.project_name}} PUBLIC 
+    {{#each otherwise.option}}
+    {{this}}
+    {{/each}}
+)
+
+{{/if~}}
+    
+{{#if otherwise.custom}}
+{{this}}
+
+{{/if~}}
 
 {{/if~}}
     
@@ -146,6 +207,7 @@ target_include_directories({{@root.cmake.project_name}} PRIVATE
     {{this}}
     {{/each}}
 )
+
 {{/if~}}
     
 {{#if let.define}}
@@ -154,6 +216,7 @@ target_compile_definitions({{@root.cmake.project_name}} PRIVATE
     {{this}}
     {{/each}}
 )
+
 {{/if~}}
     
 {{#if let.link}}
@@ -162,6 +225,7 @@ target_link_libraries({{@root.cmake.project_name}} PRIVATE
     {{this}}
     {{/each}}
 )
+
 {{/if~}}
     
 {{#if let.feature}}
@@ -170,6 +234,7 @@ target_compile_features({{@root.cmake.project_name}} PRIVATE
     {{this}}
     {{/each}}
 )
+
 {{/if~}}
     
 {{#if let.option}}
@@ -178,6 +243,7 @@ target_compile_options({{@root.cmake.project_name}} PRIVATE
     {{this}}
     {{/each}}
 )
+
 {{/if~}}
     
 {{#if let.source}}
@@ -186,13 +252,78 @@ target_sources({{@root.cmake.project_name}} PRIVATE
     {{this}}
     {{/each}}
 )
+
 {{/if~}}
     
 {{#if let.custom}}
 {{this}}
 
 {{/if~}}
+
+{{#if otherwise}}
+else()
     
+{{#if otherwise.include}}
+target_include_directories({{@root.cmake.project_name}} PRIVATE 
+    {{#each otherwise.include}}
+    {{this}}
+    {{/each}}
+)
+
+{{/if~}}
+    
+{{#if otherwise.define}}
+target_compile_definitions({{@root.cmake.project_name}} PRIVATE 
+    {{#each otherwise.define}}
+    {{this}}
+    {{/each}}
+)
+
+{{/if~}}
+    
+{{#if otherwise.link}}
+target_link_libraries({{@root.cmake.project_name}} PRIVATE 
+    {{#each otherwise.link}}
+    {{this}}
+    {{/each}}
+)
+
+{{/if~}}
+    
+{{#if otherwise.feature}}
+target_compile_features({{@root.cmake.project_name}} PRIVATE 
+    {{#each otherwise.feature}}
+    {{this}}
+    {{/each}}
+)
+
+{{/if~}}
+    
+{{#if otherwise.option}}
+target_compile_options({{@root.cmake.project_name}} PRIVATE 
+    {{#each otherwise.option}}
+    {{this}}
+    {{/each}}
+)
+
+{{/if~}}
+    
+{{#if otherwise.source}}
+target_sources({{@root.cmake.project_name}} PRIVATE 
+    {{#each otherwise.source}}
+    {{this}}
+    {{/each}}
+)
+
+{{/if~}}
+    
+{{#if otherwise.custom}}
+{{this}}
+
+{{/if~}}
+
+{{/if~}}
+
 endif()
 {{/each~}}
 

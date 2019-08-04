@@ -24,7 +24,6 @@ import {
 import { Registries } from '~/registry/registries'
 import { lockFileV1 } from '~/schemas/schemas'
 import { LockFile, UsedByVersion, VersionLock } from '~/types/lockfile.v1'
-import { version } from 'winston';
 
 export interface SATWeights {
     terms: string[]
@@ -52,7 +51,6 @@ export class SATSolver {
 
         try {
             if (isDefined(this.lock)) {
-                
                 const graph = new Graph()
                 for (const m of this.lock.versions) {
                     graph.setNode(m.versionId, m)
@@ -71,7 +69,7 @@ export class SATSolver {
                         if (!components[prop.distance]) {
                             components[prop.distance] = []
                         }
-                        components[prop.distance].push(id)                        
+                        components[prop.distance].push(id)
                     }
                 }
 
@@ -81,18 +79,23 @@ export class SATSolver {
                         continue
                     }
                     // do a bfs parallel layer processing
-                    await Promise.all(layer.map(async versionId => {
-                        const version = graph.node(versionId)
-                        const found = this.registries.searchByName(version.manifest, version.packageId)
-                        if (isDefined(found)) {
-                            await this.addPackage(found)
-                            await this.expandTerm(versionId)
-                            this.assumptions!.push(versionId)
-                        } else {
-                            logger.warn(`failure ${versionId}`)
-                            // @todo
-                        }
-                    }))
+                    await Promise.all(
+                        layer.map(async versionId => {
+                            const version = graph.node(versionId)
+                            const found = this.registries.searchByName(
+                                version.manifest,
+                                version.packageId
+                            )
+                            if (isDefined(found)) {
+                                await this.addPackage(found)
+                                await this.expandTerm(versionId)
+                                this.assumptions!.push(versionId)
+                            } else {
+                                logger.warn(`failure ${versionId}`)
+                                // @todo
+                            }
+                        })
+                    )
                 }
             }
         } catch (error) {
@@ -212,7 +215,9 @@ export class SATSolver {
         for (const m of this.assumptions) {
             const version = this.registries.getVersion(m)
             if (version) {
-                const dependsOn = version.dependsOn.filter(value => -1 !== this.assumptions!.indexOf(value))
+                const dependsOn = version.dependsOn.filter(
+                    value => -1 !== this.assumptions!.indexOf(value)
+                )
 
                 const versionLock: VersionLock = {
                     versionId: m,
@@ -223,7 +228,9 @@ export class SATSolver {
                     settings: {},
                     // the definion is defined since the version is already loaded and expanded
                     definition: get(version.definition, ['definition']) || {},
-                    dependsOn: !isEmpty(dependsOn) ? dependsOn : undefined,
+                    dependsOn: !isEmpty(dependsOn)
+                        ? dependsOn.sort((a, b) => a.localeCompare(b))
+                        : undefined,
                 }
                 nodes.set(m, versionLock)
                 graph.setNode(m)
@@ -266,7 +273,7 @@ export class SATSolver {
         const lock: LockFile = {
             // make the lock file stable
             // order doesnt matter because we do a topo sort when we load the file
-            versions: versions.sort((a, b) => (a.versionId > b.versionId) ? 1 : -1),
+            versions: versions.sort((a, b) => (a.versionId > b.versionId ? 1 : -1)),
         }
         this.lock = lock
         return lock
@@ -300,7 +307,7 @@ export class SATSolver {
                 // @todo
             }
         }
-        return usedByVersions
+        return usedByVersions.sort((a, b) => a.versionId.localeCompare(b.versionId))
     }
 
     public async getLockFile(): Promise<LockFile | undefined> {

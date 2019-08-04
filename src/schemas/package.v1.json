@@ -38,6 +38,9 @@
           "$ref": "#/definitions/PackageGDGSEntry"
         },
         {
+          "$ref": "#/definitions/PackageGDSubGSEntry"
+        },
+        {
           "$ref": "#/definitions/PackageGDPSEntry"
         },
         {
@@ -97,6 +100,41 @@
       "required": [
         "name",
         "version"
+      ]
+    },
+    "PackageGDSubGSEntry": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "pattern": "^([a-zA-Z0-9_\\-]{2,50}/[a-zA-Z0-9_\\-]{2,50})$"
+        },
+        "repository": {
+          "type": "string",
+          "pattern": "^(https://.*\\.git)$"
+        },
+        "definition": {
+          "type": "string",
+          "pattern": "^(https://.*\\.git)$"
+        },
+        "definitionPath": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string"
+        },
+        "optional": {
+          "type": "boolean"
+        },
+        "settings": {
+          "$ref": "#/definitions/PackageSettings"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "version",
+        "definitionPath"
       ]
     },
     "PackageGDPSEntry": {

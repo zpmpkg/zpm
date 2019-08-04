@@ -11,6 +11,7 @@ export type PackageSchema =
 export type PackageSingularArrayEntry = PackageEntry[] | PackageEntry
 export type PackageEntry =
     | PackageGDGSEntry
+    | PackageGDSubGSEntry
     | PackageGDPSEntry
     | PackagePDPSEntry
     | PackagePDGSEntry
@@ -40,6 +41,15 @@ export interface PackageSettings {
      * via the `patternProperty` "\w+".
      */
     [k: string]: any[]
+}
+export interface PackageGDSubGSEntry {
+    name: string
+    repository?: string
+    definition?: string
+    definitionPath: string
+    version: string
+    optional?: boolean
+    settings?: PackageSettings
 }
 export interface PackageGDPSEntry {
     definition: string

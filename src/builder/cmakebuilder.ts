@@ -21,6 +21,15 @@ interface TemplateCondition {
         option?: string[]
         custom?: string
     }
+    otherwise?: {
+        include?: string[]
+        source?: string[]
+        define?: string[]
+        link?: string[]
+        feature?: string[]
+        option?: string[]
+        custom?: string
+    }
 }
 
 interface TemplateAccessview {
@@ -52,6 +61,15 @@ interface TemplateView {
 interface TemplateSettingsCondition {
     on: string
     let: {
+        include?: string[]
+        source?: string[]
+        define?: string[]
+        link?: string[]
+        feature?: string[]
+        option?: string[]
+        custom?: string
+    }
+    otherwise?: {
         include?: string[]
         source?: string[]
         define?: string[]
@@ -255,6 +273,14 @@ ${uniq(this.libraryPaths)
                           ? Handlebars.compile(c.let.custom, { noEscape: true })(view)
                           : undefined,
                   },
+                  otherwise: isDefined(c.otherwise)
+                      ? {
+                            ...c.otherwise,
+                            custom: c.otherwise.custom
+                                ? Handlebars.compile(c.otherwise.custom, { noEscape: true })(view)
+                                : undefined,
+                        }
+                      : undefined,
               }))
             : undefined
         view.private.conditions = view.private.conditions
@@ -266,6 +292,14 @@ ${uniq(this.libraryPaths)
                           ? Handlebars.compile(c.let.custom, { noEscape: true })(view)
                           : undefined,
                   },
+                  otherwise: isDefined(c.otherwise)
+                      ? {
+                            ...c.otherwise,
+                            custom: c.otherwise.custom
+                                ? Handlebars.compile(c.otherwise.custom, { noEscape: true })(view)
+                                : undefined,
+                        }
+                      : undefined,
               }))
             : undefined
 
@@ -354,6 +388,26 @@ ${uniq(this.libraryPaths)
                             ...(c.let.option ? { option: c.let.option } : {}),
                             ...(c.let.custom ? { option: c.let.custom } : {}),
                         },
+                        otherwise: isDefined(c.otherwise)
+                            ? {
+                                  ...(c.otherwise.include ? { include: c.otherwise.include } : {}),
+                                  ...(c.otherwise.source
+                                      ? {
+                                            source: await glob(
+                                                c.otherwise.source,
+                                                target.buildPath,
+                                                [],
+                                                false
+                                            ),
+                                        }
+                                      : {}),
+                                  ...(c.otherwise.define ? { define: c.otherwise.define } : {}),
+                                  ...(c.otherwise.link ? { link: c.otherwise.link } : {}),
+                                  ...(c.otherwise.feature ? { feature: c.otherwise.feature } : {}),
+                                  ...(c.otherwise.option ? { option: c.otherwise.option } : {}),
+                                  ...(c.otherwise.custom ? { option: c.otherwise.custom } : {}),
+                              }
+                            : undefined,
                     }))
                 )
             }

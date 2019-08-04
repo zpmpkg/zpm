@@ -68,6 +68,9 @@
         "$ref": "#/definitions/RegistryGDGSEntry"
       },
       {
+        "$ref": "#/definitions/RegistryGDSubGSEntry"
+      },
+      {
         "$ref": "#/definitions/RegistryGDPSEntry"
       },
       {
@@ -101,6 +104,33 @@
     "required": [
       "name",
       "repository"
+    ]
+  },
+  "RegistryGDSubGSEntry": {
+    "type": "object",
+    "properties": {
+      "name": {
+        "type": "string",
+        "pattern": "^([a-zA-Z0-9_\\-]{2,50}/[a-zA-Z0-9_\\-]{2,50})$"
+      },
+      "repository": {
+        "type": "string",
+        "pattern": "^(https://.*\\.git)$"
+      },
+      "definition": {
+        "type": "string",
+        "pattern": "^(https://.*\\.git)$"
+      },
+      "definitionPath": {
+        "type": "string"
+      }
+    },
+    "additionalProperties": false,
+    "required": [
+      "name",
+      "repository",
+      "definition",
+      "definitionPath"
     ]
   },
   "RegistryGDPSEntry": {

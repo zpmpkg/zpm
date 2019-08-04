@@ -12,14 +12,15 @@ import { packageValiator } from './validator'
 
 export async function getPathPackageDefinition(
     pkg: IPackage,
-    parent: PackageVersion
+    parent: PackageVersion,
+    subpath?: string
 ): Promise<PackageDefinitionSummary> {
     const info = pkg.info
     let content: { content: PackageDefinition | undefined; path?: string } = {
         content: undefined,
     }
     try {
-        content = await getPathContent(info.directories.definition)
+        content = await getPathContent(info.directories.definition, undefined, subpath)
     } catch (e) {
         //
         // @todo
@@ -50,11 +51,12 @@ export async function getPathPackageDefinition(
 
 export async function getPathContent(
     directory: string,
-    version?: string
+    version?: string,
+    subpath?: string
 ): Promise<{ content: PackageDefinition | undefined; path?: string }> {
     for (const prefix of ['.', '']) {
-        const json = join(directory, `${prefix}zpm.json`)
-        const yml = join(directory, `${prefix}zpm.yml`)
+        const json = join(...[directory, subpath, `${prefix}zpm.json`].filter(isDefined))
+        const yml = join(...[directory, subpath, `${prefix}zpm.yml`].filter(isDefined))
         let pth: string = directory
         let content: PackageDefinition | undefined
         if (await fs.pathExists(json)) {

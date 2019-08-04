@@ -4,12 +4,14 @@ import {
     getInternalDefinitionEntryType,
     InternalDefinitionGDGSEntry,
     InternalDefinitionGDPSEntry,
+    InternalDefinitionGDSubGSEntry,
     InternalDefinitionGSSubEntry,
     InternalDefinitionPDGSEntry,
     InternalDefinitionPDPSEntry,
     InternalDefinitionPSSubEntry,
     InternalGDGSEntry,
     InternalGDPSEntry,
+    InternalGDSubGSEntry,
     InternalPDGSEntry,
     InternalPDPSEntry,
     transformToInternalDefinitionEntry,
@@ -23,12 +25,14 @@ import { Registries } from '~/registry/registries'
 import {
     RegistryGDGSEntry,
     RegistryGDPSEntry,
+    RegistryGDSubGSEntry,
     RegistryPDGSEntry,
     RegistryPDPSEntry,
 } from '~/types/definitions.v1'
 import {
     PackageGDGSEntry,
     PackageGDPSEntry,
+    PackageGDSubGSEntry,
     PackageGSSubEntry,
     PackagePDGSEntry,
     PackagePDPSEntry,
@@ -78,6 +82,54 @@ describe('getInternalDefinitionEntryType', () => {
                 settings: {},
             }
             expect(getInternalDefinitionEntryType(entry)).toBe(InternalDefinitionEntryType.GDGS)
+        })
+    })
+    describe('GDSubGS', () => {
+        test('simple', () => {
+            const entry: PackageGDSubGSEntry = {
+                name: 'Zefiros-Software/Awesomeness',
+                version: 'master',
+                definitionPath: 'foobar',
+            }
+            expect(getInternalDefinitionEntryType(entry)).toBe(InternalDefinitionEntryType.GDSubGS)
+        })
+        test('repository', () => {
+            const entry: PackageGDSubGSEntry = {
+                name: 'Zefiros-Software/Awesomeness',
+                version: 'master',
+                repository: 'https://example.com/foo.git',
+                definitionPath: 'foobar',
+            }
+            expect(getInternalDefinitionEntryType(entry)).toBe(InternalDefinitionEntryType.GDSubGS)
+        })
+        test('repository - definition', () => {
+            const entry: PackageGDSubGSEntry = {
+                name: 'Zefiros-Software/Awesomeness',
+                version: 'master',
+                repository: 'https://example.com/foo.git',
+                definition: 'https://example.com/foo.git',
+                definitionPath: 'foobar',
+            }
+            expect(getInternalDefinitionEntryType(entry)).toBe(InternalDefinitionEntryType.GDSubGS)
+        })
+        test('definition', () => {
+            const entry: PackageGDSubGSEntry = {
+                name: 'Zefiros-Software/Awesomeness',
+                version: 'master',
+                definition: 'https://example.com/foo.git',
+                definitionPath: 'foobar',
+            }
+            expect(getInternalDefinitionEntryType(entry)).toBe(InternalDefinitionEntryType.GDSubGS)
+        })
+        test('extra', () => {
+            const entry: PackageGDSubGSEntry = {
+                name: 'Zefiros-Software/Awesomeness',
+                version: 'master',
+                definitionPath: 'foobar',
+                optional: true,
+                settings: {},
+            }
+            expect(getInternalDefinitionEntryType(entry)).toBe(InternalDefinitionEntryType.GDSubGS)
         })
     })
     describe('GDPS', () => {
@@ -476,6 +528,172 @@ describe('transformToInternalDefinitionEntry', () => {
                     name: 'ZPM',
                     repository: undefined,
                     definition: undefined,
+                },
+                type: 'fooType',
+                usage: {
+                    version: new VersionRange('master'),
+                    optional: false,
+                    settings: {},
+                },
+            }
+            expect(transformToInternalDefinitionEntry(entry, manifest, 'fooType', parent)).toEqual([
+                internal,
+            ])
+        })
+    })
+    describe('GDSubGS', () => {
+        test('simple', () => {
+            const entry: PackageGDSubGSEntry = {
+                name: 'Zefiros-Software/Awesomeness',
+                version: 'master',
+                definitionPath: 'foobar',
+            }
+            const internal: InternalDefinitionGDSubGSEntry = {
+                internalDefinitionType: InternalDefinitionEntryType.GDSubGS,
+                entry: {
+                    vendor: 'Zefiros-Software',
+                    name: 'Awesomeness',
+                    definitionPath: 'foobar',
+                    repository: undefined,
+                    definition: undefined,
+                },
+                type: 'fooType',
+                usage: {
+                    version: new VersionRange('master'),
+                    optional: false,
+                    settings: {},
+                },
+            }
+            expect(transformToInternalDefinitionEntry(entry, manifest, 'fooType', parent)).toEqual([
+                internal,
+            ])
+        })
+        test('repository', () => {
+            const entry: PackageGDSubGSEntry = {
+                name: 'Zefiros-Software/Awesomeness',
+                version: 'master',
+                repository: 'https://example.com/foo.git',
+                definitionPath: 'foobar',
+            }
+            const internal: InternalDefinitionGDSubGSEntry = {
+                internalDefinitionType: InternalDefinitionEntryType.GDSubGS,
+                entry: {
+                    vendor: 'Zefiros-Software',
+                    name: 'Awesomeness',
+                    repository: 'https://example.com/foo.git',
+                    definition: undefined,
+                    definitionPath: 'foobar',
+                },
+                type: 'fooType',
+                usage: {
+                    version: new VersionRange('master'),
+                    optional: false,
+                    settings: {},
+                },
+            }
+            expect(transformToInternalDefinitionEntry(entry, manifest, 'fooType', parent)).toEqual([
+                internal,
+            ])
+        })
+        test('repository - definition', () => {
+            const entry: PackageGDSubGSEntry = {
+                name: 'Zefiros-Software/Awesomeness',
+                version: 'master',
+                repository: 'https://example.com/foo.git',
+                definition: 'https://example.com/foo.git',
+                definitionPath: 'foobar',
+            }
+            const internal: InternalDefinitionGDSubGSEntry = {
+                internalDefinitionType: InternalDefinitionEntryType.GDSubGS,
+                entry: {
+                    vendor: 'Zefiros-Software',
+                    name: 'Awesomeness',
+                    repository: 'https://example.com/foo.git',
+                    definition: 'https://example.com/foo.git',
+                    definitionPath: 'foobar',
+                },
+                type: 'fooType',
+                usage: {
+                    version: new VersionRange('master'),
+                    optional: false,
+                    settings: {},
+                },
+            }
+            expect(transformToInternalDefinitionEntry(entry, manifest, 'fooType', parent)).toEqual([
+                internal,
+            ])
+        })
+        test('definition', () => {
+            const entry: PackageGDSubGSEntry = {
+                name: 'Zefiros-Software/Awesomeness',
+                version: 'master',
+                definition: 'https://example.com/foo.git',
+                definitionPath: 'foobar',
+            }
+
+            const internal: InternalDefinitionGDSubGSEntry = {
+                internalDefinitionType: InternalDefinitionEntryType.GDSubGS,
+                entry: {
+                    vendor: 'Zefiros-Software',
+                    name: 'Awesomeness',
+                    repository: undefined,
+                    definition: 'https://example.com/foo.git',
+                    definitionPath: 'foobar',
+                },
+                type: 'fooType',
+                usage: {
+                    version: new VersionRange('master'),
+                    optional: false,
+                    settings: {},
+                },
+            }
+            expect(transformToInternalDefinitionEntry(entry, manifest, 'fooType', parent)).toEqual([
+                internal,
+            ])
+        })
+        test('extra', () => {
+            const entry: PackageGDSubGSEntry = {
+                name: 'Zefiros-Software/Awesomeness',
+                version: 'master',
+                definitionPath: 'foobar',
+                optional: true,
+                settings: {},
+            }
+
+            const internal: InternalDefinitionGDSubGSEntry = {
+                internalDefinitionType: InternalDefinitionEntryType.GDSubGS,
+                entry: {
+                    vendor: 'Zefiros-Software',
+                    name: 'Awesomeness',
+                    repository: undefined,
+                    definition: undefined,
+                    definitionPath: 'foobar',
+                },
+                type: 'fooType',
+                usage: {
+                    version: new VersionRange('master'),
+                    optional: true,
+                    settings: {},
+                },
+            }
+            expect(transformToInternalDefinitionEntry(entry, manifest, 'fooType', parent)).toEqual([
+                internal,
+            ])
+        })
+        test('alias', () => {
+            const entry: PackageGDSubGSEntry = {
+                name: 'ZPM',
+                version: 'master',
+                definitionPath: 'foobar',
+            }
+            const internal: InternalDefinitionGDSubGSEntry = {
+                internalDefinitionType: InternalDefinitionEntryType.GDGS,
+                entry: {
+                    vendor: undefined,
+                    name: 'ZPM',
+                    repository: undefined,
+                    definition: undefined,
+                    definitionPath: 'foobar',
                 },
                 type: 'fooType',
                 usage: {
@@ -1501,6 +1719,24 @@ describe('transformToInternalEntry', () => {
                 name: 'Awesomeness',
                 repository: 'https://foo.com/foo.git',
                 definition: 'https://example.com/foo.git',
+            }
+            expect(transformToInternalEntry(entry)).toEqual(internal)
+        })
+    })
+    describe('GDSubGS', () => {
+        test('simple', () => {
+            const entry: RegistryGDSubGSEntry = {
+                name: 'Zefiros-Software/Awesomeness',
+                repository: 'https://foo.com/foo.git',
+                definition: 'https://foo.com/foo.git',
+                definitionPath: 'foobar',
+            }
+            const internal: InternalGDSubGSEntry = {
+                vendor: 'Zefiros-Software',
+                name: 'Awesomeness',
+                repository: 'https://foo.com/foo.git',
+                definition: 'https://foo.com/foo.git',
+                definitionPath: 'foobar',
             }
             expect(transformToInternalEntry(entry)).toEqual(internal)
         })

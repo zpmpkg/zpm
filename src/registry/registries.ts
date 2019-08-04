@@ -10,6 +10,7 @@ import {
     PackageInfoOptions,
     PackageTypeToInternalType,
     PackageVersion,
+    InternalDefinitionEntryType,
 } from '~/package/internal'
 import { ConfigurationSchema } from '~/types/configuration.v1'
 import {
@@ -78,7 +79,13 @@ export class Registries {
         const found = this.manifests[entry.type].search(entry)
         if (found.package) {
             if (
-                PackageTypeToInternalType[found.package.info.type] === entry.internalDefinitionType
+                PackageTypeToInternalType[found.package.info.type] === entry.internalDefinitionType 
+                ||
+                ((entry.internalDefinitionType === InternalDefinitionEntryType.GDGS || 
+                    entry.internalDefinitionType === InternalDefinitionEntryType.GDSubGS) &&
+
+                    (PackageTypeToInternalType[found.package.info.type] === InternalDefinitionEntryType.GDGS ||
+                 PackageTypeToInternalType[found.package.info.type] === InternalDefinitionEntryType.GDSubGS))
             ) {
                 return { ...found, sameType: true }
             }

@@ -1,6 +1,7 @@
 import {
     InternalGDGSEntry,
     InternalGDPSEntry,
+    InternalGDSubGSEntry,
     InternalPDGSEntry,
     InternalPDPSEntry,
 } from '~/package/entry'
@@ -25,6 +26,18 @@ describe('classifyType', () => {
                 definition: 'https://foo.com/foo.git',
             }
             expect(classifyType(entry)).toBe(PackageType.GDGS)
+        })
+    })
+    describe('GDSubGS', () => {
+        test('simple', () => {
+            const entry: InternalGDSubGSEntry = {
+                name: 'Awesomeness',
+                vendor: 'Zefiros-Software',
+                repository: 'https://foo.com/foo.git',
+                definition: 'https://foo.com/foo.git',
+                definitionPath: 'foobar',
+            }
+            expect(classifyType(entry)).toBe(PackageType.GDSubGS)
         })
     })
     describe('GDPS', () => {

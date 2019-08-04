@@ -2,6 +2,7 @@ import {
     RegistryEntry,
     RegistryGDGSEntry,
     RegistryGDPSEntry,
+    RegistryGDSubGSEntry,
     RegistryPDGSEntry,
     RegistryPDPSEntry,
     RegistryPSSubEntry,
@@ -9,6 +10,7 @@ import {
 
 export type RegistryEntry =
     | RegistryGDGSEntry
+    | RegistryGDSubGSEntry
     | RegistryGDPSEntry
     | RegistryPDGSEntry
     | RegistryPDPSEntry

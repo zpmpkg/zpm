@@ -8,7 +8,7 @@
   "files": [
     "dist/**"
   ],
-  "version": "0.2.0-alpha14",
+  "version": "0.2.0-alpha16",
   "main": "./dist/src/main.js",
   "bin": {
     "zpm": "./dist/src/main.js"

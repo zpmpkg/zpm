@@ -2,6 +2,7 @@ import {
     InternalDefinitionEntry,
     InternalDefinitionGDGSEntry,
     InternalDefinitionGDPSEntry,
+    InternalDefinitionGDSubGSEntry,
     InternalDefinitionGSSubEntry,
     InternalDefinitionPDGSEntry,
     InternalDefinitionPDPSEntry,
@@ -11,6 +12,7 @@ import { PackageType } from './type'
 
 export const enum InternalDefinitionEntryType {
     GDGS = 'GDGS',
+    GDSubGS = 'GDSubGS',
     GDPS = 'GDPS',
     PDGS = 'PDGS',
     PDPS = 'PDPS',
@@ -20,6 +22,7 @@ export const enum InternalDefinitionEntryType {
 
 export interface PackageTypeToInternalDefinitionEntry {
     [InternalDefinitionEntryType.GDGS]: InternalDefinitionGDGSEntry
+    [InternalDefinitionEntryType.GDSubGS]: InternalDefinitionGDSubGSEntry
     [InternalDefinitionEntryType.PDPS]: InternalDefinitionPDPSEntry
     [InternalDefinitionEntryType.PDGS]: InternalDefinitionPDGSEntry
     [InternalDefinitionEntryType.GDPS]: InternalDefinitionGDPSEntry
@@ -29,6 +32,7 @@ export interface PackageTypeToInternalDefinitionEntry {
 
 export const PackageTypeToInternalType = {
     [PackageType.GDGS]: InternalDefinitionEntryType.GDGS,
+    [PackageType.GDSubGS]: InternalDefinitionEntryType.GDSubGS,
     [PackageType.PDPS]: InternalDefinitionEntryType.PDPS,
     [PackageType.PDGS]: InternalDefinitionEntryType.PDGS,
     [PackageType.GDPS]: InternalDefinitionEntryType.GDPS,
@@ -39,6 +43,7 @@ export const isInternalDefinitionEntry = <K extends InternalDefinitionEntryType>
     entry: Partial<InternalDefinitionEntry>
 ): entry is PackageTypeToInternalDefinitionEntry[K] => entry.internalDefinitionType === condition
 export const isInternalGDGS = isInternalDefinitionEntry(InternalDefinitionEntryType.GDGS)
+export const isInternalGDSubGS = isInternalDefinitionEntry(InternalDefinitionEntryType.GDSubGS)
 export const isInternalPDPS = isInternalDefinitionEntry(InternalDefinitionEntryType.PDPS)
 export const isInternalPDGS = isInternalDefinitionEntry(InternalDefinitionEntryType.PDGS)
 export const isInternalGDPS = isInternalDefinitionEntry(InternalDefinitionEntryType.GDPS)

@@ -10,12 +10,14 @@ import {
     RegistryEntry,
     RegistryGDGSEntry,
     RegistryGDPSEntry,
+    RegistryGDSubGSEntry,
     RegistryPDGSEntry,
 } from '~/types/definitions.v1'
 import {
     PackageEntry,
     PackageGDGSEntry,
     PackageGDPSEntry,
+    PackageGDSubGSEntry,
     PackageGSSubEntry,
     PackagePDGSEntry,
     PackagePDPSEntry,
@@ -23,7 +25,7 @@ import {
     PackageSettings,
 } from '~/types/package.v1'
 import { isInternalGSSub, isInternalPDGS } from './entryType'
-import { isGDGS, isGSSub, isPDGS, PackageInfo, PDGSPackageOptions } from './info'
+import { isGDGS, isGDSubGS, isGSSub, isPDGS, PackageInfo, PDGSPackageOptions } from './info'
 import {
     GSSubPackageOptions,
     InternalDefinitionEntryType,
@@ -35,6 +37,8 @@ import {
     PDPSPackageOptions,
     PSSubPackageOptions,
 } from './internal'
+import { SourceVersion } from './sourceVersion'
+import { PackageType } from './type'
 
 export interface InternalGDGSEntry {
     // type: InternalEntryType.GDGS
@@ -42,6 +46,14 @@ export interface InternalGDGSEntry {
     name: string
     repository: string
     definition?: string
+}
+export interface InternalGDSubGSEntry {
+    // type: InternalEntryType.GDGS
+    vendor: string
+    name: string
+    repository: string
+    definition: string
+    definitionPath: string
 }
 export interface InternalGDPSEntry {
     // type: InternalEntryType.GDPS
@@ -74,6 +86,7 @@ export interface InternalGSSubEntry {
 
 export type InternalEntry =
     | InternalGDGSEntry
+    | InternalGDSubGSEntry
     | InternalGDPSEntry
     | InternalPDGSEntry
     | InternalPDPSEntry
@@ -82,6 +95,7 @@ export type InternalEntry =
 
 export const enum InternalEntryType {
     GDGS = 'GDGS',
+    GDSubGS = 'GDSubGS',
     GDPS = 'GDPS',
     PDGS = 'PDGS',
     PDPS = 'PDPS',
@@ -99,6 +113,25 @@ export function transformToInternalEntry(entry: RegistryEntry): InternalEntry {
             name: split[1],
             repository: pdgsEntry.repository,
             definition: pdgsEntry.definition,
+        }
+    }
+    const gdsubgsEntry = entry as RegistryGDSubGSEntry
+    if (
+        has(entry, 'name') &&
+        isDefined(gdsubgsEntry.repository) &&
+        isGitUrl(gdsubgsEntry.repository) &&
+        isDefined(gdsubgsEntry.definition) &&
+        isGitUrl(gdsubgsEntry.definition) &&
+        isDefined(gdsubgsEntry.definitionPath)
+    ) {
+        const split = gdsubgsEntry.name.split('/')
+        return {
+            // type: InternalEntryType.GDGS,
+            vendor: split[0],
+            name: split[1],
+            repository: gdsubgsEntry.repository,
+            definition: gdsubgsEntry.definition,
+            definitionPath: gdsubgsEntry.definitionPath,
         }
     }
     const gdgsEntry = entry as RegistryGDGSEntry
@@ -146,6 +179,23 @@ export interface InternalDefinitionGDGSEntry {
         name: string
         repository?: string
         definition?: string
+    }
+    type: string
+    options?: PackageInfoOptions
+    usage: {
+        version: VersionRange
+        optional: boolean
+        settings: PackageSettings
+    }
+}
+export interface InternalDefinitionGDSubGSEntry {
+    internalDefinitionType: InternalDefinitionEntryType
+    entry: {
+        vendor?: string
+        name: string
+        repository?: string
+        definition?: string
+        definitionPath: string
     }
     type: string
     options?: PackageInfoOptions
@@ -259,6 +309,17 @@ export function getInternalDefinitionEntryType(entry: PackageEntry): InternalDef
         }
     }
 
+    const gdsubgsEntry = entry as PackageGDSubGSEntry
+    if (
+        has(entry, 'name') &&
+        has(entry, 'definitionPath') &&
+        ((isDefined(gdsubgsEntry.repository) && isGitUrl(gdsubgsEntry.repository)) ||
+            isUndefined(gdsubgsEntry.repository)) &&
+        ((isDefined(gdsubgsEntry.definition) && isGitUrl(gdsubgsEntry.definition)) ||
+            isUndefined(gdsubgsEntry.definition))
+    ) {
+        return InternalDefinitionEntryType.GDSubGS
+    }
     const gdgsEntry = entry as PackageGDGSEntry
     if (
         has(entry, 'name') &&
@@ -269,6 +330,7 @@ export function getInternalDefinitionEntryType(entry: PackageEntry): InternalDef
     ) {
         return InternalDefinitionEntryType.GDGS
     }
+
     if (has(entry, 'name') && has(entry, 'definition')) {
         return InternalDefinitionEntryType.PDGS
     }
@@ -319,7 +381,8 @@ export function overrideInternalDefinitionToInternalEntry(
     if (
         isInternalPDGS(definition) &&
         (!isDefined(overriding) ||
-            (isDefined(overriding) && (isPDGS(overriding) || isGDGS(overriding))))
+            (isDefined(overriding) &&
+                (isPDGS(overriding) || isGDGS(overriding) || isGDSubGS(overriding))))
     ) {
         if (!isDefined(overriding) && !isDefined(definition.entry.repository)) {
             throw new Error()
@@ -355,35 +418,47 @@ export function overrideInternalDefinitionOptions<T extends PackageInfoOptions>(
     throw new Error('Failed to convert entry')
 }
 
-export function getInternalEntryType(entry: PackageEntry): InternalEntryType {
-    const gdgsEntry = entry as PackageGDGSEntry
-    if (
-        has(entry, 'name') &&
-        has(entry, 'vendor') &&
-        ((isDefined(gdgsEntry.repository) && isGitUrl(gdgsEntry.repository)) ||
-            isUndefined(gdgsEntry.repository)) &&
-        ((isDefined(gdgsEntry.definition) && isGitUrl(gdgsEntry.definition)) ||
-            isUndefined(gdgsEntry.definition))
-    ) {
-        return InternalEntryType.GDGS
-    }
-    if (has(entry, 'name') && has(entry, 'vendor') && has(entry, 'definition')) {
-        return InternalEntryType.PDGS
-    }
-    const gdpsEntry = entry as PackageGDPSEntry
-    if (
-        !has(entry, 'name') &&
-        has(entry, 'path') &&
-        isDefined(gdpsEntry.definition) &&
-        isGitUrl(gdpsEntry.definition)
-    ) {
-        return InternalEntryType.GDPS
-    }
-    if (has(entry, 'path')) {
-        return InternalEntryType.PDPS
-    }
-    throw Error('This should never be called')
-}
+// export function getInternalEntryType(entry: PackageEntry): InternalEntryType {
+//     const gdsubgsEntry = entry as PackageGDGSEntry
+//     if (
+//         has(entry, 'name') &&
+//         has(entry, 'vendor') &&
+//         has(entry, 'definitionPath') &&
+//         ((isDefined(gdsubgsEntry.repository) && isGitUrl(gdsubgsEntry.repository)) ||
+//             isUndefined(gdsubgsEntry.repository)) &&
+//         ((isDefined(gdsubgsEntry.definition) && isGitUrl(gdsubgsEntry.definition)) ||
+//             isUndefined(gdsubgsEntry.definition))
+//     ) {
+//         return InternalEntryType.GDSubGS
+//     }
+//     const gdgsEntry = entry as PackageGDGSEntry
+//     if (
+//         has(entry, 'name') &&
+//         has(entry, 'vendor') &&
+//         ((isDefined(gdgsEntry.repository) && isGitUrl(gdgsEntry.repository)) ||
+//             isUndefined(gdgsEntry.repository)) &&
+//         ((isDefined(gdgsEntry.definition) && isGitUrl(gdgsEntry.definition)) ||
+//             isUndefined(gdgsEntry.definition))
+//     ) {
+//         return InternalEntryType.GDGS
+//     }
+//     if (has(entry, 'name') && has(entry, 'vendor') && has(entry, 'definition')) {
+//         return InternalEntryType.PDGS
+//     }
+//     const gdpsEntry = entry as PackageGDPSEntry
+//     if (
+//         !has(entry, 'name') &&
+//         has(entry, 'path') &&
+//         isDefined(gdpsEntry.definition) &&
+//         isGitUrl(gdpsEntry.definition)
+//     ) {
+//         return InternalEntryType.GDPS
+//     }
+//     if (has(entry, 'path')) {
+//         return InternalEntryType.PDPS
+//     }
+//     throw Error('This should never be called')
+// }
 
 export function splitVendorName(vendorName: string): { vendor?: string; name: string } {
     let [vendor, name]: Array<string | undefined> = vendorName.split('/')
@@ -573,6 +648,25 @@ export function transformToInternalDefinitionEntry(
                     version: new VersionRange(gdgsEntry.version),
                     optional: isDefined(gdgsEntry.optional) ? gdgsEntry.optional : false,
                     settings: gdgsEntry.settings || {},
+                },
+            }
+            return [internal]
+        }
+        case InternalDefinitionEntryType.GDSubGS: {
+            const gdsubgsEntry = entry as PackageGDSubGSEntry
+            const internal: InternalDefinitionGDSubGSEntry = {
+                internalDefinitionType: entryType,
+                entry: {
+                    ...splitVendorName(gdsubgsEntry.name),
+                    repository: gdsubgsEntry.repository,
+                    definition: gdsubgsEntry.definition,
+                    definitionPath: gdsubgsEntry.definitionPath,
+                },
+                type,
+                usage: {
+                    version: new VersionRange(gdsubgsEntry.version),
+                    optional: isDefined(gdsubgsEntry.optional) ? gdsubgsEntry.optional : false,
+                    settings: gdsubgsEntry.settings || {},
                 },
             }
             return [internal]

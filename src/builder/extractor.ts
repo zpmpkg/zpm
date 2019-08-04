@@ -5,12 +5,12 @@ import { join } from 'upath'
 import { FsApi } from '~/api/fs'
 import { GitApi } from '~/api/git'
 import { PackageVersionApi } from '~/api/package'
+import { PlatformApi } from '~/api/platform'
 import { ShellApi } from '~/api/shell'
 import { hasHash } from '~/common/git'
 import { logger } from '~/common/logger'
 import { executeSandboxTypescript } from '~/sandbox/sandbox'
 import { PackageBuilder, TargetBuilder } from './packageBuilder'
-import { PlatformApi } from '~/api/platform';
 
 interface ExtractionApi {
     version: PackageVersionApi
@@ -106,7 +106,7 @@ export class TargetExtractor extends TargetBuilder {
             git: new GitApi(target.sourcePath, target.spin),
             fs: new FsApi(target.sourcePath, target.targetPath, target.spin),
             shell: new ShellApi(target.sourcePath, target.targetPath, target.spin),
-            platform: new PlatformApi()
+            platform: new PlatformApi(),
         }
         const filepath = join(this.version.package.info.directories.definition, 'extract.ts')
 

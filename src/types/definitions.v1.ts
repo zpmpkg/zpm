@@ -16,6 +16,7 @@ export type RegistryDefinition = RegistryNamedLocationEntry | RegistryPathLocati
  */
 export type RegistryEntry =
     | RegistryGDGSEntry
+    | RegistryGDSubGSEntry
     | RegistryGDPSEntry
     | RegistryPDGSEntry
     | RegistryPDPSEntry
@@ -62,6 +63,16 @@ export interface RegistryGDGSEntry {
     name: string
     repository: string
     definition?: string
+}
+/**
+ * This interface was referenced by `DefinitionsSchema`'s JSON-Schema
+ * via the `definition` "RegistryGDSubGSEntry".
+ */
+export interface RegistryGDSubGSEntry {
+    name: string
+    repository: string
+    definition: string
+    definitionPath: string
 }
 /**
  * This interface was referenced by `DefinitionsSchema`'s JSON-Schema

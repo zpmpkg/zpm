@@ -9,6 +9,7 @@ import {
     InternalEntry,
     InternalGDGSEntry,
     InternalGDPSEntry,
+    InternalGDSubGSEntry,
     InternalGSSubEntry,
     InternalPDGSEntry,
     InternalPDPSEntry,
@@ -21,6 +22,17 @@ import {
 import { PackageType } from './type'
 
 export function classifyType(entry: InternalEntry): PackageType {
+    const gdsubgsEntry = entry as InternalGDSubGSEntry
+    if (
+        has(entry, 'name') &&
+        has(entry, 'vendor') &&
+        isGitUrl(gdsubgsEntry.repository) &&
+        ((isDefined(gdsubgsEntry.definition) && isGitUrl(gdsubgsEntry.definition)) ||
+            isUndefined(gdsubgsEntry.definition)) &&
+        has(entry, 'definitionPath')
+    ) {
+        return PackageType.GDSubGS
+    }
     const gdgsEntry = entry as InternalGDGSEntry
     if (
         has(entry, 'name') &&
@@ -64,6 +76,7 @@ export const isPackageInfo = <K extends PackageType>(condition: K) => (
     entry: Partial<PackageInfo>
 ): entry is PackageTypeToInternalEntry[K] => entry.type === condition
 export const isGDGS = isPackageInfo(PackageType.GDGS)
+export const isGDSubGS = isPackageInfo(PackageType.GDSubGS)
 export const isPDPS = isPackageInfo(PackageType.PDPS)
 export const isPDGS = isPackageInfo(PackageType.PDGS)
 export const isGDPS = isPackageInfo(PackageType.GDPS)
@@ -77,7 +90,7 @@ export function getId(info: Partial<PackageInfo>, type: string): string {
         return `${type}:${info.options.rootName}:${info.entry.path}`
     } else if (isGSSub(info) && info.options) {
         return `${type}:${info.options.packageVendor}:${info.options.packageName}+${info.entry.path}`
-    } else if (isGDGS(info) || isPDGS(info)) {
+    } else if (isGDGS(info) || isGDSubGS(info) || isPDGS(info)) {
         return `${type}:${info.entry.vendor}:${info.entry.name}`
     } else {
         throw Error('not implemented')
@@ -91,7 +104,7 @@ export function getName(info: Partial<PackageInfo>): string {
         return `${info.options.rootName}:${info.entry.path}`
     } else if (isGSSub(info) && info.options) {
         return `${info.options.packageVendor}:${info.options.packageName}+${info.entry.path}`
-    } else if (isGDGS(info)) {
+    } else if (isGDGS(info) || isGDSubGS(info)) {
         return `${info.entry.vendor}/${info.entry.name}`
     } else if (isPDGS(info)) {
         return `${info.entry.vendor}/${info.entry.name}`
@@ -123,7 +136,7 @@ export function getNameFromEntry(entry: InternalDefinitionEntry): string {
 export function getAlias(info: Partial<PackageInfo>): string | undefined {
     if (isPDPS(info)) {
         return get(info, ['options', 'alias'])
-    } else if (isPSSub(info) || isGSSub(info) || isGDGS(info) || isPDGS(info)) {
+    } else if (isPSSub(info) || isGSSub(info) || isGDGS(info) || isGDSubGS(info) || isPDGS(info)) {
         return undefined
     } else {
         throw Error('not implemented')
@@ -161,6 +174,26 @@ export function getDirectories(info: Partial<PackageInfo>): PackageInfo['directo
             definition:
                 isDefined(info.entry.definition) && info.entry.definition !== info.entry.repository
                     ? join(root, `definition-${shortHash(info.entry.definition)}`)
+                    : sourceDir,
+            source: sourceDir,
+        }
+    } else if (isGDSubGS(info)) {
+        const root = join(
+            environment.directory.packages,
+            info.manifest,
+            info.entry.vendor,
+            info.entry.name
+        )
+        const definitions = join(
+            environment.directory.packages,
+            info.manifest,
+            "definitions"
+        )
+        const sourceDir = join(root, `source-${shortHash(info.entry.repository)}`)
+        return {
+            definition:
+                isDefined(info.entry.definition) && info.entry.definition !== info.entry.repository
+                    ? join(definitions, `definition-${shortHash(info.entry.definition)}`)
                     : sourceDir,
             source: sourceDir,
         }
@@ -209,6 +242,7 @@ export function getPackageInfo<E extends InternalEntry, O extends PackageInfoOpt
 
 export interface PackageTypeToInternalEntry {
     [PackageType.GDGS]: GDGSPackageInfo
+    [PackageType.GDSubGS]: GDSubGSPackageInfo
     [PackageType.PDPS]: PDPSPackageInfo
     [PackageType.PDGS]: PDGSPackageInfo
     [PackageType.GDPS]: PackageInfo<InternalGDPSEntry>
@@ -240,6 +274,7 @@ export type PDGSPackageInfo = PackageInfo<InternalPDGSEntry, PDGSPackageOptions>
 export type PSSubPackageInfo = PackageInfo<InternalPSSubEntry, PSSubPackageOptions>
 export type GSSubPackageInfo = PackageInfo<InternalGSSubEntry, GSSubPackageOptions>
 export type GDGSPackageInfo = PackageInfo<InternalGDGSEntry, PackageInfoOptions>
+export type GDSubGSPackageInfo = PackageInfo<InternalGDSubGSEntry, PackageInfoOptions>
 
 export interface PDPSPackageOptions extends PackageInfoOptions {
     alias?: string

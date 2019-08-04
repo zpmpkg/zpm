@@ -11,6 +11,7 @@ import {
     PSSubPackage,
 } from './internal'
 import { PackageType } from './type'
+import { GDSubGSPackage } from './gdsubgs';
 
 export class Package {
     public readonly manifest: Manifest
@@ -31,6 +32,7 @@ export class Package {
                 return new PDPSPackage(this)
             case PackageType.PDGS:
                 return new PDGSPackage(this)
+  
             // case PackageType.GDPS:
             //     return new GDPSPackage(this)
             case PackageType.PSSub:
@@ -39,6 +41,8 @@ export class Package {
                 return new GSSubPackage(this)
             case PackageType.GDGS:
                 return new GDGSPackage(this)
+            case PackageType.GDSubGS:
+                return new GDSubGSPackage(this)
 
             default:
                 throw new Error(`${this.info.type} not implemented`)

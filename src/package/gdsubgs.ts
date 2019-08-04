@@ -5,16 +5,15 @@ import { environment } from '~/common/environment'
 import { logger } from '~/common/logger'
 import { shorten } from '~/common/util'
 import { PackageDefinitionSummary } from '~/resolver/definition/definition'
-import { getGitPackageDefinition } from '~/resolver/definition/git'
 import { GitVersion, listGitVersions } from '~/resolver/source/git'
-import { InternalDefinitionGDGSEntry } from './entry'
-import { GDGSPackageInfo } from './info'
+import { InternalDefinitionGDSubGSEntry } from './entry'
+import { GDSubGSPackageInfo } from './info'
 import { IPackage, IPackageVersion, PackageVersion, ParentUsage } from './internal'
 import { createRepository } from './repository'
 import { SourceVersion } from './sourceVersion'
 import { getPathPackageDefinition } from '~resolver/definition/path';
 
-export class GDGSPackageVersion extends IPackageVersion {
+export class GDSubGSPackageVersion extends IPackageVersion {
     public gitVersion: GitVersion
     public constructor(pkg: IPackage, id: string, gitVersion: GitVersion) {
         super(pkg, `${id}:${gitVersion.name}-${shorten(gitVersion.hash)}`)
@@ -23,10 +22,7 @@ export class GDGSPackageVersion extends IPackageVersion {
 
     public async getDefinition(parent: PackageVersion): Promise<PackageDefinitionSummary> {
         logger.logfile.info(`Trying to read '${this.package.info.entry.repository}' definition`)
-        if (this.package.info.entry.repository !== this.package.info.entry.definition) {  
-            return getPathPackageDefinition(this.package, parent)
-        }
-        return getGitPackageDefinition(this.package, this.gitVersion, parent)
+        return getPathPackageDefinition(this.package, parent, this.package.info.entry.definitionPath)
     }
 
     public getVersion(): SourceVersion | undefined {
@@ -50,8 +46,8 @@ export class GDGSPackageVersion extends IPackageVersion {
         )
     }
 
-    public get package(): GDGSPackage {
-        return this._package as GDGSPackage
+    public get package(): GDSubGSPackage {
+        return this._package as GDSubGSPackage
     }
 
     public getCost(): number {
@@ -59,7 +55,7 @@ export class GDGSPackageVersion extends IPackageVersion {
     }
 
     public addUsage(usage: ParentUsage): boolean {
-        const entry = usage.entry as InternalDefinitionGDGSEntry
+        const entry = usage.entry as InternalDefinitionGDSubGSEntry
 
         if (entry.usage.version.satisfies(this.gitVersion.version)) {
             if (!isDefined(this.version.usedBy[usage.addedBy.id])) {
@@ -74,7 +70,7 @@ export class GDGSPackageVersion extends IPackageVersion {
     }
 }
 
-export class GDGSPackage extends IPackage {
+export class GDSubGSPackage extends IPackage {
     public async load(): Promise<boolean> {
         const promises = [
             createRepository(this.info.directories.source, this.info.entry.repository).cloneOrFetch(
@@ -97,10 +93,10 @@ export class GDGSPackage extends IPackage {
     public async getVersions(): Promise<IPackageVersion[]> {
         const fversions = await listGitVersions(this.info.directories.source)
 
-        return fversions.map(v => new GDGSPackageVersion(this, this.id, v))
+        return fversions.map(v => new GDSubGSPackageVersion(this, this.id, v))
     }
 
-    public get info(): GDGSPackageInfo {
-        return this.package.info as GDGSPackageInfo
+    public get info(): GDSubGSPackageInfo {
+        return this.package.info as GDSubGSPackageInfo
     }
 }
