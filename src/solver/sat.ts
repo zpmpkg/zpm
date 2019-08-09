@@ -377,7 +377,7 @@ export class SATSolver {
             await this.addPackage(added.package, { entry, addedBy })
         } else {
             const found = this.registries.search(entry)
-            if (!found.sameType && get(addedBy.package.info.options, ['mayChangeRegistry'])) {
+            if (found.override && get(addedBy.package.info.options, ['mayChangeRegistry'])) {
                 found.package = this.registries.addPackage(
                     entry.type,
                     overrideInternalDefinitionToInternalEntry(

@@ -3,7 +3,9 @@ import { logger } from '~/common/logger'
 import { Version } from '~/common/version'
 import { PackageDefinitionSummary } from '~/resolver/definition/definition'
 import { getPathPackageDefinition } from '~/resolver/definition/path'
+import { PackagePDPSEntry } from '~types/package.v1'
 import {
+    InternalDefinitionEntryType,
     InternalDefinitionPDPSEntry,
     IPackage,
     IPackageVersion,
@@ -52,11 +54,26 @@ export class PDPSPackageVersion extends IPackageVersion {
 }
 
 export class PDPSPackage extends IPackage {
-    public async getVersions(): Promise<IPackageVersion[]> {
-        return [new PDPSPackageVersion(this, this.id)]
-    }
-
     public get info(): PDPSPackageInfo {
         return this.package.info as PDPSPackageInfo
+    }
+
+    public static toInternalDefinition(
+        type: string,
+        packageEntry: PackagePDPSEntry
+    ): InternalDefinitionPDPSEntry {
+        return {
+            internalDefinitionType: InternalDefinitionEntryType.PDPS,
+            entry: {},
+            type,
+            usage: {
+                optional: isDefined(packageEntry.optional) ? packageEntry.optional : false,
+                settings: packageEntry.settings || {},
+            },
+        }
+    }
+
+    public async getVersions(): Promise<IPackageVersion[]> {
+        return [new PDPSPackageVersion(this, this.id)]
     }
 }

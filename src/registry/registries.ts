@@ -5,12 +5,12 @@ import { transformPath } from '~/common/io'
 import { isDefined } from '~/common/util'
 import {
     InternalDefinitionEntry,
+    InternalDefinitionEntryType,
     InternalEntry,
     Package,
     PackageInfoOptions,
     PackageTypeToInternalType,
     PackageVersion,
-    InternalDefinitionEntryType,
 } from '~/package/internal'
 import { ConfigurationSchema } from '~/types/configuration.v1'
 import {
@@ -75,23 +75,24 @@ export class Registries {
 
     public search(
         entry: InternalDefinitionEntry
-    ): { package: Package | undefined; name: string; sameType: boolean } {
+    ): { package: Package | undefined; name: string; override: boolean } {
         const found = this.manifests[entry.type].search(entry)
         if (found.package) {
             if (
-                PackageTypeToInternalType[found.package.info.type] === entry.internalDefinitionType 
-                ||
-                ((entry.internalDefinitionType === InternalDefinitionEntryType.GDGS || 
+                PackageTypeToInternalType[found.package.info.type] ===
+                    entry.internalDefinitionType ||
+                ((entry.internalDefinitionType === InternalDefinitionEntryType.GDGS ||
                     entry.internalDefinitionType === InternalDefinitionEntryType.GDSubGS) &&
-
-                    (PackageTypeToInternalType[found.package.info.type] === InternalDefinitionEntryType.GDGS ||
-                 PackageTypeToInternalType[found.package.info.type] === InternalDefinitionEntryType.GDSubGS))
+                    (PackageTypeToInternalType[found.package.info.type] ===
+                        InternalDefinitionEntryType.GDGS ||
+                        PackageTypeToInternalType[found.package.info.type] ===
+                            InternalDefinitionEntryType.GDSubGS))
             ) {
-                return { ...found, sameType: true }
+                return { ...found, override: false }
             }
-            return { ...found, sameType: false }
+            return { ...found, override: true }
         }
-        return { ...found, sameType: false }
+        return { ...found, override: true }
     }
 
     public searchByName(type: string, name: string) {

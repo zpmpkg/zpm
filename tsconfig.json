@@ -14,7 +14,8 @@
         "transform": "@zerollup/ts-transform-paths",
         "exclude": ["*"]
       }
-    ]
+    ],
+    "incremental": true
   },
   "include": [
     "src/**/*.ts",

@@ -184,11 +184,7 @@ export function getDirectories(info: Partial<PackageInfo>): PackageInfo['directo
             info.entry.vendor,
             info.entry.name
         )
-        const definitions = join(
-            environment.directory.packages,
-            info.manifest,
-            "definitions"
-        )
+        const definitions = join(environment.directory.packages, info.manifest, 'definitions')
         const sourceDir = join(root, `source-${shortHash(info.entry.repository)}`)
         return {
             definition:
@@ -299,54 +295,5 @@ export interface GSSubPackageOptions extends PackageInfoOptions {
     packageDirectory: string
     subPath: string
 }
+
 export interface PSSubPackageOptions extends PackageInfoOptions {}
-
-// export function composeEntry(entry: InternalDefinitionEntry): ComposedEntry {
-//     const entryType = getInternalEntryType(entry)
-//     switch (entryType) {
-//         case InternalEntryType.GDGS:
-//             return {
-//                 type: entryType,
-//                 usage: entry,
-//                 registry: undefined,
-//                 mayBeRegistered: false,
-//             }
-
-//         case InternalEntryType.GDPS: {
-//             const gdps = entry as InternalDefinitionGDPSEntry
-//             const internal: InternalGDPSEntry = {
-//                 path: gdps.path,
-//                 definition: gdps.definition,
-//             }
-//             return {
-//                 type: entryType,
-//                 usage: entry,
-//                 registry: internal,
-//                 mayBeRegistered: true,
-//             }
-//         }
-//         case InternalEntryType.PDGS: {
-//             const pdgs = entry as InternalDefinitionPDGSEntry
-//             const internal: InternalPDGSEntry = {
-//                 name: pdgs.name,
-//                 vendor: pdgs.vendor,
-//                 repository: pdgs.repository,
-//                 definition: pdgs.definition,
-//             }
-//             return {
-//                 type: entryType,
-//                 usage: entry,
-//                 registry: internal,
-//                 mayBeRegistered: true,
-//             }
-//         }
-//         case InternalEntryType.PDPS: {
-//             return {
-//                 type: entryType,
-//                 usage: entry,
-//                 registry: undefined,
-//                 mayBeRegistered: false,
-//             }
-//         }
-//     }
-// }

@@ -1,5 +1,6 @@
 import { isUndefined } from 'util'
 import { Manifest } from '~/registry/package'
+import { GDSubGSPackage } from './gdsubgs'
 import {
     GDGSPackage,
     GSSubPackage,
@@ -11,19 +12,20 @@ import {
     PSSubPackage,
 } from './internal'
 import { PackageType } from './type'
-import { GDSubGSPackage } from './gdsubgs';
 
 export class Package {
     public readonly manifest: Manifest
     public readonly impl: IPackage
     public readonly info: PackageInfo
+    public readonly entryHash: string
 
     public versions?: PackageVersion[] = undefined
     public loaded: boolean = false
 
-    constructor(manifest: Manifest, info: PackageInfo) {
+    constructor(manifest: Manifest, info: PackageInfo, entryHash: string) {
         this.manifest = manifest
         this.info = info
+        this.entryHash = entryHash
         this.impl = this.createPackageType()
     }
     public createPackageType(): IPackage {
@@ -32,7 +34,7 @@ export class Package {
                 return new PDPSPackage(this)
             case PackageType.PDGS:
                 return new PDGSPackage(this)
-  
+
             // case PackageType.GDPS:
             //     return new GDPSPackage(this)
             case PackageType.PSSub:

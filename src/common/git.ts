@@ -252,10 +252,7 @@ export async function checkout(
 }
 
 export function getBranch(name?: string): string | undefined {
-    if (isDefined(name)) {
-        return `origin/${name || 'master'}`
-    }
-    return undefined
+    return `origin/${name || 'master'}`
 }
 
 export const pull: typeof _pull = _pull // currently disabled: memoize(_pull)

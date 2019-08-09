@@ -6,13 +6,17 @@ import { shorten } from '~/common/util'
 import { PackageDefinitionSummary } from '~/resolver/definition/definition'
 import { getPathPackageDefinition } from '~/resolver/definition/path'
 import { GitVersion, listGitVersions } from '~/resolver/source/git'
+import { VersionRange } from '~common/range'
+import { PackagePDGSEntry } from '~types/package.v1'
 import {
+    InternalDefinitionEntryType,
     InternalDefinitionPDGSEntry,
     IPackage,
     IPackageVersion,
     PackageVersion,
     ParentUsage,
     PDGSPackageInfo,
+    splitVendorName,
 } from './internal'
 import { createRepository } from './repository'
 import { SourceVersion } from './sourceVersion'
@@ -74,6 +78,30 @@ export class PDGSPackageVersion extends IPackageVersion {
 }
 
 export class PDGSPackage extends IPackage {
+    public get info(): PDGSPackageInfo {
+        return this.package.info as PDGSPackageInfo
+    }
+
+    public static toInternalDefinition(
+        type: string,
+        packageEntry: PackagePDGSEntry
+    ): InternalDefinitionPDGSEntry {
+        return {
+            internalDefinitionType: InternalDefinitionEntryType.PDGS,
+            entry: {
+                ...splitVendorName(packageEntry.name),
+                repository: packageEntry.repository,
+                definition: packageEntry.definition,
+            },
+            type,
+            usage: {
+                version: new VersionRange(packageEntry.version),
+                optional: isDefined(packageEntry.optional) ? packageEntry.optional : false,
+                settings: packageEntry.settings || {},
+            },
+        }
+    }
+
     public async load(): Promise<boolean> {
         await createRepository(
             this.info.directories.source,
@@ -87,9 +115,5 @@ export class PDGSPackage extends IPackage {
         const fversions = await listGitVersions(this.info.directories.source)
 
         return fversions.map(v => new PDGSPackageVersion(this, this.id, v))
-    }
-
-    public get info(): PDGSPackageInfo {
-        return this.package.info as PDGSPackageInfo
     }
 }

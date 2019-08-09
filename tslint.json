@@ -1,9 +1,17 @@
 {
   "extends": [
     "@zefiros/npm-defaults/tslint.json",
-    "typestrict"
+    "typestrict",
+    "tslint-no-commented-code-rule"
   ],
   "rules": {
-    "no-use-before-declare": false
+    "no-use-before-declare": false,
+    "no-commented-code": [
+      true,
+      {
+        "minLineCount": 2,
+        "ignoredCommentRegex": "^(\\w+$|TODO|FIXME)"
+      }
+    ]
   }
 }

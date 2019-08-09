@@ -1,6 +1,7 @@
 import { isDefined } from '@zefiros/axioms'
 import ajv = require('ajv')
 import * as fs from 'fs-extra'
+import hash from 'object-hash'
 import { join } from 'upath'
 import { settledPromiseAll } from '~/common/async'
 import { environment } from '~/common/environment'
@@ -97,6 +98,7 @@ export class Manifest {
                 }) as any
             }
         }
+        const entryHash = hash(entry)
         const info = getPackageInfo<E, O>(entry, this.type, pkgType, options)
         const searchKey = info.name
         let pkg: Package | undefined = this.entries.get(searchKey)
@@ -104,7 +106,7 @@ export class Manifest {
             if (isDefined(pkg)) {
                 logger.debug(`Overriding package '${pkg.info.name}' to new entry`)
             }
-            pkg = new Package(this, info)
+            pkg = new Package(this, info, entryHash)
             this.entries.set(searchKey, pkg)
         }
         if (info.alias && !this.entries.has(info.alias)) {
@@ -115,7 +117,6 @@ export class Manifest {
 
     public search(entry: InternalDefinitionEntry): { package: Package | undefined; name: string } {
         const name = getNameFromEntry(entry)
-        // const searchKey = getName({})
         return {
             package: this.searchByName(name),
             name,

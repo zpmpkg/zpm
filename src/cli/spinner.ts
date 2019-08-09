@@ -54,7 +54,7 @@ export class Spinner {
 
         const childText = this.children.map(c => c.render()).map(t => `  ${figures.play} ${t}\n`)
 
-        this.frame = `${this.frame}\n${childText}`.trimRight()
+        this.frame = `${this.frame}\n${childText.join('')}`.trimRight()
 
         if (oldFrame !== this.frame) {
             logger.logfile.info(this.frame)

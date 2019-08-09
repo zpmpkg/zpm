@@ -68,9 +68,6 @@ export class ShellApi {
 
     public async exec(command: string) {
         let child: any
-        // const stdio = new BufferList(() => {
-
-        // })
         try {
             child = await spawnProcess(command, this.source, this.spinner)
         } catch (e) {
@@ -78,40 +75,5 @@ export class ShellApi {
             logger.error(`Failed to spawn process '${command}': ${error.stderr} ${error.stack}`)
         }
         return child
-        // if (this.spinner && child.stdout) {
-        //     child.stdout.on('data', data => {
-        //         this.spinner!.stream.write(data)
-        //     })
-        // }
-        // if (this.spinner && child.stderr) {
-        //     child.stderr.on('data', data => {
-        //         logger.error(data)
-        //     })
-        // }
-
-        // const promise = new Promise((resolve, reject) => {
-        //     if (isDefined(child)) {
-        //         child.on('error', error => {
-        //             logger.error(error)
-        //             reject(error)
-        //         })
-
-        //         child.on('exit', (code: any) => {
-        //             if (code === 0) {
-        //                 logger.info(
-        //                     '%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%'
-        //                 )
-        //                 resolve(code)
-        //             } else {
-        //                 logger.info(
-        //                     '&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&'
-        //                 )
-        //                 throw new Error(`child exited with code ${code}`)
-        //             }
-        //         })
-        //     } else {
-        //         throw new Error('Failed to spawn process')
-        //     }
-        // })
     }
 }
