@@ -378,15 +378,22 @@ export class SATSolver {
         } else {
             const found = this.registries.search(entry)
             if (found.override && get(addedBy.package.info.options, ['mayChangeRegistry'])) {
-                found.package = this.registries.addPackage(
-                    entry.type,
-                    overrideInternalDefinitionToInternalEntry(
-                        entry,
-                        found.package ? found.package.info : undefined
-                    ),
-                    overrideInternalDefinitionOptions(entry.options!, entry, addedBy.package.info),
-                    true
-                ).package
+                const oentry = overrideInternalDefinitionToInternalEntry(
+                    entry,
+                    found.package ? found.package.info : undefined
+                )
+                if (oentry) {
+                    found.package = this.registries.addPackage(
+                        entry.type,
+                        oentry,
+                        overrideInternalDefinitionOptions(
+                            entry.options!,
+                            entry,
+                            addedBy.package.info
+                        ),
+                        true
+                    ).package
+                }
             }
             if (found.package) {
                 await this.addPackage(found.package, { entry, addedBy })

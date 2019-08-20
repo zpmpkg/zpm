@@ -4,6 +4,7 @@ import { catFile } from '~/common/git'
 import { validateSchema } from '~/common/validation'
 import { IPackage, PackageVersion } from '~/package/internal'
 import { PackageDefinition } from '~/types/package.v1'
+import { Await } from '~common/util'
 import { GitVersion } from '../source/git'
 import { fromPackageDefinition, PackageDefinitionSummary } from './definition'
 import { packageValiator } from './validator'
@@ -14,7 +15,7 @@ export async function getGitPackageDefinition(
     parent: PackageVersion
 ): Promise<PackageDefinitionSummary> {
     const info = pkg.info
-    let content: { content: PackageDefinition | undefined; path?: string } = {
+    let content: Await<ReturnType<typeof getGitContent>> = {
         content: undefined,
     }
     try {

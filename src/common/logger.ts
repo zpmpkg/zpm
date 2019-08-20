@@ -23,7 +23,7 @@ class Logger {
         ],
     })
     private consola = Consola.create({
-        level: verbose() ? 'debug' : undefined,
+        level: verbose() ? 4 : undefined,
     })
 
     public fatal(...message: any[]): void {

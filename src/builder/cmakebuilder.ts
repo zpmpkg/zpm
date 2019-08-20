@@ -12,6 +12,8 @@ import { PackageBuilder, TargetBuilder } from './packageBuilder'
 
 interface TemplateCondition {
     on: string
+    chain: string
+    endif?: string
     let: {
         include?: string[]
         source?: string[]
@@ -44,6 +46,8 @@ interface TemplateAccessview {
 interface TemplateView {
     public: TemplateAccessview
     private: TemplateAccessview
+
+    unscoped: TemplateAccessview
     source?: string[]
     custom?: string
     globs: {
@@ -60,6 +64,7 @@ interface TemplateView {
 
 interface TemplateSettingsCondition {
     on: string
+    chain?: 'elseif'
     let: {
         include?: string[]
         source?: string[]
@@ -91,6 +96,7 @@ interface TemplateSettingsAccessView {
 interface TemplateSettings {
     public: TemplateSettingsAccessView
     private: TemplateSettingsAccessView
+
     source?: string[]
     custom?: string
     template?: string
@@ -168,8 +174,8 @@ export class TargetCMakeBuilder extends TargetBuilder {
     }
 
     public async finish(): Promise<boolean> {
-        for (const [path, modules] of this.moduleMap) {
-            const cmakeList = join(path, 'CMakeLists.txt')
+        for (const [p, modules] of this.moduleMap) {
+            const cmakeList = join(p, 'CMakeLists.txt')
             if (fs.pathExistsSync(cmakeList)) {
                 throw new Error()
                 // @todo
@@ -229,30 +235,30 @@ ${uniq(this.libraryPaths)
             return { settings: undefined, self }
         }
 
-        for (const access of ['public', 'private']) {
+        for (const access of ['public', 'private', 'unscoped']) {
             if (!settings[access]) {
                 settings[access] = {}
             }
         }
         if (settings.include) {
-            settings.public.include = [...(settings.public.include || []), ...settings.include]
+            settings.unscoped.include = [...(settings.unscoped.include || []), ...settings.include]
             delete settings.include
         }
         if (settings.define) {
-            settings.public.define = [...(settings.public.define || []), ...settings.define]
+            settings.unscoped.define = [...(settings.unscoped.define || []), ...settings.define]
             delete settings.define
         }
         if (settings.link) {
-            settings.public.link = [...(settings.public.link || []), ...settings.link]
+            settings.unscoped.link = [...(settings.unscoped.link || []), ...settings.link]
             delete settings.link
         }
         if (settings.feature) {
-            settings.public.feature = [...(settings.public.feature || []), ...settings.feature]
+            settings.unscoped.feature = [...(settings.unscoped.feature || []), ...settings.feature]
             delete settings.feature
         }
         if (settings.conditions) {
-            settings.public.conditions = [
-                ...(settings.public.conditions || []),
+            settings.unscoped.conditions = [
+                ...(settings.unscoped.conditions || []),
                 ...settings.conditions,
             ]
             delete settings.conditions
@@ -267,6 +273,8 @@ ${uniq(this.libraryPaths)
         view.public.conditions = view.public.conditions
             ? view.public.conditions.map(c => ({
                   on: c.on,
+                  chain: c.chain,
+                  endif: c.endif,
                   let: {
                       ...c.let,
                       custom: c.let.custom
@@ -286,6 +294,29 @@ ${uniq(this.libraryPaths)
         view.private.conditions = view.private.conditions
             ? view.private.conditions.map(c => ({
                   on: c.on,
+                  chain: c.chain,
+                  endif: c.endif,
+                  let: {
+                      ...c.let,
+                      custom: c.let.custom
+                          ? Handlebars.compile(c.let.custom, { noEscape: true })(view)
+                          : undefined,
+                  },
+                  otherwise: isDefined(c.otherwise)
+                      ? {
+                            ...c.otherwise,
+                            custom: c.otherwise.custom
+                                ? Handlebars.compile(c.otherwise.custom, { noEscape: true })(view)
+                                : undefined,
+                        }
+                      : undefined,
+              }))
+            : undefined
+        view.unscoped.conditions = view.unscoped.conditions
+            ? view.unscoped.conditions.map(c => ({
+                  on: c.on,
+                  chain: c.chain,
+                  endif: c.endif,
                   let: {
                       ...c.let,
                       custom: c.let.custom
@@ -318,6 +349,9 @@ ${uniq(this.libraryPaths)
                 conditions: [],
             },
             private: {
+                conditions: [],
+            },
+            unscoped: {
                 conditions: [],
             },
             globs: {},
@@ -353,7 +387,7 @@ ${uniq(this.libraryPaths)
             }
         }
 
-        for (const access of ['public', 'private']) {
+        for (const access of ['public', 'private', 'unscoped']) {
             const settingsAccess = settings[
                 access as keyof typeof settings
             ] as TemplateSettingsAccessView
@@ -375,8 +409,15 @@ ${uniq(this.libraryPaths)
             }
             if (settingsAccess.conditions) {
                 resultAccess.conditions = await Promise.all(
-                    settingsAccess.conditions.map(async c => ({
+                    settingsAccess.conditions.map(async (c, i) => ({
                         on: c.on,
+                        chain: c.chain ? c.chain : 'if',
+                        endif:
+                            settingsAccess.conditions && settingsAccess.conditions[i + 1]
+                                ? settingsAccess.conditions[i + 1].chain === 'elseif'
+                                    ? undefined
+                                    : 'endif()'
+                                : 'endif()',
                         let: {
                             ...(c.let.include ? { include: c.let.include } : {}),
                             ...(c.let.source

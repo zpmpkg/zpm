@@ -19,15 +19,13 @@ import {
     PackageSettings,
 } from '~/types/package.v1'
 import { isInternalGSSub, isInternalPDGS } from './entryType'
-import { isGDGS, isGDSubGS, isGSSub, isPDGS, PackageInfo, PDGSPackageOptions } from './info'
+import { isGDGS, isGDSubGS, isPDGS, PackageInfo, PDGSPackageOptions } from './info'
 import {
     GDGSPackage,
     GDSubGSPackage,
     GSSubPackageOptions,
     InternalDefinitionEntryType,
     isInternalPSSub,
-    isPDPS,
-    isPSSub,
     PackageInfoOptions,
     PackageVersion,
     PDGSPackage,
@@ -355,8 +353,10 @@ export function overrideInternalDefinitionToInternalEntry(
         }
         return entry
     }
-    throw new Error('Failed to convert entry')
-    // return undefined
+    if (overriding) {
+        throw new Error('Failed to convert entry')
+    }
+    return undefined
 }
 export function overrideInternalDefinitionOptions<T extends PackageInfoOptions>(
     coptions: T,

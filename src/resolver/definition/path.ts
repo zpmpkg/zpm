@@ -6,21 +6,32 @@ import { loadJsonOrYaml } from '~/common/io'
 import { VersionRange } from '~/common/range'
 import { validateSchema } from '~/common/validation'
 import { IPackage, PackageVersion } from '~/package/internal'
-import { PackageDefinition, PackageSchema } from '~/types/package.v1'
+import {
+    PackageDefinition,
+    PackageFileDefinition,
+    PackageSchema,
+    PackageSchemas,
+} from '~/types/package.v1'
+import { Await } from '~common/util'
+import { Version } from '~common/version'
 import { fromPackageDefinition, PackageDefinitionSummary } from './definition'
 import { packageValiator } from './validator'
 
 export async function getPathPackageDefinition(
     pkg: IPackage,
     parent: PackageVersion,
-    subpath?: string
+    options: { subpath?: string; version?: Version } = {}
 ): Promise<PackageDefinitionSummary> {
     const info = pkg.info
-    let content: { content: PackageDefinition | undefined; path?: string } = {
+    let content: Await<ReturnType<typeof getPathContent>> = {
         content: undefined,
     }
     try {
-        content = await getPathContent(info.directories.definition, undefined, subpath)
+        content = await getPathContent(
+            info.directories.definition,
+            options.version,
+            options.subpath
+        )
     } catch (e) {
         //
         // @todo
@@ -51,9 +62,9 @@ export async function getPathPackageDefinition(
 
 export async function getPathContent(
     directory: string,
-    version?: string,
+    version?: Version,
     subpath?: string
-): Promise<{ content: PackageDefinition | undefined; path?: string }> {
+): Promise<{ content: PackageFileDefinition | undefined; path?: string }> {
     for (const prefix of ['.', '']) {
         const json = join(...[directory, subpath, `${prefix}zpm.json`].filter(isDefined))
         const yml = join(...[directory, subpath, `${prefix}zpm.yml`].filter(isDefined))
@@ -63,7 +74,7 @@ export async function getPathContent(
             content = (await loadFile(json)) as PackageDefinition
             pth = json
         } else if (await fs.pathExists(yml)) {
-            content = getYamlDefinition((await loadFile(yml)) as PackageSchema[], version)
+            content = getYamlDefinition((await loadFile(yml)) as PackageSchema, version)
             pth = yml
         }
         return { content, path: pth }
@@ -72,15 +83,15 @@ export async function getPathContent(
 }
 
 export function getYamlDefinition(
-    yml: PackageSchema[],
-    version?: string
-): PackageDefinition | undefined {
+    yml: PackageSchema,
+    version?: Version
+): PackageFileDefinition | undefined {
     if (isArray(yml)) {
         if (isSingularYaml(yml) || !isDefined(version)) {
             return yml[0]
         }
         const found = find(yml, (y: PackageSchema) => {
-            if (isDefined(y.versions)) {
+            if (isPackageSchemas(y)) {
                 return new VersionRange(y.versions).satisfies(version)
             }
             return false
@@ -95,7 +106,7 @@ export function getYamlDefinition(
 
 export async function loadFile(
     file: string
-): Promise<PackageSchema[] | PackageDefinition | undefined> {
+): Promise<PackageSchema[] | PackageFileDefinition | undefined> {
     let content
     if (await fs.pathExists(file)) {
         content = await loadJsonOrYaml(file)
@@ -110,9 +121,13 @@ export function isSingularYaml(yml: PackageSchema[]): yml is PackageDefinitionSu
     return false
 }
 
-export function getDefinition(yml: PackageSchema): PackageDefinitionSummary {
-    if (isDefined(yml.versions)) {
+export function getDefinition(yml: PackageSchema): PackageFileDefinition {
+    if (isPackageSchemas(yml)) {
         return yml.definition
     }
-    return yml as PackageDefinitionSummary
+    return yml
+}
+
+export function isPackageSchemas(arg: PackageSchema): arg is PackageSchemas {
+    return has(arg, ['versions'])
 }

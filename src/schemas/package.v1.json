@@ -2,15 +2,20 @@
   "type": "object",
   "oneOf": [
     {
-      "$ref": "#/definitions/PackageDefinition"
+      "$ref": "#/definitions/PackageFileDefinition"
     },
     {
+      "$ref": "#/definitions/PackageSchemas"
+    }
+  ],
+  "definitions": {
+    "PackageSchemas": {
       "properties": {
         "versions": {
           "type": "string"
         },
         "definition": {
-          "$ref": "#/definitions/PackageDefinition"
+          "$ref": "#/definitions/PackageFileDefinition"
         }
       },
       "additionalProperties": false,
@@ -18,9 +23,28 @@
         "versions",
         "definition"
       ]
-    }
-  ],
-  "definitions": {
+    },
+    "PackageFileDefinition": {
+      "anyOf": [
+        {
+          "$ref": "#/definitions/PackageDefinition"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "packages": {
+              "type": "object",
+              "patternProperties": {
+                "\\w+": {
+                  "$ref": "#/definitions/PackageDefinition"
+                }
+              }
+            }
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
     "PackageDefinition": {
       "type": "object",
       "properties": {

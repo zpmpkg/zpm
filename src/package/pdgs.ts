@@ -29,7 +29,9 @@ export class PDGSPackageVersion extends IPackageVersion {
     }
     public async getDefinition(parent: PackageVersion): Promise<PackageDefinitionSummary> {
         logger.logfile.info(`Trying to read '${this.package.info.entry.repository}' definition`)
-        return getPathPackageDefinition(this.package, parent)
+        return getPathPackageDefinition(this.package, parent, {
+            version: this.gitVersion.version,
+        })
     }
 
     public getVersion(): SourceVersion | undefined {

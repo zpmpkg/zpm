@@ -1,8 +1,10 @@
-export type PackageSchema =
+export type PackageSchema = PackageFileDefinition | PackageSchemas
+export type PackageFileDefinition =
     | PackageDefinition
     | {
-          versions: string
-          definition: PackageDefinition
+          packages?: {
+              [k: string]: PackageDefinition
+          }
       }
 /**
  * This interface was referenced by `PackageEntries`'s JSON-Schema definition
@@ -19,6 +21,10 @@ export type PackageEntry =
     | PackagePSSubEntry
     | PackagePSSubNameEntry
 
+/**
+ * This interface was referenced by `undefined`'s JSON-Schema definition
+ * via the `patternProperty` "\w+".
+ */
 export interface PackageDefinition {
     development?: PackageEntries
     requires?: PackageEntries
@@ -87,4 +93,8 @@ export interface PackagePSSubNameEntry {
     name: string
     optional?: boolean
     settings?: PackageSettings
+}
+export interface PackageSchemas {
+    versions: string
+    definition: PackageFileDefinition
 }

@@ -14,3 +14,9 @@ export function isDefined<T>(value: T | undefined | null): value is T {
 export function sleep(ms: number) {
     return new Promise(resolve => setTimeout(resolve, ms))
 }
+
+export type Await<T> = T extends {
+    then(onfulfilled?: (value: infer U) => unknown): unknown
+}
+    ? U
+    : T

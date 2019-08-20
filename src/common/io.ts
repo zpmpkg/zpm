@@ -41,14 +41,12 @@ export async function glob(
     excludes: string[] = [],
     absolute = true
 ) {
-    return filter(
-        (await fg(source, {
-            absolute,
-            cwd: root,
-            ignore: excludes,
-        })).map(f => f.toString()),
-        f => isSubDirectory(f, root)
-    )
+    const glob = fg.sync(source, {
+        absolute,
+        cwd: root,
+        ignore: excludes,
+    })
+    return filter(glob.map(f => f.toString()), f => isSubDirectory(f, root))
 }
 
 export async function copy(

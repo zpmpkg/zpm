@@ -1,10 +1,63 @@
-- name: Zefiros-Software/CoreLib
-  repository: "https://github.com/Zefiros-Software/CoreLib.git"
-- name: Zefiros-Software/FlatHashMap
+
+- name: boostorg/boost
+  repository: "https://github.com/boostorg/boost.git"
+  definition: "https://github.com/Zefiros-Software/definitions.git"
+  definitionPath: boost
+- name: skarupke/flat_hash_map
   repository: "https://github.com/skarupke/flat_hash_map.git"
   definition: "https://github.com/Zefiros-Software/definitions.git"
   definitionPath: flathashmap
-- name: Zefiros-Software/GoogleTest
+- name: fmtlib/fmt
+  repository: "https://github.com/fmtlib/fmt.git"
+  definition: "https://github.com/Zefiros-Software/definitions.git"
+  definitionPath: fmt
+- name: jkuhlmann/gainput
+  repository: "https://github.com/jkuhlmann/gainput.git"
+  definition: "https://github.com/Zefiros-Software/definitions.git"
+  definitionPath: gainput
+- name: glfw/glfw
+  repository: "https://github.com/glfw/glfw.git"
+  definition: "https://github.com/Zefiros-Software/definitions.git"
+  definitionPath: glfw
+- name: g-truc/glm
+  repository: "https://github.com/g-truc/glm.git"
+  definition: "https://github.com/Zefiros-Software/definitions.git"
+  definitionPath: glm
+- name: google/googletest
   repository: "https://github.com/google/googletest.git"
   definition: "https://github.com/Zefiros-Software/definitions.git"
   definitionPath: googletest
+- name: tcbrindle/NanoRange
+  repository: "https://github.com/tcbrindle/NanoRange.git"
+  definition: "https://github.com/Zefiros-Software/definitions.git"
+  definitionPath: nanorange
+- name: nlohmann/json
+  repository: "https://github.com/nlohmann/json.git"
+  definition: "https://github.com/Zefiros-Software/definitions.git"
+  definitionPath: nlohmannjson
+- name: boostorg/predef
+  repository: "https://github.com/boostorg/predef.git"
+  definition: "https://github.com/Zefiros-Software/definitions.git"
+  definitionPath: predef
+- name: ericniebler/range-v3
+  repository: "https://github.com/ericniebler/range-v3.git"
+  definition: "https://github.com/Zefiros-Software/definitions.git"
+  definitionPath: range-v3
+- name: p12tic/libsimdpp
+  repository: "https://github.com/p12tic/libsimdpp.git"
+  definition: "https://github.com/Zefiros-Software/definitions.git"
+  definitionPath: simdpp
+- name: gabime/spdlog
+  repository: "https://github.com/gabime/spdlog.git"
+  definition: "https://github.com/Zefiros-Software/definitions.git"
+  definitionPath: spdlog
+- name: cpp-taskflow/cpp-taskflow
+  repository: "https://github.com/cpp-taskflow/cpp-taskflow.git"
+  definition: "https://github.com/Zefiros-Software/definitions.git"
+  definitionPath: taskflow
+
+
+- name: Zefiros-Software/Preproc
+  repository: "https://github.com/Zefiros-Software/Preproc.git"
+  definition: "https://github.com/Zefiros-Software/definitions.git"
+  definitionPath: preproc

@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 3.13)
 
+project({{cmake.dir}})
+
 if(NOT ZPM_LOADED)
   include("extern/ZPM")
 
@@ -15,7 +17,7 @@ add_executable({{cmake.dir}}
 {{#if private.link}}
 target_link_libraries({{cmake.dir}} PRIVATE 
     {{#each private.link}}
-    {{this}}
+    "{{this}}"
     {{/each}}
 )
 

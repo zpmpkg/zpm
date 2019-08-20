@@ -11,7 +11,7 @@ class Inquisitor {
     }
     public async ask(
         name: string,
-        question: inquirer.Questions,
+        question: inquirer.QuestionCollection<inquirer.Answers>,
         options: { all?: string }
     ): Promise<string> {
         return this.withLock(() => this.inquire(name, { ...question, name: 'answer' }, options))
@@ -23,7 +23,7 @@ class Inquisitor {
 
     private async inquire(
         name: string,
-        question: inquirer.Questions,
+        question: inquirer.QuestionCollection<inquirer.Answers>,
         options: { all?: string }
     ): Promise<string> {
         const currentAnswer = this.answers[name]

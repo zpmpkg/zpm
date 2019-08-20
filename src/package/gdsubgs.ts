@@ -30,11 +30,10 @@ export class GDSubGSPackageVersion extends IPackageVersion {
 
     public async getDefinition(parent: PackageVersion): Promise<PackageDefinitionSummary> {
         logger.logfile.info(`Trying to read '${this.package.info.entry.repository}' definition`)
-        return getPathPackageDefinition(
-            this.package,
-            parent,
-            this.package.info.entry.definitionPath
-        )
+        return getPathPackageDefinition(this.package, parent, {
+            subpath: this.package.info.entry.definitionPath,
+            version: this.gitVersion.version,
+        })
     }
 
     public getVersion(): SourceVersion | undefined {
